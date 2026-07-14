@@ -158,7 +158,7 @@ async function apiRequest(endpoint, options = {}) {
     headers
   });
 
-  if (response.status === 401) {
+  if (response.status === 401 && endpoint !== '/auth/login') {
     // Unauthorized - log out user
     logout();
     throw new Error('Session expired. Please log in again.');
