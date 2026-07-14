@@ -18,11 +18,18 @@ app.use(express.json());
 app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 app.use(express.static(path.join(__dirname, '../public')));
 
-// API routes
+// API routes (supports both /api prefix and stripped paths for Vercel compatibility)
 app.use('/api/auth', authRoutes);
+app.use('/auth', authRoutes);
+
 app.use('/api/customers', customerRoutes);
+app.use('/customers', customerRoutes);
+
 app.use('/api/inventory', inventoryRoutes);
+app.use('/inventory', inventoryRoutes);
+
 app.use('/api/billing', billingRoutes);
+app.use('/billing', billingRoutes);
 
 
 // Export the app for Vercel Serverless Functions
