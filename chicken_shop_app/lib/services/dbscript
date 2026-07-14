@@ -1,0 +1,55 @@
+-- 1. Create System Roles Table
+CREATE TABLE roles (
+    id SERIAL PRIMARY KEY,
+    role_name VARCHAR(50) UNIQUE NOT NULL
+);
+
+-- Pre-populate default roles
+INSERT INTO roles (role_name) VALUES ('admin'), ('cashier');
+
+-- 2. Create Users Table
+CREATE TABLE users (
+    id SERIAL PRIMARY KEY,
+    username VARCHAR(100) UNIQUE NOT NULL,
+    password_hash VARCHAR(255) NOT NULL,
+    role VARCHAR(50) REFERENCES roles(role_name) ON UPDATE CASCADE DEFAULT 'cashier'
+);
+
+-- Insert default admin user (username: admin, password: admin123)
+INSERT INTO users (username, password_hash, role) VALUES ('admin', '$2b$10$wY9Pj/xR6G9l9w4S8K9xOeb1l1w4Z4.K/K3rK9l9w4S8K9xOeb1l', 'admin');
+
+-- 3. Create Customers Table
+CREATE TABLE customers (
+    phone_no VARCHAR(20) PRIMARY KEY,
+    name VARCHAR(150) NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- 4. Create Inventory Table
+CREATE TABLE inventory (
+    id SERIAL PRIMARY KEY,
+    item_name VARCHAR(150) NOT NULL,
+    description TEXT,
+    qty INT DEFAULT 0,
+    price DECIMAL(10, 2) NOT NULL,
+    image_url VARCHAR(255)
+);
+
+-- 5. Create Pending Bills Table
+CREATE TABLE pending_bills (
+    id SERIAL PRIMARY KEY,
+    items JSONB NOT NULL,
+    subtotal DECIMAL(10, 2) NOT NULL,
+    saved_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- 6. Create Completed Bills Table
+CREATE TABLE completed_bills (
+    bill_no SERIAL PRIMARY KEY,
+    customer_phone VARCHAR(20) REFERENCES customers(phone_no),
+    items JSONB NOT NULL,
+    total_amount DECIMAL(10, 2) NOT NULL,
+    discount DECIMAL(10, 2) DEFAULT 0,
+    final_price DECIMAL(10, 2) NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
