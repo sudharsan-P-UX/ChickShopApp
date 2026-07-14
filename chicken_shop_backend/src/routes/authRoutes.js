@@ -1,0 +1,24 @@
+const express = require('express');
+const router = express.Router();
+const authController = require('../controllers/authController');
+const authMiddleware = require('../middlewares/authMiddleware');
+
+const adminOnly = (req, res, next) => {
+  if (!req.user || req.user.role !== 'admin') {
+    return res.status(403).json({ message: 'Access Denied: Admin Privilege Required' });
+  }
+  next();
+};
+
+router.post('/login', authController.login);
+router.post('/register', authMiddleware, adminOnly, authController.register);
+router.get('/users', authMiddleware, adminOnly, authController.listUsers);
+router.put('/users/:id/role', authMiddleware, adminOnly, authController.updateRole);
+router.delete('/users/:id', authMiddleware, adminOnly, authController.deleteUser);
+
+// Roles routing
+router.get('/roles', authMiddleware, authController.listRoles);
+router.post('/roles', authMiddleware, adminOnly, authController.createRole);
+router.delete('/roles/:id', authMiddleware, adminOnly, authController.deleteRole);
+
+module.exports = router;

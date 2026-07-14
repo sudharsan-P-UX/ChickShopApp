@@ -1,0 +1,604 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Chicken Shop POS - Admin & Cashier Portal</title>
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <!-- Ionicons for premium icons -->
+  <script type="module" src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.esm.js"></script>
+  <script nomodule src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.js"></script>
+  <link rel="stylesheet" href="index.css?v=4">
+</head>
+<body>
+
+  <!-- Toast Notification Container -->
+  <div id="toast-container" class="toast-container"></div>
+
+  <!-- Login Screen -->
+  <div id="login-screen" class="screen active">
+    <div class="login-card glass">
+      <div class="brand">
+        <div class="brand-logo">
+          <ion-icon name="restaurant"></ion-icon>
+        </div>
+        <h1>Chicken Shop POS</h1>
+        <p>Sign in to your account to manage sales & inventory</p>
+      </div>
+      <form id="login-form">
+        <div class="input-group">
+          <label for="username">Username</label>
+          <div class="input-wrapper">
+            <ion-icon name="person-outline"></ion-icon>
+            <input type="text" id="username" required placeholder="Enter username">
+          </div>
+        </div>
+        <div class="input-group">
+          <label for="password">Password</label>
+          <div class="input-wrapper">
+            <ion-icon name="lock-closed-outline"></ion-icon>
+            <input type="password" id="password" required placeholder="Enter password">
+          </div>
+        </div>
+        <button type="submit" class="btn-primary btn-block">
+          <span>Login</span>
+          <ion-icon name="arrow-forward-outline"></ion-icon>
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Main App Layout -->
+  <div id="app-layout" class="app-layout screen">
+    <!-- Sidebar Navigation -->
+    <aside class="sidebar glass">
+      <div class="sidebar-header">
+        <ion-icon name="restaurant" class="logo-icon"></ion-icon>
+        <h2>Chicken Shop</h2>
+      </div>
+      
+      <div class="user-profile">
+        <div class="avatar">
+          <ion-icon name="person"></ion-icon>
+        </div>
+        <div class="user-info">
+          <h4 id="user-display-name">Admin User</h4>
+          <span id="user-display-role" class="badge">admin</span>
+        </div>
+      </div>
+
+      <nav class="nav-menu">
+        <a href="#" class="nav-item active" data-target="billing-view">
+          <ion-icon name="cart-outline"></ion-icon>
+          <span>Billing & POS</span>
+        </a>
+        <a href="#" class="nav-item" data-target="dashboard-view" data-role="admin">
+          <ion-icon name="grid-outline"></ion-icon>
+          <span>Overview</span>
+        </a>
+        <a href="#" class="nav-item" data-target="cart-view">
+          <ion-icon name="basket-outline"></ion-icon>
+          <span>View Cart <span id="cart-badge-count" class="badge danger hidden" style="font-size: 9px; padding: 2px 6px; margin-left: auto;">0</span></span>
+        </a>
+        <a href="#" class="nav-item" data-target="pending-view">
+          <ion-icon name="bookmark-outline"></ion-icon>
+          <span>Pending Orders</span>
+        </a>
+        <a href="#" class="nav-item" data-target="inventory-view" data-role="admin">
+          <ion-icon name="cube-outline"></ion-icon>
+          <span>Inventory</span>
+        </a>
+        <a href="#" class="nav-item" data-target="customers-view">
+          <ion-icon name="people-outline"></ion-icon>
+          <span>Customers</span>
+        </a>
+        <a href="#" class="nav-item" data-target="users-view" data-role="admin">
+          <ion-icon name="shield-half-outline"></ion-icon>
+          <span>User Management</span>
+        </a>
+      </nav>
+
+      <div class="sidebar-footer">
+        <button id="btn-logout" class="btn-logout">
+          <ion-icon name="log-out-outline"></ion-icon>
+          <span>Sign Out</span>
+        </button>
+      </div>
+    </aside>
+
+    <!-- Main Content Area -->
+    <main class="main-content">
+      <!-- Top Header -->
+      <header class="top-header glass">
+        <h1 id="page-title">Dashboard Overview</h1>
+        <div class="header-actions">
+          <span id="current-time"></span>
+        </div>
+      </header>
+
+      <!-- View Sections -->
+      <div class="view-container">
+        
+        <!-- Dashboard Section -->
+        <section id="dashboard-view" class="app-view active">
+          <div class="stats-grid">
+            <div class="stat-card glass" id="card-revenue" title="Click to view Sales History">
+              <div class="stat-icon revenue">
+                <ion-icon name="cash-outline"></ion-icon>
+              </div>
+              <div class="stat-info">
+                <h3>Total Revenue</h3>
+                <h2 id="stat-revenue">₹0.00</h2>
+                <p>All completed orders</p>
+              </div>
+            </div>
+            <div class="stat-card glass" id="card-bills" title="Click to view Sales History">
+              <div class="stat-icon orders">
+                <ion-icon name="receipt-outline"></ion-icon>
+              </div>
+              <div class="stat-info">
+                <h3>Completed Bills</h3>
+                <h2 id="stat-bills">0</h2>
+                <p>Successfully processed</p>
+              </div>
+            </div>
+            <div class="stat-card glass" id="card-low-stock" title="Click to manage Inventory">
+              <div class="stat-icon stock">
+                <ion-icon name="alert-circle-outline"></ion-icon>
+              </div>
+              <div class="stat-info">
+                <h3>Low Stock Alert</h3>
+                <h2 id="stat-low-stock">0</h2>
+                <p>Items with quantity &lt; 5</p>
+              </div>
+            </div>
+            <div class="stat-card glass" id="card-customers" title="Click to manage Customers">
+              <div class="stat-icon clients">
+                <ion-icon name="people-outline"></ion-icon>
+              </div>
+              <div class="stat-info">
+                <h3>Registered Customers</h3>
+                <h2 id="stat-customers">0</h2>
+                <p>Total customer database</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Recent Activity and Inventory Alert Row -->
+          <div class="dashboard-details-row">
+            <!-- Recent Sales -->
+            <div class="details-card glass flex-2">
+              <div class="card-header">
+                <h3>Recent Sales</h3>
+                <button class="btn-text" onclick="switchView('billing-view')">New Sale</button>
+              </div>
+              <div class="table-container">
+                <table class="data-table">
+                  <thead>
+                    <tr>
+                      <th>Bill No</th>
+                      <th>Customer Phone</th>
+                      <th>Items Count</th>
+                      <th>Total</th>
+                      <th>Final Price</th>
+                      <th>Date & Time</th>
+                    </tr>
+                  </thead>
+                  <tbody id="recent-bills-table-body">
+                    <tr>
+                      <td colspan="6" class="empty-state">No recent bills found. Make a sale to view here!</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <!-- Low Stock List -->
+            <div class="details-card glass flex-1">
+              <div class="card-header">
+                <h3>Stock Alerts</h3>
+                <button class="btn-text" onclick="switchView('inventory-view')">Manage</button>
+              </div>
+              <div class="alert-list" id="low-stock-list">
+                <div class="empty-state">All items are sufficiently stocked!</div>
+              </div>
+            </div>
+          </div>
+        </section>        <!-- Billing / POS Section -->
+        <section id="billing-view" class="app-view">
+          <div class="pos-container">
+            <!-- Full-Width: Product Picker -->
+            <div class="pos-products glass" style="flex: 1; width: 100%;">
+              <div class="pos-header" style="display: flex; justify-content: space-between; align-items: center; gap: 16px; width: 100%;">
+                <div class="search-box" style="flex-grow: 1; max-width: 400px;">
+                  <ion-icon name="search-outline"></ion-icon>
+                  <input type="text" id="pos-search-input" placeholder="Search menu items...">
+                </div>
+                <button type="button" id="btn-billing-go-to-cart" class="btn-primary" onclick="switchView('cart-view')" style="padding: 10px 20px; font-size: 14px;">
+                  <ion-icon name="basket-outline" style="font-size: 18px;"></ion-icon>
+                  <span>View Cart (<span id="billing-cart-badge">0</span>)</span>
+                </button>
+              </div>
+              <div class="products-grid" id="pos-products-grid" style="grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));">
+                <!-- Products dynamically loaded -->
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- View Cart Section -->
+        <section id="cart-view" class="app-view">
+          <div class="cart-page-wrapper" style="padding: 10px 0;">
+            <div class="pos-cart glass" style="max-width: 600px; margin: 0 auto; width: 100%; padding: 28px; border: 1px solid var(--border-glass); display: flex; flex-direction: column;">
+              <div class="cart-header" style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 16px; margin-bottom: 20px;">
+                <h3 style="font-size: 18px; font-weight: 600;">Shopping Cart Details</h3>
+                <button id="btn-clear-cart" class="btn-text-danger">
+                  <ion-icon name="trash-outline"></ion-icon> Clear Cart
+                </button>
+              </div>
+              
+              <!-- Cart Items List -->
+              <div class="cart-items" id="cart-items-list" style="max-height: 350px; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; margin-bottom: 20px;">
+                <div class="empty-cart-state">
+                  <ion-icon name="basket-outline"></ion-icon>
+                  <p>Your cart is empty</p>
+                  <small>Go back to Billing & POS to add items</small>
+                </div>
+              </div>
+
+              <!-- Customer Details Section -->
+              <div class="cart-customer" style="padding: 20px 0; border-top: 1px solid rgba(255,255,255,0.05); border-bottom: 1px solid rgba(255,255,255,0.05); margin-bottom: 20px;">
+                <div class="input-group">
+                  <label for="cart-customer-phone">Customer Phone Number</label>
+                  <div class="customer-input-row" style="display: flex; gap: 10px;">
+                    <div class="input-wrapper" style="flex-grow: 1;">
+                      <ion-icon name="call-outline"></ion-icon>
+                      <input type="text" id="cart-customer-phone" placeholder="e.g. 9876543210" maxlength="15">
+                    </div>
+                    <button type="button" id="btn-lookup-customer" class="btn-secondary-icon" title="Check / Register Customer">
+                      <ion-icon name="checkmark-circle-outline"></ion-icon>
+                    </button>
+                  </div>
+                </div>
+                <div id="customer-name-display" class="customer-info-display hidden" style="margin-top: 10px;">
+                  <ion-icon name="person-circle-outline"></ion-icon>
+                  <span id="lbl-customer-name">Walking Customer</span>
+                </div>
+              </div>
+
+              <!-- Cart Financial Summary -->
+              <div class="cart-summary" style="display: flex; flex-direction: column; gap: 12px; margin-bottom: 24px;">
+                <div class="summary-row" style="display: flex; justify-content: space-between; font-size: 15px;">
+                  <span>Subtotal</span>
+                  <span id="cart-subtotal">₹0.00</span>
+                </div>
+                <div class="summary-row" style="display: flex; justify-content: space-between; align-items: center; font-size: 15px;">
+                  <span>Discount (₹)</span>
+                  <input type="number" id="cart-discount" min="0" value="0" class="discount-input" style="width: 100px; text-align: right;">
+                </div>
+                <hr style="border: 0; border-top: 1px solid rgba(255,255,255,0.05); margin: 8px 0;">
+                <div class="summary-row total" style="display: flex; justify-content: space-between; font-size: 18px; font-weight: 700; color: #fff;">
+                  <span>Final Total</span>
+                  <span id="cart-final-total" style="color: var(--accent-orange);">₹0.00</span>
+                </div>
+              </div>
+
+              <div class="cart-actions" style="display: flex; flex-direction: column; gap: 12px;">
+                <button id="btn-save-pending" class="btn-secondary btn-block">
+                  <ion-icon name="bookmark-outline"></ion-icon>
+                  <span>Save Pending Bill</span>
+                </button>
+                <button id="btn-complete-bill" class="btn-success btn-block">
+                  <ion-icon name="print-outline"></ion-icon>
+                  <span>Print & Complete Bill</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Inventory Section -->
+        <section id="inventory-view" class="app-view">
+          <div class="inventory-container">
+            <!-- Left Panel: Add/Edit Item Form -->
+            <div class="inventory-form glass">
+              <h3 id="inventory-form-title">Add New Inventory Item</h3>
+              <form id="inventory-item-form">
+                <input type="hidden" id="edit-item-id">
+                
+                <div class="input-group">
+                  <label for="item_name">Item Name</label>
+                  <input type="text" id="item_name" required placeholder="e.g. Fried Chicken (2pcs)">
+                </div>
+
+                <div class="input-group">
+                  <label for="item_description">Description</label>
+                  <textarea id="item_description" placeholder="Item ingredients or sizing info..." rows="3"></textarea>
+                </div>
+
+                <div class="input-row">
+                  <div class="input-group">
+                    <label for="item_qty">Quantity (Stock)</label>
+                    <input type="number" id="item_qty" min="0" required placeholder="e.g. 50">
+                  </div>
+                  <div class="input-group">
+                    <label for="item_price">Price (₹)</label>
+                    <input type="number" id="item_price" min="0.01" step="0.01" required placeholder="e.g. 199.00">
+                  </div>
+                </div>
+
+                <div class="input-group">
+                  <label for="item_image">Item Image</label>
+                  <div class="file-upload-wrapper">
+                    <input type="file" id="item_image" accept="image/*">
+                    <div class="upload-placeholder">
+                      <ion-icon name="image-outline"></ion-icon>
+                      <span>Choose Image (Optional)</span>
+                    </div>
+                  </div>
+                  <div id="image-preview-container" class="image-preview-container hidden">
+                    <img id="image-preview" src="" alt="Preview">
+                    <button type="button" id="btn-remove-preview" class="btn-close-small">
+                      <ion-icon name="close-circle"></ion-icon>
+                    </button>
+                  </div>
+                </div>
+
+                <div class="form-actions">
+                  <button type="button" id="btn-cancel-edit" class="btn-secondary hidden">Cancel Edit</button>
+                  <button type="submit" id="btn-save-item" class="btn-primary">Add Item</button>
+                </div>
+              </form>
+            </div>
+
+            <!-- Right Panel: Inventory List -->
+            <div class="inventory-list-wrapper glass">
+              <div class="list-header">
+                <h3>Inventory Items</h3>
+                <div class="search-box">
+                  <ion-icon name="search-outline"></ion-icon>
+                  <input type="text" id="inventory-search-input" placeholder="Search inventory...">
+                </div>
+              </div>
+              <div class="table-container">
+                <table class="data-table">
+                  <thead>
+                    <tr>
+                      <th>Image</th>
+                      <th>Item Name</th>
+                      <th>Price</th>
+                      <th>Stock Qty</th>
+                      <th>Status</th>
+                      <th>Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody id="inventory-table-body">
+                    <!-- Dynamic inventory items -->
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Customers Section -->
+        <section id="customers-view" class="app-view">
+          <div class="customers-container">
+            <!-- Left Panel: Register Customer -->
+            <div class="customer-form glass">
+              <h3>Register Customer</h3>
+              <form id="customer-register-form">
+                <div class="input-group">
+                  <label for="customer_phone">Phone Number</label>
+                  <input type="text" id="customer_phone" required placeholder="e.g. 9876543210" maxlength="15">
+                </div>
+                <div class="input-group">
+                  <label for="customer_name">Customer Name</label>
+                  <input type="text" id="customer_name" required placeholder="e.g. Sudharsan R">
+                </div>
+                <button type="submit" class="btn-primary">Register Customer</button>
+              </form>
+            </div>
+
+            <!-- Right Panel: Customers List -->
+            <div class="customers-list-wrapper glass">
+              <div class="list-header">
+                <h3>Customer Directory</h3>
+                <div class="search-box">
+                  <ion-icon name="search-outline"></ion-icon>
+                  <input type="text" id="customers-search-input" placeholder="Search by name or phone...">
+                </div>
+              </div>
+              <div class="table-container">
+                <table class="data-table">
+                  <thead>
+                    <tr>
+                      <th>Phone Number</th>
+                      <th>Customer Name</th>
+                      <th>Registered Date</th>
+                    </tr>
+                  </thead>
+                  <tbody id="customers-table-body">
+                    <!-- Dynamic customers list -->
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Pending Bills Section -->
+        <section id="pending-view" class="app-view">
+          <div class="pending-container glass">
+            <div class="list-header">
+              <h3>Pending Orders</h3>
+              <div class="search-box">
+                <ion-icon name="search-outline"></ion-icon>
+                <input type="text" id="pending-search-input" placeholder="Search pending orders...">
+              </div>
+            </div>
+            <div class="pending-grid" id="pending-orders-grid">
+              <!-- Pending order cards will load dynamically -->
+            </div>
+          </div>
+        </section>
+
+        <!-- User Management Section -->
+        <section id="users-view" class="app-view">
+          <div class="inventory-container" style="display: flex; gap: 24px; height: 100%;">
+            <!-- Left Panel: Create User Form and Create Role Form -->
+            <div class="inventory-form glass" style="flex: 1.2; padding: 24px; display: flex; flex-direction: column; gap: 20px; overflow-y: auto; max-height: 550px;">
+              <div>
+                <h3 style="margin-bottom: 12px;">Create New Role</h3>
+                <form id="new-role-form" style="display: flex; gap: 8px; margin-bottom: 12px;">
+                  <input type="text" id="new_role_name" required placeholder="e.g. manager" style="flex: 1; background: rgba(0,0,0,0.2); color: #fff; padding: 10px;">
+                  <button type="submit" class="btn-primary" style="padding: 10px 16px;">Add</button>
+                </form>
+                
+                <h4 style="font-size: 13px; color: var(--text-muted); margin-bottom: 6px;">Custom System Roles</h4>
+                <div id="roles-list-container" style="display: flex; flex-wrap: wrap; gap: 6px;">
+                  <!-- Dynamic role tags loaded here -->
+                </div>
+              </div>
+
+              <hr style="border: 0; border-top: 1px dashed rgba(255,255,255,0.15); margin: 8px 0;">
+
+              <div>
+                <h3 style="margin-bottom: 12px;">Register New User</h3>
+                <form id="new-user-form" style="display: flex; flex-direction: column; gap: 12px;">
+                  <div class="input-group">
+                    <label for="new_username">Username</label>
+                    <input type="text" id="new_username" required placeholder="e.g. cashier_john" style="background: rgba(0,0,0,0.2); color: #fff; padding: 10px;">
+                  </div>
+                  <div class="input-group">
+                    <label for="new_password">Password</label>
+                    <input type="password" id="new_password" required placeholder="e.g. Min 6 characters" style="background: rgba(0,0,0,0.2); color: #fff; padding: 10px;">
+                  </div>
+                  <div class="input-group">
+                    <label for="new_role">User Role</label>
+                    <select id="new_role" required style="width: 100%; padding: 10px; background: rgba(0,0,0,0.3); border: 1px solid var(--border-glass); border-radius: var(--border-radius-md); color: #fff; cursor: pointer;">
+                      <!-- Populated dynamically -->
+                    </select>
+                  </div>
+                  <button type="submit" class="btn-primary btn-block" style="margin-top: 8px; padding: 10px;">Create Account</button>
+                </form>
+              </div>
+            </div>
+            
+            <!-- Right Panel: Users Directory -->
+            <div class="inventory-table glass" style="flex: 2; padding: 24px; display: flex; flex-direction: column;">
+              <div class="card-header">
+                <h3>System Users</h3>
+              </div>
+              <div class="table-container" style="overflow-y: auto; max-height: 450px;">
+                <table class="data-table">
+                  <thead>
+                    <tr>
+                      <th>User ID</th>
+                      <th>Username</th>
+                      <th>System Role</th>
+                      <th>Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody id="users-table-body">
+                    <!-- Users dynamically loaded -->
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </section>
+
+      </div>
+    </main>
+  </div>
+
+  <!-- Custom Dialog for Adding Customer on the fly in POS -->
+  <div id="customer-modal" class="modal-overlay hidden">
+    <div class="modal-content glass">
+      <div class="modal-header">
+        <h3>Customer Not Found</h3>
+        <button type="button" class="btn-close-modal" onclick="closeCustomerModal()">
+          <ion-icon name="close"></ion-icon>
+        </button>
+      </div>
+      <div class="modal-body">
+        <p>The phone number <strong id="modal-phone-num"></strong> is not registered. Would you like to register them now?</p>
+        <form id="modal-customer-form">
+          <div class="input-group">
+            <label for="modal-customer-name">Full Name</label>
+            <input type="text" id="modal-customer-name" required placeholder="e.g. John Doe">
+          </div>
+          <div class="modal-footer-buttons">
+            <button type="button" class="btn-secondary" onclick="closeCustomerModal()">Cancel</button>
+            <button type="submit" class="btn-primary">Register & Add</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Sales History Modal -->
+  <div id="sales-history-modal" class="modal-overlay hidden">
+    <div class="modal-content glass" style="width: 700px; max-width: 95%;">
+      <div class="modal-header">
+        <h3>Complete Sales History</h3>
+        <button type="button" class="btn-close-modal" onclick="closeSalesHistoryModal()">
+          <ion-icon name="close"></ion-icon>
+        </button>
+      </div>
+      <div class="modal-body" style="display: flex; flex-direction: column; gap: 16px;">
+        <div class="search-box" style="max-width: 100%;">
+          <ion-icon name="search-outline"></ion-icon>
+          <input type="text" id="sales-history-search" placeholder="Search sales by bill no or customer phone...">
+        </div>
+        <div class="table-container" style="max-height: 400px; overflow-y: auto;">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Bill No</th>
+                <th>Customer Phone</th>
+                <th>Items Count</th>
+                <th>Total</th>
+                <th>Final Price</th>
+                <th>Date & Time</th>
+              </tr>
+            </thead>
+            <tbody id="sales-history-table-body">
+              <!-- Sales rows dynamically loaded -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Receipt Modal -->
+  <div id="receipt-modal" class="modal-overlay hidden">
+    <div class="modal-content glass" style="width: 420px; max-width: 95%;">
+      <div class="modal-header" style="border-bottom: 1px dashed rgba(255, 255, 255, 0.1); padding-bottom: 12px;">
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <ion-icon name="restaurant" style="color: var(--accent-orange); font-size: 24px;"></ion-icon>
+          <h3 style="color: #fff; margin: 0; font-size: 16px;">Chicken Shop Invoice</h3>
+        </div>
+        <button type="button" class="btn-close-modal" onclick="closeReceiptModal()">
+          <ion-icon name="close"></ion-icon>
+        </button>
+      </div>
+      <div class="modal-body" style="padding-top: 16px;">
+        <div id="receipt-details-area">
+          <!-- Receipt body dynamically loaded -->
+        </div>
+        <div style="margin-top: 24px; text-align: center;">
+          <button type="button" class="btn-primary" onclick="closeReceiptModal()" style="width: 100%; padding: 10px;">Close Receipt</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="index.js?v=7"></script>
+</body>
+</html>
