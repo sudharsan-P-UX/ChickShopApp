@@ -43,4 +43,4 @@ CREATE TABLE completed_bills (
 );
 
 -- Insert a default admin user (password: admin123)
-INSERT INTO users (username, password_hash, role) VALUES ('admin', '$2b$10$wY9Pj/xR6G9l9w4S8K9xOeb1l1w4Z4.K/K3rK9l9w4S8K9xOeb1l', 'admin');
+INSERT INTO users (username, password_hash, role) VALUES ('admin', '$2a$10$p3nw/1shsLkMmmmlrYkBC.G77RxL/mLHjvmaDf9tukPLXLqca7bW6', 'admin');
