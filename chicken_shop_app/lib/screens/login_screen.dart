@@ -24,7 +24,12 @@ class _LoginScreenState extends State<LoginScreen> {
       );
       if (mounted) {
         Provider.of<AppState>(context, listen: false)
-            .login(response['token'], response['user']['role'], response['user']['username']);
+            .login(
+              response['token'], 
+              response['user']['role'], 
+              response['user']['username'],
+              response['user']['permissions'] != null ? Map<String, dynamic>.from(response['user']['permissions']) : null
+            );
       }
     } catch (e) {
       if (mounted) {

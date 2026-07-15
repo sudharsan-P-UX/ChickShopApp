@@ -6,6 +6,7 @@ class AppState with ChangeNotifier {
   bool _isAuthenticated = false;
   String _username = '';
   String _userRole = '';
+  Map<String, dynamic> _permissions = {};
   int _screenIndex = 0; // Default view index (0 = Billing & POS)
 
   // Caches
@@ -26,8 +27,20 @@ class AppState with ChangeNotifier {
   bool get isAuthenticated => _isAuthenticated;
   String get username => _username;
   String get userRole => _userRole;
+  Map<String, dynamic> get permissions => _permissions;
   bool get isAdmin => _userRole == 'admin';
   int get screenIndex => _screenIndex;
+
+  bool hasPermission(String menu, String action) {
+    if (_userRole == 'admin') return true; // Admin has fallback full access
+    if (_permissions.containsKey(menu)) {
+      final menuPerms = _permissions[menu];
+      if (menuPerms is Map && menuPerms.containsKey(action)) {
+        return menuPerms[action] == true;
+      }
+    }
+    return false;
+  }
 
   int get cartCount => cart.values.fold(0, (sum, qty) => sum + qty);
 
@@ -47,9 +60,10 @@ class AppState with ChangeNotifier {
   double mathMax(double a, double b) => a > b ? a : b;
 
   // Authentication Actions
-  Future<void> login(String token, String role, String username) async {
+  Future<void> login(String token, String role, String username, Map<String, dynamic>? permissions) async {
     _userRole = role;
     _username = username;
+    _permissions = permissions ?? {};
     _isAuthenticated = true;
     _screenIndex = 0; // Default to Billing after login
     
@@ -57,6 +71,7 @@ class AppState with ChangeNotifier {
     await prefs.setString('token', token);
     await prefs.setString('role', role);
     await prefs.setString('username', username);
+    await prefs.setString('permissions', jsonEncode(_permissions));
     
     notifyListeners();
   }
@@ -64,6 +79,7 @@ class AppState with ChangeNotifier {
   Future<void> logout() async {
     _userRole = '';
     _username = '';
+    _permissions = {};
     _isAuthenticated = false;
     clearCart();
     
@@ -71,6 +87,7 @@ class AppState with ChangeNotifier {
     await prefs.remove('token');
     await prefs.remove('role');
     await prefs.remove('username');
+    await prefs.remove('permissions');
     
     notifyListeners();
   }
@@ -235,7 +252,7 @@ class AppState with ChangeNotifier {
       });
     });
 
-    await ApiService.savePendingBill(itemsList, cartSubtotal);
+    await ApiService.savePendingBill(itemsList, cartSubtotal, activePendingBillId);
     clearCart();
     await fetchPendingOrders();
   }

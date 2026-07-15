@@ -52,15 +52,28 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget build(BuildContext context) {
     final appState = Provider.of<AppState>(context);
     
-    // Access control: cashier fallback to Billing POS (0)
     int index = appState.screenIndex;
-    final bool isAdminScreen = index == 1 || index == 4 || index == 6;
-    if (isAdminScreen && !appState.isAdmin) {
-      index = 0;
+
+    // Check permissions dynamically
+    String? menuKey;
+    switch (index) {
+      case 1: menuKey = 'dashboard'; break;
+      case 4: menuKey = 'inventory'; break;
+      case 5: menuKey = 'customers'; break;
+      case 6: menuKey = 'users'; break;
+    }
+    if (menuKey != null && !appState.hasPermission(menuKey, 'view')) {
+      index = 0; // Fallback to Billing POS
     }
 
     return Scaffold(
       appBar: AppBar(
+        leading: index != 0
+            ? IconButton(
+                icon: const Icon(Icons.arrow_back),
+                onPressed: () => appState.setScreenIndex(0),
+              )
+            : null,
         title: Text(_getScreenTitle(index)),
         elevation: 2,
         actions: [
@@ -127,78 +140,103 @@ class _HomeScreenState extends State<HomeScreen> {
               child: ListView(
                 padding: EdgeInsets.zero,
                 children: [
-                  ListTile(
-                    leading: const Icon(Icons.point_of_sale),
-                    title: const Text('Billing & POS'),
-                    selected: index == 0,
-                    onTap: () {
-                      appState.setScreenIndex(0);
-                      Navigator.pop(context);
-                    },
+                  ExpansionTile(
+                    leading: const Icon(Icons.point_of_sale, color: Colors.deepOrange),
+                    title: const Text('Register & Billing', style: TextStyle(fontWeight: FontWeight.bold)),
+                    initiallyExpanded: true,
+                    children: [
+                      if (appState.hasPermission('billing', 'view'))
+                        ListTile(
+                          contentPadding: const EdgeInsets.only(left: 24, right: 16),
+                          leading: const Icon(Icons.calculate_outlined),
+                          title: const Text('Billing & POS'),
+                          selected: index == 0,
+                          onTap: () {
+                            appState.setScreenIndex(0);
+                            Navigator.pop(context);
+                          },
+                        ),
+                      if (appState.hasPermission('billing', 'view'))
+                        ListTile(
+                          contentPadding: const EdgeInsets.only(left: 24, right: 16),
+                          leading: const Icon(Icons.shopping_cart_outlined),
+                          title: const Text('View Cart'),
+                          selected: index == 2,
+                          trailing: appState.cartCount > 0
+                              ? Badge(
+                                  label: Text('${appState.cartCount}'),
+                                  backgroundColor: Colors.red,
+                                )
+                              : null,
+                          onTap: () {
+                            appState.setScreenIndex(2);
+                            Navigator.pop(context);
+                          },
+                        ),
+                      if (appState.hasPermission('billing', 'view'))
+                        ListTile(
+                          contentPadding: const EdgeInsets.only(left: 24, right: 16),
+                          leading: const Icon(Icons.bookmark_outline),
+                          title: const Text('Pending Orders'),
+                          selected: index == 3,
+                          onTap: () {
+                            appState.setScreenIndex(3);
+                            Navigator.pop(context);
+                          },
+                        ),
+                    ],
                   ),
-                  if (appState.isAdmin)
-                    ListTile(
-                      leading: const Icon(Icons.dashboard),
-                      title: const Text('Overview'),
-                      selected: index == 1,
-                      onTap: () {
-                        appState.setScreenIndex(1);
-                        Navigator.pop(context);
-                      },
-                    ),
-                  ListTile(
-                    leading: const Icon(Icons.shopping_cart),
-                    title: const Text('View Cart'),
-                    selected: index == 2,
-                    trailing: appState.cartCount > 0
-                        ? Badge(
-                            label: Text('${appState.cartCount}'),
-                            backgroundColor: Colors.red,
-                          )
-                        : null,
-                    onTap: () {
-                      appState.setScreenIndex(2);
-                      Navigator.pop(context);
-                    },
+                  ExpansionTile(
+                    leading: const Icon(Icons.business, color: Colors.deepOrange),
+                    title: const Text('Store Management', style: TextStyle(fontWeight: FontWeight.bold)),
+                    initiallyExpanded: true,
+                    children: [
+                      if (appState.hasPermission('dashboard', 'view'))
+                        ListTile(
+                          contentPadding: const EdgeInsets.only(left: 24, right: 16),
+                          leading: const Icon(Icons.dashboard_outlined),
+                          title: const Text('Overview'),
+                          selected: index == 1,
+                          onTap: () {
+                            appState.setScreenIndex(1);
+                            Navigator.pop(context);
+                          },
+                        ),
+                      if (appState.hasPermission('inventory', 'view'))
+                        ListTile(
+                          contentPadding: const EdgeInsets.only(left: 24, right: 16),
+                          leading: const Icon(Icons.inventory_2_outlined),
+                          title: const Text('Inventory Control'),
+                          selected: index == 4,
+                          onTap: () {
+                            appState.setScreenIndex(4);
+                            Navigator.pop(context);
+                          },
+                        ),
+                      if (appState.hasPermission('customers', 'view'))
+                        ListTile(
+                          contentPadding: const EdgeInsets.only(left: 24, right: 16),
+                          leading: const Icon(Icons.people_outline),
+                          title: const Text('Customer Directory'),
+                          selected: index == 5,
+                          onTap: () {
+                            appState.setScreenIndex(5);
+                            Navigator.pop(context);
+                          },
+                        ),
+                      if (appState.hasPermission('users', 'view'))
+                        ListTile(
+                          contentPadding: const EdgeInsets.only(left: 24, right: 16),
+                          leading: const Icon(Icons.admin_panel_settings_outlined),
+                          title: const Text('User Management'),
+                          selected: index == 6,
+                          onTap: () {
+                            appState.setScreenIndex(6);
+                            Navigator.pop(context);
+                          },
+                        ),
+                    ],
                   ),
-                  ListTile(
-                    leading: const Icon(Icons.bookmark),
-                    title: const Text('Pending Orders'),
-                    selected: index == 3,
-                    onTap: () {
-                      appState.setScreenIndex(3);
-                      Navigator.pop(context);
-                    },
-                  ),
-                  if (appState.isAdmin)
-                    ListTile(
-                      leading: const Icon(Icons.inventory),
-                      title: const Text('Inventory Control'),
-                      selected: index == 4,
-                      onTap: () {
-                        appState.setScreenIndex(4);
-                        Navigator.pop(context);
-                      },
-                    ),
-                  ListTile(
-                    leading: const Icon(Icons.people),
-                    title: const Text('Customer Directory'),
-                    selected: index == 5,
-                    onTap: () {
-                      appState.setScreenIndex(5);
-                      Navigator.pop(context);
-                    },
-                  ),
-                  if (appState.isAdmin)
-                    ListTile(
-                      leading: const Icon(Icons.admin_panel_settings),
-                      title: const Text('User Management'),
-                      selected: index == 6,
-                      onTap: () {
-                        appState.setScreenIndex(6);
-                        Navigator.pop(context);
-                      },
-                    ),
                   const Divider(),
                   ListTile(
                     leading: const Icon(Icons.logout, color: Colors.red),

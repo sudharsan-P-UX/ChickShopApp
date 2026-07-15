@@ -278,14 +278,14 @@ class ApiService {
     throw Exception('Failed to load pending bills');
   }
 
-  static Future<dynamic> savePendingBill(List<Map<String, dynamic>> items, double subtotal) async {
+  static Future<dynamic> savePendingBill(List<Map<String, dynamic>> items, double subtotal, [int? id]) async {
     final headers = await _getHeaders();
     final response = await http.post(
       Uri.parse('$baseUrl/billing/pending'),
       headers: headers,
-      body: jsonEncode({'items': items, 'subtotal': subtotal}),
+      body: jsonEncode({'id': id, 'items': items, 'subtotal': subtotal}),
     );
-    if (response.statusCode == 201) {
+    if (response.statusCode == 201 || response.statusCode == 200) {
       return jsonDecode(response.body);
     }
     final body = jsonDecode(response.body);
