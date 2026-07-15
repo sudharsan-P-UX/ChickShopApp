@@ -52,6 +52,8 @@ async function initSuperAdmin() {
       console.log("Seeding 'super_admin' role...");
       const superPerms = {
         billing: { view: true, add: true, edit: true, delete: true },
+        cart: { view: true, add: true, edit: true, delete: true },
+        pending: { view: true, add: true, edit: true, delete: true },
         dashboard: { view: true, add: true, edit: true, delete: true },
         inventory: { view: true, add: true, edit: true, delete: true },
         customers: { view: true, add: true, edit: true, delete: true },
@@ -80,6 +82,8 @@ async function initSuperAdmin() {
     if (adminRoleCheck.rows.length > 0 && !adminRoleCheck.rows[0].permissions) {
       const defaultAdminPerms = {
         billing: { view: true, add: true, edit: true, delete: true },
+        cart: { view: true, add: true, edit: true, delete: true },
+        pending: { view: true, add: true, edit: true, delete: true },
         dashboard: { view: true, add: true, edit: true, delete: true },
         inventory: { view: true, add: true, edit: true, delete: true },
         customers: { view: true, add: true, edit: true, delete: true },

@@ -1590,7 +1590,7 @@ function renderPrivilegeMatrix(roles) {
     return;
   }
 
-  const menus = ['dashboard', 'billing', 'inventory', 'customers', 'users'];
+  const menus = ['dashboard', 'billing', 'cart', 'pending', 'inventory', 'customers', 'users', 'custom_labels'];
 
   container.innerHTML = roles.map(r => {
     const isSuperAdmin = r.role_name === 'super_admin' || r.role_name === 'superadmin';
@@ -1599,9 +1599,9 @@ function renderPrivilegeMatrix(roles) {
     const columnsHtml = menus.map(menu => {
       const menuPerms = permissions[menu] || { view: false, add: false, edit: false, delete: false };
       
-      const showAdd = menu !== 'dashboard';
-      const showEdit = menu !== 'dashboard' && menu !== 'customers' && menu !== 'billing';
-      const showDelete = menu !== 'dashboard' && menu !== 'customers';
+      const showAdd = menu === 'billing' || menu === 'inventory' || menu === 'customers' || menu === 'users';
+      const showEdit = menu === 'inventory' || menu === 'users';
+      const showDelete = menu === 'billing' || menu === 'inventory' || menu === 'users' || menu === 'pending';
       
       const viewChecked = menuPerms.view ? 'checked' : '';
       const addChecked = menuPerms.add ? 'checked' : '';
@@ -1656,9 +1656,12 @@ async function saveRolePrivileges() {
     rolePermissions[r.id] = {
       dashboard: { view: false, add: false, edit: false, delete: false },
       billing: { view: false, add: false, edit: false, delete: false },
+      cart: { view: false, add: false, edit: false, delete: false },
+      pending: { view: false, add: false, edit: false, delete: false },
       inventory: { view: false, add: false, edit: false, delete: false },
       customers: { view: false, add: false, edit: false, delete: false },
-      users: { view: false, add: false, edit: false, delete: false }
+      users: { view: false, add: false, edit: false, delete: false },
+      custom_labels: { view: false, add: false, edit: false, delete: false }
     };
   });
 

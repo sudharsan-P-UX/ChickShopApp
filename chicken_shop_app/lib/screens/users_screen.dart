@@ -590,9 +590,12 @@ class _UsersScreenState extends State<UsersScreen> {
                       children: [
                         _buildMenuPermissionRow(roleId, 'dashboard', state.getLabel('user_rbac_th_overview', 'Dashboard Overview'), isSuperAdminRole, ['view']),
                         _buildMenuPermissionRow(roleId, 'billing', state.getLabel('user_rbac_th_billing', 'Billing & POS'), isSuperAdminRole, ['view', 'add', 'delete']),
+                        _buildMenuPermissionRow(roleId, 'cart', state.getLabel('user_rbac_th_cart', 'View Cart'), isSuperAdminRole, ['view']),
+                        _buildMenuPermissionRow(roleId, 'pending', state.getLabel('user_rbac_th_pending', 'Pending Orders'), isSuperAdminRole, ['view', 'delete']),
                         _buildMenuPermissionRow(roleId, 'inventory', state.getLabel('user_rbac_th_inventory', 'Inventory'), isSuperAdminRole, ['view', 'add', 'edit', 'delete']),
                         _buildMenuPermissionRow(roleId, 'customers', state.getLabel('user_rbac_th_customers', 'Customers'), isSuperAdminRole, ['view', 'add']),
                         _buildMenuPermissionRow(roleId, 'users', state.getLabel('user_rbac_th_users', 'User & Role Management'), isSuperAdminRole, ['view', 'add', 'edit', 'delete']),
+                        _buildMenuPermissionRow(roleId, 'custom_labels', state.getLabel('user_rbac_th_labels', 'Custom Labels'), isSuperAdminRole, ['view']),
                       ],
                     );
                   }).toList(),

@@ -62,6 +62,8 @@ class _HomeScreenState extends State<HomeScreen> {
     String? menuKey;
     switch (index) {
       case 1: menuKey = 'dashboard'; break;
+      case 2: menuKey = 'cart'; break;
+      case 3: menuKey = 'pending'; break;
       case 4: menuKey = 'inventory'; break;
       case 5: menuKey = 'customers'; break;
       case 6: menuKey = 'users'; break;
@@ -82,7 +84,7 @@ class _HomeScreenState extends State<HomeScreen> {
         title: Text(_getScreenTitle(index, appState)),
         elevation: 2,
         actions: [
-          if (index == 0) // Billing screen cart icon shortcut
+          if (index == 0 && appState.hasPermission('cart', 'view')) // Billing screen cart icon shortcut
             Stack(
               alignment: Alignment.center,
               children: [
@@ -188,7 +190,7 @@ class _HomeScreenState extends State<HomeScreen> {
                             Navigator.pop(context);
                           },
                         ),
-                      if (appState.hasPermission('billing', 'view'))
+                      if (appState.hasPermission('pending', 'view'))
                         ListTile(
                           contentPadding: const EdgeInsets.only(left: 24, right: 16),
                           leading: const Icon(Icons.bookmark_outline),

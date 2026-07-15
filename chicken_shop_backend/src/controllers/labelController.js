@@ -120,9 +120,12 @@ const defaultLabels = [
   { menu_key: 'users', label_key: 'user_rbac_th_role', label_name: 'Matrix Table: System Role', custom_label: 'System Role' },
   { menu_key: 'users', label_key: 'user_rbac_th_overview', label_name: 'Matrix Table: Dashboard Overview', custom_label: 'Dashboard Overview' },
   { menu_key: 'users', label_key: 'user_rbac_th_billing', label_name: 'Matrix Table: Billing & POS', custom_label: 'Billing & POS' },
+  { menu_key: 'users', label_key: 'user_rbac_th_cart', label_name: 'Matrix Table: View Cart', custom_label: 'View Cart' },
+  { menu_key: 'users', label_key: 'user_rbac_th_pending', label_name: 'Matrix Table: Pending Orders', custom_label: 'Pending Orders' },
   { menu_key: 'users', label_key: 'user_rbac_th_inventory', label_name: 'Matrix Table: Inventory', custom_label: 'Inventory' },
   { menu_key: 'users', label_key: 'user_rbac_th_customers', label_name: 'Matrix Table: Customers', custom_label: 'Customers' },
   { menu_key: 'users', label_key: 'user_rbac_th_users', label_name: 'Matrix Table: User & Role Management', custom_label: 'User & Role Management' },
+  { menu_key: 'users', label_key: 'user_rbac_th_labels', label_name: 'Matrix Table: Custom Labels', custom_label: 'Custom Labels' },
 
   // Custom Label Settings View
   { menu_key: 'custom_labels', label_key: 'custom_labels_menu', label_name: 'Custom Label Menu Title', custom_label: 'Custom Label' },
