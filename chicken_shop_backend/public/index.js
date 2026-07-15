@@ -129,7 +129,9 @@ function switchView(viewId) {
   // Access control rights check
   const permissions = currentUser ? currentUser.permissions : null;
   const permKey = getPermissionKeyForView(viewId);
-  if (permKey && permissions && permissions[permKey]) {
+  if (currentUser && currentUser.role === 'admin') {
+    // Admin always has full access bypass on all views
+  } else if (permKey && permissions && permissions[permKey]) {
     if (!permissions[permKey].view) {
       showToast('Access Denied: Insufficient Privileges', 'danger');
       return;

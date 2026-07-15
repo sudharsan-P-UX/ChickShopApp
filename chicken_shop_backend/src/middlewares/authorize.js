@@ -8,6 +8,9 @@ module.exports = (menu, action) => {
       }
 
       const role = req.user.role;
+      if (role === 'admin') {
+        return next();
+      }
 
       // Fetch permissions for this role from the database
       const { rows } = await db.query('SELECT permissions FROM roles WHERE role_name = $1', [role]);
