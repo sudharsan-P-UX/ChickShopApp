@@ -888,7 +888,7 @@ select:focus {
 }
 
 .product-card .btn-add-to-cart:hover {
-  background: var(--accent-orange-hover);
+  filter: brightness(1.1);
   transform: translateY(-1px);
 }
 
