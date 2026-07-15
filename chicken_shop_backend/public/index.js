@@ -506,15 +506,20 @@ function renderPOSCart() {
   cartContainer.innerHTML = cartEntries.map(entry => {
     const subtotal = entry.item.price * entry.qty;
     return `
-      <div class="cart-item">
+      <div class="cart-item" style="display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid var(--border-color);">
         <div class="cart-item-details">
-          <h5>${entry.item.item_name}</h5>
-          <p>₹${entry.item.price} &times; ${entry.qty}</p>
+          <h5 style="margin: 0 0 4px 0; font-size: 14px; font-weight: 500;">${entry.item.item_name}</h5>
+          <p style="margin: 0; font-size: 12px; color: var(--text-secondary);">₹${entry.item.price} &times; ${entry.qty}</p>
         </div>
-        <div class="cart-item-qty">
-          <button class="qty-btn" onclick="updateCartQty(${entry.item.id}, -1)">-</button>
-          <span>${entry.qty}</span>
-          <button class="qty-btn" onclick="updateCartQty(${entry.item.id}, 1)">+</button>
+        <div style="display: flex; align-items: center; gap: 10px;">
+          <div class="cart-item-qty">
+            <button class="qty-btn" onclick="updateCartQty(${entry.item.id}, -1)">-</button>
+            <span>${entry.qty}</span>
+            <button class="qty-btn" onclick="updateCartQty(${entry.item.id}, 1)">+</button>
+          </div>
+          <button onclick="removeFromCart(${entry.item.id})" style="background: none; border: none; color: #ff3b30; cursor: pointer; display: flex; align-items: center; justify-content: center; padding: 4px; border-radius: 4px;" title="Remove Item">
+            <ion-icon name="trash-outline" style="font-size: 18px;"></ion-icon>
+          </button>
         </div>
       </div>
     `;
@@ -541,6 +546,14 @@ function updateCartQty(itemId, delta) {
     cart[itemId].qty = newQty;
   }
   renderPOSCart();
+}
+
+function removeFromCart(itemId) {
+  if (cart[itemId]) {
+    delete cart[itemId];
+    renderPOSCart();
+    showToast('Item removed from cart', 'info');
+  }
 }
 
 function clearPOSCart() {
