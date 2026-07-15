@@ -245,9 +245,9 @@
           <div class="cart-page-wrapper" style="padding: 10px 0;">
             <div class="pos-cart glass" style="max-width: 600px; margin: 0 auto; width: 100%; padding: 28px; border: 1px solid var(--border-glass); display: flex; flex-direction: column;">
               <div class="cart-header" style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 16px; margin-bottom: 20px;">
-                <h3 style="font-size: 18px; font-weight: 600;">Shopping Cart Details</h3>
+                <h3 style="font-size: 18px; font-weight: 600;" class="label-cart_details_title">Shopping Cart Details</h3>
                 <button id="btn-clear-cart" class="btn-text-danger">
-                  <ion-icon name="trash-outline"></ion-icon> Clear Cart
+                  <ion-icon name="trash-outline"></ion-icon> <span class="label-clear_cart_button">Clear Cart</span>
                 </button>
               </div>
               
@@ -259,11 +259,11 @@
                   <small>Go back to Billing & POS to add items</small>
                 </div>
               </div>
-
+ 
               <!-- Customer Details Section -->
               <div class="cart-customer" style="padding: 20px 0; border-top: 1px solid rgba(255,255,255,0.05); border-bottom: 1px solid rgba(255,255,255,0.05); margin-bottom: 20px;">
                 <div class="input-group">
-                  <label for="cart-customer-phone">Customer Phone Number</label>
+                  <label for="cart-customer-phone" class="label-customer_phone_label">Customer Phone Number</label>
                   <div class="customer-input-row" style="display: flex; gap: 10px;">
                     <div class="input-wrapper" style="flex-grow: 1;">
                       <ion-icon name="call-outline"></ion-icon>
@@ -279,32 +279,32 @@
                   <span id="lbl-customer-name">Walking Customer</span>
                 </div>
               </div>
-
+ 
               <!-- Cart Financial Summary -->
               <div class="cart-summary" style="display: flex; flex-direction: column; gap: 12px; margin-bottom: 24px;">
                 <div class="summary-row" style="display: flex; justify-content: space-between; font-size: 15px;">
-                  <span>Subtotal</span>
+                  <span class="label-cart_subtotal_label">Subtotal</span>
                   <span id="cart-subtotal">₹0.00</span>
                 </div>
                 <div class="summary-row" style="display: flex; justify-content: space-between; align-items: center; font-size: 15px;">
-                  <span>Discount (₹)</span>
+                  <span class="label-cart_discount_label">Discount (₹)</span>
                   <input type="number" id="cart-discount" min="0" value="0" class="discount-input" style="width: 100px; text-align: right;">
                 </div>
                 <hr style="border: 0; border-top: 1px solid rgba(255,255,255,0.05); margin: 8px 0;">
                 <div class="summary-row total" style="display: flex; justify-content: space-between; font-size: 18px; font-weight: 700; color: #fff;">
-                  <span>Final Total</span>
+                  <span class="label-cart_total_label">Final Total</span>
                   <span id="cart-final-total" style="color: var(--accent-orange);">₹0.00</span>
                 </div>
               </div>
-
+ 
               <div class="cart-actions" style="display: flex; flex-direction: column; gap: 12px;">
                 <button id="btn-save-pending" class="btn-secondary btn-block">
                   <ion-icon name="bookmark-outline"></ion-icon>
-                  <span>Save Pending Bill</span>
+                  <span class="label-save_pending_button">Save Pending Bill</span>
                 </button>
                 <button id="btn-complete-bill" class="btn-success btn-block">
                   <ion-icon name="print-outline"></ion-icon>
-                  <span>Print & Complete Bill</span>
+                  <span class="label-complete_bill_button">Print & Complete Bill</span>
                 </button>
               </div>
             </div>

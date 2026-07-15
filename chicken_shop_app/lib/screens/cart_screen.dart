@@ -154,9 +154,9 @@ class _CartScreenState extends State<CartScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
-            'Order Items List',
-            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+          Text(
+            state.getLabel('cart_details_title', 'Shopping Cart Details'),
+            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
           ),
           const SizedBox(height: 12),
           // Cart Items Card List
@@ -237,10 +237,10 @@ class _CartScreenState extends State<CartScreen> {
                         child: TextField(
                           controller: _phoneController,
                           keyboardType: TextInputType.phone,
-                          decoration: const InputDecoration(
-                            labelText: 'Customer Phone Number',
-                            prefixIcon: Icon(Icons.phone),
-                            border: OutlineInputBorder(),
+                          decoration: InputDecoration(
+                            labelText: state.getLabel('customer_phone_label', 'Customer Phone Number'),
+                            prefixIcon: const Icon(Icons.phone),
+                            border: const OutlineInputBorder(),
                           ),
                         ),
                       ),
@@ -304,7 +304,7 @@ class _CartScreenState extends State<CartScreen> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      const Text('Subtotal:'),
+                      Text(state.getLabel('cart_subtotal_label', 'Subtotal') + ':'),
                       Text('₹${state.cartSubtotal.toStringAsFixed(2)}'),
                     ],
                   ),
@@ -312,7 +312,7 @@ class _CartScreenState extends State<CartScreen> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      const Text('Discount amount (₹):'),
+                      Text(state.getLabel('cart_discount_label', 'Discount (₹)') + ':'),
                       SizedBox(
                         width: 100,
                         height: 40,
@@ -336,7 +336,7 @@ class _CartScreenState extends State<CartScreen> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      const Text('Total Amount:', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                      Text(state.getLabel('cart_total_label', 'Final Total') + ':', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
                       Text(
                         '₹${state.cartFinalTotal.toStringAsFixed(2)}',
                         style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: Colors.deepOrange),
@@ -371,7 +371,7 @@ class _CartScreenState extends State<CartScreen> {
                   minimumSize: const Size.fromHeight(50),
                 ),
                 icon: const Icon(Icons.bookmark_outline),
-                label: const Text('Save Pending Bill'),
+                label: Text(state.getLabel('save_pending_button', 'Save Pending Bill')),
               ),
               const SizedBox(height: 12),
               ElevatedButton.icon(
@@ -394,7 +394,7 @@ class _CartScreenState extends State<CartScreen> {
                   minimumSize: const Size.fromHeight(50),
                 ),
                 icon: const Icon(Icons.print_outlined),
-                label: const Text('Print & Complete Order'),
+                label: Text(state.getLabel('complete_bill_button', 'Print & Complete Bill')),
               ),
             ],
           )

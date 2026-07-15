@@ -1727,14 +1727,14 @@ function applyCustomLabels() {
   const customLabelsTitle = getCustomLabelValue('custom_labels_menu', 'Custom Label');
 
   const titles = {
-    'dashboard-view': overviewTitle + ' details',
-    'billing-view': billingTitle + ' System',
-    'cart-view': viewCartTitle + ' & Checkout',
-    'inventory-view': inventoryTitle + ' & Stock Control',
-    'customers-view': customersTitle + ' Directory',
+    'dashboard-view': overviewTitle,
+    'billing-view': billingTitle,
+    'cart-view': getCustomLabelValue('cart_details_title', 'Shopping Cart Details'),
+    'inventory-view': inventoryTitle,
+    'customers-view': customersTitle,
     'pending-view': pendingOrdersTitle,
-    'users-view': usersTitle + ' & Role Management',
-    'labels-view': customLabelsTitle + ' Manager'
+    'users-view': usersTitle,
+    'labels-view': customLabelsTitle
   };
   
   const activeView = document.querySelector('.app-view.active');

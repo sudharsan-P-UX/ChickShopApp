@@ -57,6 +57,14 @@ const defaultLabels = [
   { menu_key: 'billing', label_key: 'add_button', label_name: 'Add Button Label', custom_label: 'Add' },
   { menu_key: 'billing', label_key: 'out_of_stock', label_name: 'Out of Stock Label', custom_label: 'Out of Stock' },
   { menu_key: 'billing', label_key: 'pending_orders', label_name: 'Pending Orders Label', custom_label: 'Pending Orders' },
+  { menu_key: 'billing', label_key: 'cart_details_title', label_name: 'Shopping Cart Details Header', custom_label: 'Shopping Cart Details' },
+  { menu_key: 'billing', label_key: 'clear_cart_button', label_name: 'Clear Cart Button', custom_label: 'Clear Cart' },
+  { menu_key: 'billing', label_key: 'customer_phone_label', label_name: 'Customer Phone Number Label', custom_label: 'Customer Phone Number' },
+  { menu_key: 'billing', label_key: 'cart_subtotal_label', label_name: 'Subtotal Label', custom_label: 'Subtotal' },
+  { menu_key: 'billing', label_key: 'cart_discount_label', label_name: 'Discount Label', custom_label: 'Discount (₹)' },
+  { menu_key: 'billing', label_key: 'cart_total_label', label_name: 'Final Total Label', custom_label: 'Final Total' },
+  { menu_key: 'billing', label_key: 'save_pending_button', label_name: 'Save Pending Bill Button', custom_label: 'Save Pending Bill' },
+  { menu_key: 'billing', label_key: 'complete_bill_button', label_name: 'Print & Complete Bill Button', custom_label: 'Print & Complete Bill' },
 
   // Overview Dashboard
   { menu_key: 'overview', label_key: 'overview_menu', label_name: 'Overview Menu Title', custom_label: 'Overview' },
