@@ -100,7 +100,12 @@ class _InventoryScreenState extends State<InventoryScreen> {
                                       ? Image.network(pickedImage!.path, fit: BoxFit.cover)
                                       : Image.file(File(pickedImage!.path), fit: BoxFit.cover))
                                   : (isEdit && item['image_url'] != null
-                                      ? Image.network('${ApiService.baseUrl.replaceAll('/api', '')}${item['image_url']}', fit: BoxFit.cover)
+                                      ? Image.network(
+                                           item['image_url'].startsWith('http')
+                                               ? item['image_url']
+                                               : '${ApiService.baseUrl.replaceAll('/api', '')}${item['image_url']}',
+                                           fit: BoxFit.cover,
+                                         )
                                       : const Icon(Icons.image, color: Colors.grey)),
                             ),
                             const SizedBox(width: 12),
@@ -237,7 +242,9 @@ class _InventoryScreenState extends State<InventoryScreen> {
                             ),
                             child: item['image_url'] != null
                                 ? Image.network(
-                                    '${ApiService.baseUrl.replaceAll('/api', '')}${item['image_url']}',
+                                    item['image_url'].startsWith('http')
+                                        ? item['image_url']
+                                        : '${ApiService.baseUrl.replaceAll('/api', '')}${item['image_url']}',
                                     fit: BoxFit.cover,
                                     errorBuilder: (context, error, stackTrace) => const Icon(Icons.fastfood, color: Colors.grey),
                                   )

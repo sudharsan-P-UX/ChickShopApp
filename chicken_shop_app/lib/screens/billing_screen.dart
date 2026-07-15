@@ -125,7 +125,9 @@ class _BillingScreenState extends State<BillingScreen> {
                                     color: Colors.grey[200],
                                     child: item['image_url'] != null
                                         ? Image.network(
-                                            '${ApiService.baseUrl.replaceAll('/api', '')}${item['image_url']}',
+                                            item['image_url'].startsWith('http')
+                                                ? item['image_url']
+                                                : '${ApiService.baseUrl.replaceAll('/api', '')}${item['image_url']}',
                                             fit: BoxFit.cover,
                                             errorBuilder: (context, error, stackTrace) => const Icon(
                                               Icons.restaurant,

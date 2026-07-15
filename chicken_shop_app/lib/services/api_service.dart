@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -138,7 +139,16 @@ class ApiService {
     request.fields['price'] = price.toString();
 
     if (imagePath != null && imagePath.isNotEmpty) {
-      request.files.add(await http.MultipartFile.fromPath('image', imagePath));
+      if (kIsWeb) {
+        final res = await http.get(Uri.parse(imagePath));
+        request.files.add(http.MultipartFile.fromBytes(
+          'image',
+          res.bodyBytes,
+          filename: 'upload.png',
+        ));
+      } else {
+        request.files.add(await http.MultipartFile.fromPath('image', imagePath));
+      }
     }
 
     final streamedResponse = await request.send();
@@ -164,7 +174,16 @@ class ApiService {
     request.fields['price'] = price.toString();
 
     if (imagePath != null && imagePath.isNotEmpty) {
-      request.files.add(await http.MultipartFile.fromPath('image', imagePath));
+      if (kIsWeb) {
+        final res = await http.get(Uri.parse(imagePath));
+        request.files.add(http.MultipartFile.fromBytes(
+          'image',
+          res.bodyBytes,
+          filename: 'upload.png',
+        ));
+      } else {
+        request.files.add(await http.MultipartFile.fromPath('image', imagePath));
+      }
     }
 
     final streamedResponse = await request.send();
