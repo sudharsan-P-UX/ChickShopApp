@@ -77,7 +77,7 @@ class _BillingScreenState extends State<BillingScreen> {
                   padding: const EdgeInsets.all(12),
                   gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                     crossAxisCount: 2,
-                    childAspectRatio: 0.8,
+                    childAspectRatio: 0.68,
                     crossAxisSpacing: 12,
                     mainAxisSpacing: 12,
                   ),
@@ -93,102 +93,151 @@ class _BillingScreenState extends State<BillingScreen> {
                     return Card(
                       elevation: 2,
                       clipBehavior: Clip.antiAlias,
-                      child: InkWell(
-                        onTap: isOutOfStock
-                            ? null
-                            : () {
-                                try {
-                                  state.addToCart(item);
-                                  ScaffoldMessenger.of(context).hideCurrentSnackBar();
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    SnackBar(
-                                      content: Text('${item['item_name']} added to cart!'),
-                                      duration: const Duration(seconds: 1),
-                                    ),
-                                  );
-                                } catch (e) {
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    SnackBar(
-                                      content: Text(e.toString().replaceAll('Exception: ', '')),
-                                      backgroundColor: Colors.orange,
-                                    ),
-                                  );
-                                }
-                              },
-                        child: Stack(
-                          children: [
-                            Column(
-                              crossAxisAlignment: CrossAxisAlignment.stretch,
-                              children: [
-                                Expanded(
-                                  child: Container(
-                                    color: Colors.grey[200],
-                                    child: item['image_url'] != null
-                                        ? Image.network(
-                                            item['image_url'].startsWith('http')
-                                                ? item['image_url']
-                                                : '${ApiService.baseUrl.replaceAll('/api', '')}${item['image_url']}',
-                                            fit: BoxFit.cover,
-                                            errorBuilder: (context, error, stackTrace) => const Icon(
-                                              Icons.restaurant,
-                                              size: 40,
-                                              color: Colors.grey,
-                                            ),
-                                          )
-                                        : const Icon(
+                      child: Stack(
+                        children: [
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
+                            children: [
+                              Expanded(
+                                child: Container(
+                                  color: Colors.grey[200],
+                                  child: item['image_url'] != null
+                                      ? Image.network(
+                                          item['image_url'].startsWith('http')
+                                              ? item['image_url']
+                                              : '${ApiService.baseUrl.replaceAll('/api', '')}${item['image_url']}',
+                                          fit: BoxFit.cover,
+                                          errorBuilder: (context, error, stackTrace) => const Icon(
                                             Icons.restaurant,
                                             size: 40,
                                             color: Colors.grey,
                                           ),
-                                  ),
-                                ),
-                                Padding(
-                                  padding: const EdgeInsets.all(8.0),
-                                  child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    children: [
-                                      Text(
-                                        item['item_name'],
-                                        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
-                                        maxLines: 1,
-                                        overflow: TextOverflow.ellipsis,
-                                      ),
-                                      const SizedBox(height: 2),
-                                      Text(
-                                        '₹${price.toStringAsFixed(2)}',
-                                        style: const TextStyle(color: Colors.green, fontWeight: FontWeight.bold, fontSize: 13),
-                                      ),
-                                      const SizedBox(height: 2),
-                                      Text(
-                                        isOutOfStock ? 'OUT OF STOCK' : 'Stock: $stock',
-                                        style: TextStyle(
-                                          fontSize: 10,
-                                          color: isOutOfStock ? Colors.red : Colors.grey,
-                                          fontWeight: isOutOfStock ? FontWeight.bold : FontWeight.normal,
+                                        )
+                                      : const Icon(
+                                          Icons.restaurant,
+                                          size: 40,
+                                          color: Colors.grey,
                                         ),
-                                      ),
-                                    ],
-                                  ),
-                                )
-                              ],
-                            ),
-                            // Cart count badge overlay
-                            if (cartQty > 0)
-                              Positioned(
-                                top: 8,
-                                right: 8,
-                                child: CircleAvatar(
-                                  radius: 12,
-                                  backgroundColor: Colors.deepOrange,
-                                  child: Text(
-                                    '$cartQty',
-                                    style: const TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.bold),
-                                  ),
                                 ),
                               ),
-                            // Out of Stock opacity layer
-                            if (isOutOfStock)
-                              Container(
+                              Padding(
+                                padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      item['item_name'],
+                                      style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                    const SizedBox(height: 2),
+                                    Text(
+                                      '₹${price.toStringAsFixed(2)}',
+                                      style: const TextStyle(color: Colors.green, fontWeight: FontWeight.bold, fontSize: 13),
+                                    ),
+                                    const SizedBox(height: 2),
+                                    Text(
+                                      isOutOfStock ? 'OUT OF STOCK' : 'Stock: $stock',
+                                      style: TextStyle(
+                                        fontSize: 10,
+                                        color: isOutOfStock ? Colors.red : Colors.grey,
+                                        fontWeight: isOutOfStock ? FontWeight.bold : FontWeight.normal,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              Padding(
+                                padding: const EdgeInsets.all(8.0),
+                                child: isOutOfStock
+                                    ? Container(
+                                        width: double.infinity,
+                                        height: 32,
+                                        decoration: BoxDecoration(
+                                          color: Colors.grey[800],
+                                          borderRadius: BorderRadius.circular(4),
+                                        ),
+                                        child: const Center(
+                                          child: Text(
+                                            'Out of Stock',
+                                            style: TextStyle(color: Colors.grey, fontSize: 11, fontWeight: FontWeight.bold),
+                                          ),
+                                        ),
+                                      )
+                                    : cartQty > 0
+                                        ? Container(
+                                            width: double.infinity,
+                                            height: 32,
+                                            decoration: BoxDecoration(
+                                              color: Colors.deepOrange,
+                                              borderRadius: BorderRadius.circular(4),
+                                            ),
+                                            child: Row(
+                                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                              children: [
+                                                IconButton(
+                                                  padding: EdgeInsets.zero,
+                                                  constraints: const BoxConstraints(),
+                                                  icon: const Icon(Icons.remove, color: Colors.white, size: 18),
+                                                  onPressed: () {
+                                                    try {
+                                                      state.updateCartQty(itemId, -1);
+                                                    } catch (e) {
+                                                      ScaffoldMessenger.of(context).showSnackBar(
+                                                        SnackBar(content: Text(e.toString().replaceAll('Exception: ', ''))),
+                                                      );
+                                                    }
+                                                  },
+                                                ),
+                                                Text(
+                                                  '$cartQty',
+                                                  style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold),
+                                                ),
+                                                IconButton(
+                                                  padding: EdgeInsets.zero,
+                                                  constraints: const BoxConstraints(),
+                                                  icon: const Icon(Icons.add, color: Colors.white, size: 18),
+                                                  onPressed: () {
+                                                    try {
+                                                      state.updateCartQty(itemId, 1);
+                                                    } catch (e) {
+                                                      ScaffoldMessenger.of(context).showSnackBar(
+                                                        SnackBar(content: Text(e.toString().replaceAll('Exception: ', ''))),
+                                                      );
+                                                    }
+                                                  },
+                                                ),
+                                              ],
+                                            ),
+                                          )
+                                        : ElevatedButton(
+                                            onPressed: () {
+                                              try {
+                                                state.addToCart(item);
+                                              } catch (e) {
+                                                ScaffoldMessenger.of(context).showSnackBar(
+                                                  SnackBar(content: Text(e.toString().replaceAll('Exception: ', ''))),
+                                                );
+                                              }
+                                            },
+                                            style: ElevatedButton.styleFrom(
+                                              backgroundColor: Colors.deepOrange,
+                                              foregroundColor: Colors.white,
+                                              minimumSize: const Size(double.infinity, 32),
+                                              padding: EdgeInsets.zero,
+                                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
+                                              elevation: 0,
+                                            ),
+                                            child: const Text('Add', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
+                                          ),
+                              ),
+                            ],
+                          ),
+                          // Out of Stock opacity layer
+                          if (isOutOfStock)
+                            Positioned.fill(
+                              child: Container(
                                 color: Colors.black.withOpacity(0.4),
                                 child: Center(
                                   child: RotationTransition(
@@ -204,8 +253,8 @@ class _BillingScreenState extends State<BillingScreen> {
                                   ),
                                 ),
                               ),
-                          ],
-                        ),
+                            ),
+                        ],
                       ),
                     );
                   },
