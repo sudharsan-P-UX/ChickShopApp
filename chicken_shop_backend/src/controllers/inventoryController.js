@@ -31,14 +31,13 @@ const uploadToCatbox = (file) => {
         if (res.statusCode === 200) {
           resolve(data.trim());
         } else {
-          resolve(null);
+          resolve(`UPLOAD_ERROR: Status ${res.statusCode} - ${data.trim()}`);
         }
       });
     });
     
     req.on('error', (err) => {
-      console.error('Catbox upload error:', err);
-      resolve(null);
+      resolve(`UPLOAD_ERROR: Connection failed - ${err.message}`);
     });
     
     req.write(bodyBuffer);
@@ -51,7 +50,7 @@ const uploadBase64ToCatbox = async (base64Data) => {
   if (!base64Data || !base64Data.startsWith('data:')) return base64Data;
   try {
     const matches = base64Data.match(/^data:([A-Za-z-+\/]+);base64,(.+)$/);
-    if (!matches) return null;
+    if (!matches) return 'UPLOAD_ERROR: Invalid base64 regex match';
     
     const mimeType = matches[1];
     const buffer = Buffer.from(matches[2], 'base64');
@@ -64,9 +63,8 @@ const uploadBase64ToCatbox = async (base64Data) => {
       mimetype: mimeType
     });
   } catch (err) {
-    console.error('Base64 upload failed:', err);
+    return `UPLOAD_ERROR: Base64 decode error - ${err.message}`;
   }
-  return null;
 };
 
 exports.getAllItems = async (req, res) => {
@@ -88,6 +86,10 @@ exports.addItem = async (req, res) => {
       uploadedUrl = await uploadToCatbox(req.file);
     }
     
+    if (uploadedUrl && uploadedUrl.startsWith('UPLOAD_ERROR:')) {
+      return res.status(500).json({ error: uploadedUrl });
+    }
+    
     const { rows } = await db.query(
       'INSERT INTO inventory (item_name, description, qty, price, image_url) VALUES ($1, $2, $3, $4, $5) RETURNING *',
       [item_name, description, qty, price, uploadedUrl]
@@ -107,6 +109,10 @@ exports.updateItem = async (req, res) => {
       uploadedUrl = await uploadBase64ToCatbox(image_url);
     } else if (req.file) {
       uploadedUrl = await uploadToCatbox(req.file);
+    }
+    
+    if (uploadedUrl && uploadedUrl.startsWith('UPLOAD_ERROR:')) {
+      return res.status(500).json({ error: uploadedUrl });
     }
     
     const { rows } = await db.query(
