@@ -117,6 +117,20 @@ class ApiService {
     }
   }
 
+  static Future<dynamic> updateRolePermissions(int roleId, Map<String, dynamic> permissions) async {
+    final headers = await _getHeaders();
+    final response = await http.put(
+      Uri.parse('$baseUrl/auth/roles/$roleId/permissions'),
+      headers: headers,
+      body: jsonEncode({'permissions': permissions}),
+    );
+    if (response.statusCode == 200) {
+      return jsonDecode(response.body);
+    }
+    final body = jsonDecode(response.body);
+    throw Exception(body['message'] ?? 'Failed to update role privileges');
+  }
+
   // Inventory Operations
   static Future<List<dynamic>> getInventory() async {
     final headers = await _getHeaders();

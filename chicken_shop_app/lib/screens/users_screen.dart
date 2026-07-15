@@ -17,6 +17,58 @@ class _UsersScreenState extends State<UsersScreen> {
   final _passwordController = TextEditingController();
   final _roleNameController = TextEditingController();
   String _selectedRole = 'cashier';
+  final Map<int, Map<String, dynamic>> _workingPermissions = {};
+  bool _isSavingPrivileges = false;
+
+  bool _getPermission(int roleId, String menu, String action) {
+    if (!_workingPermissions.containsKey(roleId)) return false;
+    final rolePerms = _workingPermissions[roleId];
+    if (rolePerms == null || !rolePerms.containsKey(menu)) return false;
+    final menuPerms = rolePerms[menu];
+    if (menuPerms == null || !menuPerms.containsKey(action)) return false;
+    return menuPerms[action] == true;
+  }
+
+  void _togglePermission(int roleId, String menu, String action) {
+    setState(() {
+      if (!_workingPermissions.containsKey(roleId)) {
+        _workingPermissions[roleId] = {};
+      }
+      final rolePerms = _workingPermissions[roleId]!;
+      if (!rolePerms.containsKey(menu)) {
+        rolePerms[menu] = {};
+      }
+      final menuPerms = rolePerms[menu]!;
+      menuPerms[action] = !(menuPerms[action] == true);
+    });
+  }
+
+  void _saveAllPrivileges(AppState state) async {
+    setState(() => _isSavingPrivileges = true);
+    try {
+      for (var entry in _workingPermissions.entries) {
+        final roleId = entry.key;
+        final perms = entry.value;
+        
+        final roleObj = state.roles.firstWhere((r) => r['id'] == roleId, orElse: () => null);
+        if (roleObj != null && roleObj['role_name'] == 'admin') {
+          continue; // skip admin
+        }
+        
+        await ApiService.updateRolePermissions(roleId, perms);
+      }
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('All role privilege updates saved successfully!')),
+      );
+      state.fetchUsers(); // Refresh roles & users
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error saving privileges: ${e.toString()}')),
+      );
+    } finally {
+      setState(() => _isSavingPrivileges = false);
+    }
+  }
 
   @override
   void initState() {
@@ -170,6 +222,23 @@ class _UsersScreenState extends State<UsersScreen> {
   @override
   Widget build(BuildContext context) {
     final state = Provider.of<AppState>(context);
+
+    // Initialize working permissions copy
+    if (_workingPermissions.isEmpty && state.roles.isNotEmpty) {
+      for (var r in state.roles) {
+        final roleId = r['id'];
+        final rawPerms = r['permissions'];
+        Map<String, dynamic> perms = {};
+        if (rawPerms is Map) {
+          perms = Map<String, dynamic>.from(rawPerms.map((k, v) {
+            final menuKey = k.toString();
+            final menuActions = Map<String, dynamic>.from(v as Map);
+            return MapEntry(menuKey, menuActions);
+          }));
+        }
+        _workingPermissions[roleId] = perms;
+      }
+    }
 
     if (!state.isAdmin) {
       return const Center(
@@ -364,6 +433,102 @@ class _UsersScreenState extends State<UsersScreen> {
                     },
                   ),
                 ),
+          const SizedBox(height: 24),
+          Row(
+            children: const [
+              Icon(Icons.lock_open, color: Colors.deepOrange),
+              SizedBox(width: 8),
+              Text('Role Access Control (Privilege Matrix)', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Card(
+            elevation: 2,
+            child: Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    'Configure dynamic view and action authorization privileges for each role.',
+                    style: TextStyle(fontSize: 12, color: Colors.grey),
+                  ),
+                  const SizedBox(height: 12),
+                  ...state.roles.map((r) {
+                    final roleId = r['id'];
+                    final roleName = r['role_name'].toString();
+                    final isAdminRole = roleName == 'admin';
+                    
+                    return ExpansionTile(
+                      title: Text(
+                        roleName.toUpperCase(),
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          color: isAdminRole ? Colors.green : Colors.deepOrange,
+                        ),
+                      ),
+                      subtitle: Text(isAdminRole ? 'Full Access Granted' : 'Custom Privilege Access rules'),
+                      children: [
+                        _buildMenuPermissionRow(roleId, 'dashboard', 'Dashboard Overview', isAdminRole, ['view']),
+                        _buildMenuPermissionRow(roleId, 'billing', 'Billing & POS', isAdminRole, ['view', 'add', 'delete']),
+                        _buildMenuPermissionRow(roleId, 'inventory', 'Inventory Control', isAdminRole, ['view', 'add', 'edit', 'delete']),
+                        _buildMenuPermissionRow(roleId, 'customers', 'Customer Directory', isAdminRole, ['view', 'add']),
+                        _buildMenuPermissionRow(roleId, 'users', 'User Management', isAdminRole, ['view', 'add', 'edit', 'delete']),
+                      ],
+                    );
+                  }).toList(),
+                  const SizedBox(height: 16),
+                  ElevatedButton.icon(
+                    onPressed: _isSavingPrivileges ? null : () => _saveAllPrivileges(state),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.green,
+                      foregroundColor: Colors.white,
+                      minimumSize: const Size.fromHeight(45),
+                    ),
+                    icon: _isSavingPrivileges
+                        ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
+                        : const Icon(Icons.save),
+                    label: const Text('Save Privileges'),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildMenuPermissionRow(int roleId, String menu, String title, bool isAdminRole, List<String> actions) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 16.0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(title, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+          const SizedBox(height: 4),
+          Wrap(
+            spacing: 12,
+            children: actions.map((act) {
+              final isChecked = isAdminRole ? true : _getPermission(roleId, menu, act);
+              return Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  SizedBox(
+                    width: 24,
+                    height: 24,
+                    child: Checkbox(
+                      value: isChecked,
+                      onChanged: isAdminRole ? null : (val) => _togglePermission(roleId, menu, act),
+                    ),
+                  ),
+                  const SizedBox(width: 4),
+                  Text(act.toUpperCase(), style: const TextStyle(fontSize: 11)),
+                ],
+              );
+            }).toList(),
+          ),
+          const Divider(height: 16),
         ],
       ),
     );
