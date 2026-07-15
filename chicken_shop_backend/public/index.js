@@ -540,6 +540,12 @@ function updateCartBadges() {
 
 function renderPOSCart() {
   updateCartBadges();
+
+  // Sync the POS product card selector buttons in real-time
+  if (typeof inventoryData !== 'undefined' && inventoryData && inventoryData.length > 0) {
+    filterPOSProducts();
+  }
+
   const cartContainer = document.getElementById('cart-items-list');
   const cartEntries = Object.values(cart);
 
