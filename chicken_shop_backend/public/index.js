@@ -71,6 +71,13 @@ function getPermissionKeyForView(viewId) {
 }
 
 function adjustActionPrivileges() {
+  if (currentUser && (currentUser.role === 'super_admin' || currentUser.role === 'superadmin')) {
+    const invForm = document.querySelector('.inventory-form');
+    if (invForm) invForm.style.display = 'block';
+    const custForm = document.querySelector('.customers-container .inventory-form');
+    if (custForm) custForm.style.display = 'block';
+    return;
+  }
   const permissions = currentUser ? currentUser.permissions : null;
   if (!permissions) return;
 
@@ -109,7 +116,9 @@ function showAppLayout() {
     const target = item.getAttribute('data-target');
     const permKey = getPermissionKeyForView(target);
     
-    if (permKey && permissions && permissions[permKey]) {
+    if (currentUser && (currentUser.role === 'super_admin' || currentUser.role === 'superadmin')) {
+      item.classList.remove('hidden');
+    } else if (permKey && permissions && permissions[permKey]) {
       if (permissions[permKey].view) {
         item.classList.remove('hidden');
       } else {
@@ -129,8 +138,8 @@ function switchView(viewId) {
   // Access control rights check
   const permissions = currentUser ? currentUser.permissions : null;
   const permKey = getPermissionKeyForView(viewId);
-  if (currentUser && currentUser.role === 'admin') {
-    // Admin always has full access bypass on all views
+  if (currentUser && (currentUser.role === 'super_admin' || currentUser.role === 'superadmin')) {
+    // Super Admin always has full access bypass on all views
   } else if (permKey && permissions && permissions[permKey]) {
     if (!permissions[permKey].view) {
       showToast('Access Denied: Insufficient Privileges', 'danger');
@@ -1426,7 +1435,7 @@ function renderRolesList(roles) {
   }
 
   container.innerHTML = roles.map(r => {
-    const isDefault = r.role_name === 'admin' || r.role_name === 'cashier';
+    const isDefault = r.role_name === 'admin' || r.role_name === 'cashier' || r.role_name === 'super_admin' || r.role_name === 'superadmin';
     if (isDefault) {
       return `<span class="badge info" style="font-size:11px; padding: 4px 8px;">${r.role_name}</span>`;
     } else {
@@ -1494,7 +1503,8 @@ function renderUsersTable(users) {
 
   tableBody.innerHTML = users.map(u => {
     const isSelf = currentUser && u.id === currentUser.id;
-    const badgeClass = u.role === 'admin' ? 'badge success' : 'badge info';
+    const isSuperOrAdmin = u.role === 'super_admin' || u.role === 'superadmin' || u.role === 'admin';
+    const badgeClass = isSuperOrAdmin ? 'badge success' : 'badge info';
     
     return `
       <tr>
@@ -1583,7 +1593,7 @@ function renderPrivilegeMatrix(roles) {
   const menus = ['dashboard', 'billing', 'inventory', 'customers', 'users'];
 
   container.innerHTML = roles.map(r => {
-    const isAdmin = r.role_name === 'admin';
+    const isSuperAdmin = r.role_name === 'super_admin' || r.role_name === 'superadmin';
     const permissions = r.permissions || {};
 
     const columnsHtml = menus.map(menu => {
@@ -1598,26 +1608,26 @@ function renderPrivilegeMatrix(roles) {
       const editChecked = menuPerms.edit ? 'checked' : '';
       const deleteChecked = menuPerms.delete ? 'checked' : '';
 
-      const disabledAttr = isAdmin ? 'disabled' : '';
+      const disabledAttr = isSuperAdmin ? 'disabled' : '';
 
       return `
         <td style="padding: 12px; vertical-align: middle; text-align: center; border-bottom: 1px solid var(--border-glass);">
           <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 6px; text-align: left; font-size: 11px; max-width: 140px; margin: 0 auto;">
-            <label style="display: flex; align-items: center; gap: 4px; cursor: ${isAdmin ? 'default' : 'pointer'}; color: #fff;">
+            <label style="display: flex; align-items: center; gap: 4px; cursor: ${isSuperAdmin ? 'default' : 'pointer'}; color: #fff;">
               <input type="checkbox" class="perm-checkbox" data-role-id="${r.id}" data-menu="${menu}" data-action="view" ${viewChecked} ${disabledAttr}> View
             </label>
             ${showAdd ? `
-              <label style="display: flex; align-items: center; gap: 4px; cursor: ${isAdmin ? 'default' : 'pointer'}; color: #fff;">
+              <label style="display: flex; align-items: center; gap: 4px; cursor: ${isSuperAdmin ? 'default' : 'pointer'}; color: #fff;">
                 <input type="checkbox" class="perm-checkbox" data-role-id="${r.id}" data-menu="${menu}" data-action="add" ${addChecked} ${disabledAttr}> Add
               </label>
             ` : ''}
             ${showEdit ? `
-              <label style="display: flex; align-items: center; gap: 4px; cursor: ${isAdmin ? 'default' : 'pointer'}; color: #fff;">
+              <label style="display: flex; align-items: center; gap: 4px; cursor: ${isSuperAdmin ? 'default' : 'pointer'}; color: #fff;">
                 <input type="checkbox" class="perm-checkbox" data-role-id="${r.id}" data-menu="${menu}" data-action="edit" ${editChecked} ${disabledAttr}> Edit
               </label>
             ` : ''}
             ${showDelete ? `
-              <label style="display: flex; align-items: center; gap: 4px; cursor: ${isAdmin ? 'default' : 'pointer'}; color: #fff;">
+              <label style="display: flex; align-items: center; gap: 4px; cursor: ${isSuperAdmin ? 'default' : 'pointer'}; color: #fff;">
                 <input type="checkbox" class="perm-checkbox" data-role-id="${r.id}" data-menu="${menu}" data-action="delete" ${deleteChecked} ${disabledAttr}> Del
               </label>
             ` : ''}
@@ -1629,7 +1639,7 @@ function renderPrivilegeMatrix(roles) {
     return `
       <tr style="border-bottom: 1px solid var(--border-glass);">
         <td style="padding: 12px; border-bottom: 1px solid var(--border-glass); vertical-align: middle;">
-          <span class="badge ${isAdmin ? 'success' : 'info'}" style="text-transform: capitalize; font-weight: 700;">${r.role_name}</span>
+          <span class="badge ${isSuperAdmin ? 'success' : 'info'}" style="text-transform: capitalize; font-weight: 700;">${r.role_name}</span>
         </td>
         ${columnsHtml}
       </tr>
@@ -1642,7 +1652,7 @@ async function saveRolePrivileges() {
   const rolePermissions = {};
 
   rolesData.forEach(r => {
-    if (r.role_name === 'admin') return;
+    if (r.role_name === 'super_admin' || r.role_name === 'superadmin') return;
     rolePermissions[r.id] = {
       dashboard: { view: false, add: false, edit: false, delete: false },
       billing: { view: false, add: false, edit: false, delete: false },

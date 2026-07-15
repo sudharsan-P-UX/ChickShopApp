@@ -37,6 +37,68 @@ app.use('/api/custom-labels', labelRoutes);
 app.use('/custom-labels', labelRoutes);
 
 
+// Dynamic self-healing super_admin and admin roles/users seeding
+const bcrypt = require('bcryptjs');
+const db = require('./config/db');
+
+async function initSuperAdmin() {
+  try {
+    // 1. Ensure roles table has permissions column if not already
+    await db.query('ALTER TABLE roles ADD COLUMN IF NOT EXISTS permissions JSONB');
+
+    // 2. Ensure super_admin role exists in roles table
+    const superAdminRoleCheck = await db.query("SELECT 1 FROM roles WHERE role_name = 'super_admin'");
+    if (superAdminRoleCheck.rows.length === 0) {
+      console.log("Seeding 'super_admin' role...");
+      const superPerms = {
+        billing: { view: true, add: true, edit: true, delete: true },
+        dashboard: { view: true, add: true, edit: true, delete: true },
+        inventory: { view: true, add: true, edit: true, delete: true },
+        customers: { view: true, add: true, edit: true, delete: true },
+        users: { view: true, add: true, edit: true, delete: true },
+        custom_labels: { view: true, add: true, edit: true, delete: true }
+      };
+      await db.query(
+        "INSERT INTO roles (role_name, permissions) VALUES ('super_admin', $1)",
+        [JSON.stringify(superPerms)]
+      );
+    }
+
+    // 3. Ensure superadmin user exists in users table
+    const superAdminUserCheck = await db.query("SELECT 1 FROM users WHERE username = 'superadmin'");
+    if (superAdminUserCheck.rows.length === 0) {
+      console.log("Seeding 'superadmin' user...");
+      const hash = await bcrypt.hash('admin123', 10);
+      await db.query(
+        "INSERT INTO users (username, password_hash, role) VALUES ('superadmin', $1, 'super_admin')",
+        [hash]
+      );
+    }
+
+    // 4. Ensure admin role has permissions column set if empty
+    const adminRoleCheck = await db.query("SELECT permissions FROM roles WHERE role_name = 'admin'");
+    if (adminRoleCheck.rows.length > 0 && !adminRoleCheck.rows[0].permissions) {
+      const defaultAdminPerms = {
+        billing: { view: true, add: true, edit: true, delete: true },
+        dashboard: { view: true, add: true, edit: true, delete: true },
+        inventory: { view: true, add: true, edit: true, delete: true },
+        customers: { view: true, add: true, edit: true, delete: true },
+        users: { view: true, add: true, edit: true, delete: true },
+        custom_labels: { view: true, add: true, edit: true, delete: true }
+      };
+      await db.query(
+        "UPDATE roles SET permissions = $1 WHERE role_name = 'admin'",
+        [JSON.stringify(defaultAdminPerms)]
+      );
+    }
+  } catch (err) {
+    console.error('Error seeding super_admin role/user:', err);
+  }
+}
+
+// Invoke the seeder
+initSuperAdmin();
+
 // Export the app for Vercel Serverless Functions
 module.exports = app;
 

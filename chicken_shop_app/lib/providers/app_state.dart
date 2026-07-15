@@ -30,11 +30,11 @@ class AppState with ChangeNotifier {
   String get username => _username;
   String get userRole => _userRole;
   Map<String, dynamic> get permissions => _permissions;
-  bool get isAdmin => _userRole == 'admin';
+  bool get isAdmin => _userRole == 'admin' || _userRole == 'super_admin' || _userRole == 'superadmin';
   int get screenIndex => _screenIndex;
 
   bool hasPermission(String menu, String action) {
-    if (_userRole == 'admin') return true; // Admin has fallback full access
+    if (_userRole == 'super_admin' || _userRole == 'superadmin') return true; // Super admin has absolute access
     if (_permissions.containsKey(menu)) {
       final menuPerms = _permissions[menu];
       if (menuPerms is Map && menuPerms.containsKey(action)) {

@@ -51,8 +51,8 @@ class _UsersScreenState extends State<UsersScreen> {
         final perms = entry.value;
         
         final roleObj = state.roles.firstWhere((r) => r['id'] == roleId, orElse: () => null);
-        if (roleObj != null && roleObj['role_name'] == 'admin') {
-          continue; // skip admin
+        if (roleObj != null && (roleObj['role_name'] == 'super_admin' || roleObj['role_name'] == 'superadmin')) {
+          continue; // skip super admin
         }
         
         await ApiService.updateRolePermissions(roleId, perms);
@@ -158,7 +158,7 @@ class _UsersScreenState extends State<UsersScreen> {
     // Show role selection dialog based on available roles
     final List<String> rolesList = state.roles.map<String>((r) => r['role_name'].toString()).toList();
     if (rolesList.isEmpty) {
-      rolesList.addAll(['admin', 'cashier']);
+      rolesList.addAll(['super_admin', 'admin', 'cashier']);
     }
 
     final selected = await showDialog<String>(
@@ -367,7 +367,7 @@ class _UsersScreenState extends State<UsersScreen> {
     // Dynamic dropdown roles
     final List<String> availableRoles = state.roles.map<String>((r) => r['role_name'].toString()).toList();
     if (availableRoles.isEmpty) {
-      availableRoles.addAll(['admin', 'cashier']);
+      availableRoles.addAll(['super_admin', 'admin', 'cashier']);
     }
     if (!availableRoles.contains(_selectedRole)) {
       _selectedRole = availableRoles.first;
@@ -416,7 +416,7 @@ class _UsersScreenState extends State<UsersScreen> {
                     runSpacing: 8,
                     children: state.roles.map((r) {
                       final name = r['role_name'].toString();
-                      final isDefault = name == 'admin' || name == 'cashier';
+                      final isDefault = name == 'admin' || name == 'cashier' || name == 'super_admin' || name == 'superadmin';
                       
                       return Chip(
                         label: Text(name.toUpperCase(), style: const TextStyle(fontSize: 11)),
@@ -517,7 +517,7 @@ class _UsersScreenState extends State<UsersScreen> {
                         children: [
                           ListTile(
                             leading: CircleAvatar(
-                              backgroundColor: role == 'admin' ? Colors.green : Colors.blue,
+                              backgroundColor: (role == 'super_admin' || role == 'superadmin' || role == 'admin') ? Colors.green : Colors.blue,
                               foregroundColor: Colors.white,
                               child: Text(role[0].toUpperCase()),
                             ),
@@ -576,23 +576,23 @@ class _UsersScreenState extends State<UsersScreen> {
                   ...state.roles.map((r) {
                     final roleId = r['id'];
                     final roleName = r['role_name'].toString();
-                    final isAdminRole = roleName == 'admin';
+                    final isSuperAdminRole = roleName == 'super_admin' || roleName == 'superadmin';
                     
                     return ExpansionTile(
                       title: Text(
                         roleName.toUpperCase(),
                         style: TextStyle(
                           fontWeight: FontWeight.bold,
-                          color: isAdminRole ? Colors.green : Colors.deepOrange,
+                          color: isSuperAdminRole ? Colors.green : Colors.deepOrange,
                         ),
                       ),
-                      subtitle: Text(isAdminRole ? 'Full Access Granted' : 'Custom Privilege Access rules'),
+                      subtitle: Text(isSuperAdminRole ? 'Full Access Granted' : 'Custom Privilege Access rules'),
                       children: [
-                        _buildMenuPermissionRow(roleId, 'dashboard', state.getLabel('user_rbac_th_overview', 'Dashboard Overview'), isAdminRole, ['view']),
-                        _buildMenuPermissionRow(roleId, 'billing', state.getLabel('user_rbac_th_billing', 'Billing & POS'), isAdminRole, ['view', 'add', 'delete']),
-                        _buildMenuPermissionRow(roleId, 'inventory', state.getLabel('user_rbac_th_inventory', 'Inventory'), isAdminRole, ['view', 'add', 'edit', 'delete']),
-                        _buildMenuPermissionRow(roleId, 'customers', state.getLabel('user_rbac_th_customers', 'Customers'), isAdminRole, ['view', 'add']),
-                        _buildMenuPermissionRow(roleId, 'users', state.getLabel('user_rbac_th_users', 'User & Role Management'), isAdminRole, ['view', 'add', 'edit', 'delete']),
+                        _buildMenuPermissionRow(roleId, 'dashboard', state.getLabel('user_rbac_th_overview', 'Dashboard Overview'), isSuperAdminRole, ['view']),
+                        _buildMenuPermissionRow(roleId, 'billing', state.getLabel('user_rbac_th_billing', 'Billing & POS'), isSuperAdminRole, ['view', 'add', 'delete']),
+                        _buildMenuPermissionRow(roleId, 'inventory', state.getLabel('user_rbac_th_inventory', 'Inventory'), isSuperAdminRole, ['view', 'add', 'edit', 'delete']),
+                        _buildMenuPermissionRow(roleId, 'customers', state.getLabel('user_rbac_th_customers', 'Customers'), isSuperAdminRole, ['view', 'add']),
+                        _buildMenuPermissionRow(roleId, 'users', state.getLabel('user_rbac_th_users', 'User & Role Management'), isSuperAdminRole, ['view', 'add', 'edit', 'delete']),
                       ],
                     );
                   }).toList(),

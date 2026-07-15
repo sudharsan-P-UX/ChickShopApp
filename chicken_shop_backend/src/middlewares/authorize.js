@@ -8,7 +8,7 @@ module.exports = (menu, action) => {
       }
 
       const role = req.user.role;
-      if (role === 'admin') {
+      if (role === 'super_admin' || role === 'superadmin') {
         return next();
       }
 
