@@ -126,74 +126,89 @@ class ApiService {
     throw Exception('Failed to load inventory');
   }
 
+  static Future<String?> _fileToBase64(String? path) async {
+    if (path == null || path.isEmpty) return null;
+    try {
+      List<int> bytes;
+      String mime = 'image/png';
+      if (path.endsWith('.jpg') || path.endsWith('.jpeg')) {
+        mime = 'image/jpeg';
+      } else if (path.endsWith('.gif')) {
+        mime = 'image/gif';
+      } else if (path.endsWith('.webp')) {
+        mime = 'image/webp';
+      }
+      
+      if (kIsWeb) {
+        final res = await http.get(Uri.parse(path));
+        bytes = res.bodyBytes;
+      } else {
+        bytes = await File(path).readAsBytes();
+      }
+      final String base64Str = base64Encode(bytes);
+      return 'data:$mime;base64,$base64Str';
+    } catch (e) {
+      print('Error converting file to base64: $e');
+    }
+    return null;
+  }
+
   static Future<dynamic> addInventoryItem(String name, String desc, int qty, double price, [String? imagePath]) async {
     final token = await _getToken();
     final uri = Uri.parse('$baseUrl/inventory');
     
-    final request = http.MultipartRequest('POST', uri);
-    if (token != null) request.headers['Authorization'] = 'Bearer $token';
+    final base64Image = await _fileToBase64(imagePath);
     
-    request.fields['item_name'] = name;
-    request.fields['description'] = desc;
-    request.fields['qty'] = qty.toString();
-    request.fields['price'] = price.toString();
-
-    if (imagePath != null && imagePath.isNotEmpty) {
-      if (kIsWeb) {
-        final res = await http.get(Uri.parse(imagePath));
-        request.files.add(http.MultipartFile.fromBytes(
-          'image',
-          res.bodyBytes,
-          filename: 'upload.png',
-        ));
-      } else {
-        request.files.add(await http.MultipartFile.fromPath('image', imagePath));
-      }
-    }
-
-    final streamedResponse = await request.send();
-    final response = await http.Response.fromStream(streamedResponse);
+    final headers = {
+      'Content-Type': 'application/json',
+      'Accept': 'application/json',
+    };
+    if (token != null) headers['Authorization'] = 'Bearer $token';
+    
+    final body = jsonEncode({
+      'item_name': name,
+      'description': desc,
+      'qty': qty,
+      'price': price,
+      'image_url': base64Image,
+    });
+    
+    final response = await http.post(uri, headers: headers, body: body);
     
     if (response.statusCode == 201) {
       return jsonDecode(response.body);
     }
-    final body = jsonDecode(response.body);
-    throw Exception(body['message'] ?? 'Failed to add inventory item');
+    final responseBody = jsonDecode(response.body);
+    throw Exception(responseBody['message'] ?? 'Failed to add inventory item');
   }
 
   static Future<dynamic> updateInventoryItem(int id, String name, String desc, int qty, double price, [String? imagePath]) async {
     final token = await _getToken();
     final uri = Uri.parse('$baseUrl/inventory/$id');
     
-    final request = http.MultipartRequest('PUT', uri);
-    if (token != null) request.headers['Authorization'] = 'Bearer $token';
+    final base64Image = await _fileToBase64(imagePath);
     
-    request.fields['item_name'] = name;
-    request.fields['description'] = desc;
-    request.fields['qty'] = qty.toString();
-    request.fields['price'] = price.toString();
-
-    if (imagePath != null && imagePath.isNotEmpty) {
-      if (kIsWeb) {
-        final res = await http.get(Uri.parse(imagePath));
-        request.files.add(http.MultipartFile.fromBytes(
-          'image',
-          res.bodyBytes,
-          filename: 'upload.png',
-        ));
-      } else {
-        request.files.add(await http.MultipartFile.fromPath('image', imagePath));
-      }
-    }
-
-    final streamedResponse = await request.send();
-    final response = await http.Response.fromStream(streamedResponse);
+    final headers = {
+      'Content-Type': 'application/json',
+      'Accept': 'application/json',
+    };
+    if (token != null) headers['Authorization'] = 'Bearer $token';
+    
+    final body = jsonEncode({
+      'item_name': name,
+      'description': desc,
+      'qty': qty,
+      'price': price,
+      'image_url': base64Image,
+    });
+    
+    final response = await http.put(uri, headers: headers, body: body);
     
     if (response.statusCode == 200) {
       return jsonDecode(response.body);
     }
-    final body = jsonDecode(response.body);
-    throw Exception(body['message'] ?? 'Failed to update inventory item');
+    final responseBody = jsonDecode(response.body);
+    throw Exception(responseBody['message'] ?? 'Failed to update inventory item');
   }
 
   static Future<void> deleteInventoryItem(int id) async {
