@@ -88,12 +88,19 @@ exports.updateItem = async (req, res) => {
   const { id } = req.params;
   const { item_name, description, qty, price, image_url } = req.body;
   try {
+    // Fetch existing item to preserve image if no new one is provided
+    const existing = await db.query('SELECT image_url FROM inventory WHERE id = $1', [id]);
+    if (existing.rows.length === 0) return res.status(404).json({ message: 'Item not found' });
+    const currentImageUrl = existing.rows[0].image_url;
+
     let uploadedUrl = req.body.image_url;
     if (image_url && image_url.startsWith('data:')) {
       uploadedUrl = await uploadToImgBB(image_url);
     } else if (req.file) {
       const base64Str = `data:${req.file.mimetype};base64,${req.file.buffer.toString('base64')}`;
       uploadedUrl = await uploadToImgBB(base64Str);
+    } else if (!image_url) {
+      uploadedUrl = currentImageUrl;
     }
     
     if (uploadedUrl && uploadedUrl.startsWith('UPLOAD_ERROR:')) {
