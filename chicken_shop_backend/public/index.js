@@ -63,13 +63,27 @@ function showAppLayout() {
   document.getElementById('user-display-name').textContent = currentUser.username;
   document.getElementById('user-display-role').textContent = currentUser.role;
 
-  // Toggle admin-only links visibility in navigation drawer
-  const isAdmin = currentUser.role === 'admin';
-  document.querySelectorAll('.nav-item[data-role="admin"]').forEach(item => {
-    if (isAdmin) {
-      item.classList.remove('hidden');
+  // Toggle role-based links visibility in navigation drawer
+  const role = currentUser.role;
+  document.querySelectorAll('.nav-item').forEach(item => {
+    const target = item.getAttribute('data-target');
+    if (target === 'dashboard-view' || target === 'inventory-view') {
+      // Allowed for admin and manager
+      if (role === 'admin' || role === 'manager') {
+        item.classList.remove('hidden');
+      } else {
+        item.classList.add('hidden');
+      }
+    } else if (target === 'users-view') {
+      // Allowed only for admin
+      if (role === 'admin') {
+        item.classList.remove('hidden');
+      } else {
+        item.classList.add('hidden');
+      }
     } else {
-      item.classList.add('hidden');
+      // Allowed for all roles
+      item.classList.remove('hidden');
     }
   });
 }
@@ -77,9 +91,13 @@ function showAppLayout() {
 // Router/View Switcher
 function switchView(viewId) {
   // Access control rights check
-  const adminViews = ['dashboard-view', 'inventory-view', 'users-view'];
-  if (adminViews.includes(viewId) && (!currentUser || currentUser.role !== 'admin')) {
+  const role = currentUser ? currentUser.role : null;
+  if (viewId === 'users-view' && role !== 'admin') {
     showToast('Access Denied: Admin Privilege Required', 'danger');
+    return;
+  }
+  if ((viewId === 'dashboard-view' || viewId === 'inventory-view') && role !== 'admin' && role !== 'manager') {
+    showToast('Access Denied: Insufficient Privileges', 'danger');
     return;
   }
 
@@ -116,6 +134,16 @@ function switchView(viewId) {
     'users-view': 'User Account & Role Management'
   };
   document.getElementById('page-title').textContent = titles[viewId] || 'Chicken Shop POS';
+
+  // Toggle Global Back to POS Button visibility
+  const globalBackBtn = document.getElementById('btn-global-back');
+  if (globalBackBtn) {
+    if (viewId === 'billing-view') {
+      globalBackBtn.style.display = 'none';
+    } else {
+      globalBackBtn.style.display = 'flex';
+    }
+  }
 
   // Load view-specific data
   if (viewId === 'dashboard-view') {
@@ -436,15 +464,20 @@ function renderPOSProducts(products) {
       ? `<div class="cart-qty-badge">${qtyInCart} in cart</div>`
       : '';
 
+    const isOutOfStock = item.qty <= 0;
+    const addBtn = isOutOfStock
+      ? `<button class="btn-add-to-cart" style="background: #333; color: #777; cursor: not-allowed;" disabled><ion-icon name="ban-outline"></ion-icon> Out of Stock</button>`
+      : `<button class="btn-add-to-cart" onclick="event.stopPropagation(); addToPOSCart(${item.id})"><ion-icon name="basket-outline"></ion-icon> Add</button>`;
+
     return `
-      <div class="product-card" onclick="addToPOSCart(${item.id})">
-        <div class="btn-add-badge"><ion-icon name="add"></ion-icon></div>
+      <div class="product-card">
         ${minusBtn}
         ${qtyBadge}
         ${imgTag}
         <h4>${item.item_name}</h4>
         <div class="price">₹${item.price}</div>
-        <div class="stock-tag ${isLow ? 'low' : ''}">Stock: ${item.qty}</div>
+        <div class="stock-tag ${isLow ? 'low' : ''}" style="margin-bottom: 4px;">Stock: ${item.qty}</div>
+        ${addBtn}
       </div>
     `;
   }).join('');
@@ -721,6 +754,7 @@ async function savePOSPendingOrder() {
     await apiRequest('/billing/pending', {
       method: 'POST',
       body: {
+        id: activePendingBillId,
         items,
         subtotal
       }
@@ -835,9 +869,17 @@ async function handleInventoryFormSubmit(e) {
   const fileInput = document.getElementById('item_image');
 
   try {
-    let base64Image = null;
+    let image_url = null;
     if (fileInput.files[0]) {
-      base64Image = await fileToBase64(fileInput.files[0]);
+      image_url = await fileToBase64(fileInput.files[0]);
+    } else {
+      // If editing and no new image is uploaded, check if the preview container is still visible.
+      // If visible, keep the original image URL!
+      const previewContainer = document.getElementById('image-preview-container');
+      if (editingItemId && !previewContainer.classList.contains('hidden')) {
+        const originalItem = inventoryData.find(i => i.id === editingItemId);
+        image_url = originalItem ? originalItem.image_url : null;
+      }
     }
 
     const payload = {
@@ -845,7 +887,7 @@ async function handleInventoryFormSubmit(e) {
       description,
       qty,
       price,
-      image_url: base64Image
+      image_url
     };
 
     let response;

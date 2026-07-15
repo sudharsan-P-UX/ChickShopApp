@@ -1,13 +1,21 @@
 const db = require('../config/db');
 
 exports.savePendingBill = async (req, res) => {
-  const { items, subtotal } = req.body;
+  const { id, items, subtotal } = req.body;
   try {
-    const { rows } = await db.query(
-      'INSERT INTO pending_bills (items, subtotal) VALUES ($1, $2) RETURNING *',
-      [JSON.stringify(items), subtotal]
-    );
-    res.status(201).json(rows[0]);
+    if (id) {
+      const { rows } = await db.query(
+        'UPDATE pending_bills SET items = $1, subtotal = $2 WHERE id = $3 RETURNING *',
+        [JSON.stringify(items), subtotal, id]
+      );
+      res.status(200).json(rows[0]);
+    } else {
+      const { rows } = await db.query(
+        'INSERT INTO pending_bills (items, subtotal) VALUES ($1, $2) RETURNING *',
+        [JSON.stringify(items), subtotal]
+      );
+      res.status(201).json(rows[0]);
+    }
   } catch (err) {
     res.status(500).json({ error: err.message });
   }

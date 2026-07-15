@@ -112,8 +112,14 @@
     <!-- Main Content Area -->
     <main class="main-content">
       <!-- Top Header -->
-      <header class="top-header glass">
-        <h1 id="page-title">Dashboard Overview</h1>
+      <header class="top-header glass" style="display: flex; justify-content: space-between; align-items: center; padding: 16px 24px;">
+        <div style="display: flex; align-items: center; gap: 16px;">
+          <button id="btn-global-back" class="btn-secondary" onclick="switchView('billing-view')" style="padding: 6px 12px; font-size: 13px; display: none; align-items: center; gap: 6px; border-radius: 6px; cursor: pointer; border: 1px solid var(--border-glass); background: rgba(255,255,255,0.05); color: #fff;">
+            <ion-icon name="arrow-back-outline"></ion-icon>
+            <span>Back to POS</span>
+          </button>
+          <h1 id="page-title" style="margin: 0; font-size: 20px; font-weight: 600;">Dashboard Overview</h1>
+        </div>
         <div class="header-actions">
           <span id="current-time"></span>
         </div>
