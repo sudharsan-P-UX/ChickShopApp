@@ -55,6 +55,44 @@ function showLoginScreen() {
   document.getElementById('login-screen').classList.add('active');
 }
 
+function getPermissionKeyForView(viewId) {
+  const mapping = {
+    'dashboard-view': 'dashboard',
+    'billing-view': 'billing',
+    'cart-view': 'billing',
+    'pending-view': 'billing',
+    'inventory-view': 'inventory',
+    'customers-view': 'customers',
+    'users-view': 'users'
+  };
+  return mapping[viewId] || null;
+}
+
+function adjustActionPrivileges() {
+  const permissions = currentUser ? currentUser.permissions : null;
+  if (!permissions) return;
+
+  // 1. Inventory View Add Form
+  const invForm = document.querySelector('.inventory-form');
+  if (invForm) {
+    if (permissions.inventory && permissions.inventory.add) {
+      invForm.style.display = 'block';
+    } else {
+      invForm.style.display = 'none';
+    }
+  }
+
+  // 2. Customer Add Form
+  const custForm = document.querySelector('.customers-container .inventory-form');
+  if (custForm) {
+    if (permissions.customers && permissions.customers.add) {
+      custForm.style.display = 'block';
+    } else {
+      custForm.style.display = 'none';
+    }
+  }
+}
+
 function showAppLayout() {
   document.getElementById('login-screen').classList.remove('active');
   document.getElementById('app-layout').classList.add('active');
@@ -64,41 +102,36 @@ function showAppLayout() {
   document.getElementById('user-display-role').textContent = currentUser.role;
 
   // Toggle role-based links visibility in navigation drawer
-  const role = currentUser.role;
+  const permissions = currentUser.permissions;
   document.querySelectorAll('.nav-item').forEach(item => {
     const target = item.getAttribute('data-target');
-    if (target === 'dashboard-view' || target === 'inventory-view') {
-      // Allowed for admin and manager
-      if (role === 'admin' || role === 'manager') {
-        item.classList.remove('hidden');
-      } else {
-        item.classList.add('hidden');
-      }
-    } else if (target === 'users-view') {
-      // Allowed only for admin
-      if (role === 'admin') {
+    const permKey = getPermissionKeyForView(target);
+    
+    if (permKey && permissions && permissions[permKey]) {
+      if (permissions[permKey].view) {
         item.classList.remove('hidden');
       } else {
         item.classList.add('hidden');
       }
     } else {
-      // Allowed for all roles
       item.classList.remove('hidden');
     }
   });
+
+  // Apply button and form privileges
+  adjustActionPrivileges();
 }
 
 // Router/View Switcher
 function switchView(viewId) {
   // Access control rights check
-  const role = currentUser ? currentUser.role : null;
-  if (viewId === 'users-view' && role !== 'admin') {
-    showToast('Access Denied: Admin Privilege Required', 'danger');
-    return;
-  }
-  if ((viewId === 'dashboard-view' || viewId === 'inventory-view') && role !== 'admin' && role !== 'manager') {
-    showToast('Access Denied: Insufficient Privileges', 'danger');
-    return;
+  const permissions = currentUser ? currentUser.permissions : null;
+  const permKey = getPermissionKeyForView(viewId);
+  if (permKey && permissions && permissions[permKey]) {
+    if (!permissions[permKey].view) {
+      showToast('Access Denied: Insufficient Privileges', 'danger');
+      return;
+    }
   }
 
   // Hide all views
@@ -798,6 +831,10 @@ function renderInventoryTable(items) {
     return;
   }
 
+  const permissions = currentUser ? currentUser.permissions : null;
+  const showEdit = !permissions || (permissions.inventory && permissions.inventory.edit);
+  const showDelete = !permissions || (permissions.inventory && permissions.inventory.delete);
+
   tableBody.innerHTML = items.map(item => {
     const isLow = item.qty < 5;
     const statusTag = item.qty <= 0 
@@ -809,6 +846,13 @@ function renderInventoryTable(items) {
       ? `<img src="${imgUrl}" alt="${item.item_name}" class="image-cell">`
       : `<div class="image-cell"><ion-icon name="fast-food-outline"></ion-icon></div>`;
 
+    const editBtn = showEdit 
+      ? `<button type="button" class="btn-icon-edit" onclick="startEditItem(${item.id})" title="Edit Item"><ion-icon name="create-outline"></ion-icon></button>`
+      : '';
+    const deleteBtn = showDelete 
+      ? `<button type="button" class="btn-icon-delete" onclick="deleteItem(${item.id})" title="Delete Item"><ion-icon name="trash-outline"></ion-icon></button>`
+      : '';
+
     return `
       <tr id="inventory-row-${item.id}">
         <td>${imgTag}</td>
@@ -818,12 +862,8 @@ function renderInventoryTable(items) {
         <td>${statusTag}</td>
         <td>
           <div class="table-actions">
-            <button type="button" class="btn-icon-edit" onclick="startEditItem(${item.id})" title="Edit Item">
-              <ion-icon name="create-outline"></ion-icon>
-            </button>
-            <button type="button" class="btn-icon-delete" onclick="deleteItem(${item.id})" title="Delete Item">
-              <ion-icon name="trash-outline"></ion-icon>
-            </button>
+            ${editBtn}
+            ${deleteBtn}
           </div>
         </td>
       </tr>
@@ -1337,6 +1377,7 @@ async function loadRolesData() {
     rolesData = await apiRequest('/auth/roles');
     populateUserRolesSelect(rolesData);
     renderRolesList(rolesData);
+    renderPrivilegeMatrix(rolesData);
   } catch (err) {
     showToast(err.message, 'danger');
   }
@@ -1496,6 +1537,122 @@ async function deleteUserAccount(userId) {
 
     showToast('User account deleted successfully');
     loadUsersData();
+  } catch (err) {
+    showToast(err.message, 'danger');
+  }
+}
+
+function renderPrivilegeMatrix(roles) {
+  const container = document.getElementById('privilege-matrix-body');
+  if (!container) return;
+
+  if (roles.length === 0) {
+    container.innerHTML = '<tr><td colspan="6" class="empty-state">No roles found.</td></tr>';
+    return;
+  }
+
+  const menus = ['dashboard', 'billing', 'inventory', 'customers', 'users'];
+
+  container.innerHTML = roles.map(r => {
+    const isAdmin = r.role_name === 'admin';
+    const permissions = r.permissions || {};
+
+    const columnsHtml = menus.map(menu => {
+      const menuPerms = permissions[menu] || { view: false, add: false, edit: false, delete: false };
+      
+      const showAdd = menu !== 'dashboard';
+      const showEdit = menu !== 'dashboard' && menu !== 'customers' && menu !== 'billing';
+      const showDelete = menu !== 'dashboard' && menu !== 'customers';
+      
+      const viewChecked = menuPerms.view ? 'checked' : '';
+      const addChecked = menuPerms.add ? 'checked' : '';
+      const editChecked = menuPerms.edit ? 'checked' : '';
+      const deleteChecked = menuPerms.delete ? 'checked' : '';
+
+      const disabledAttr = isAdmin ? 'disabled' : '';
+
+      return `
+        <td style="padding: 12px; vertical-align: middle; text-align: center; border-bottom: 1px solid var(--border-glass);">
+          <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 6px; text-align: left; font-size: 11px; max-width: 140px; margin: 0 auto;">
+            <label style="display: flex; align-items: center; gap: 4px; cursor: ${isAdmin ? 'default' : 'pointer'}; color: #fff;">
+              <input type="checkbox" class="perm-checkbox" data-role-id="${r.id}" data-menu="${menu}" data-action="view" ${viewChecked} ${disabledAttr}> View
+            </label>
+            ${showAdd ? `
+              <label style="display: flex; align-items: center; gap: 4px; cursor: ${isAdmin ? 'default' : 'pointer'}; color: #fff;">
+                <input type="checkbox" class="perm-checkbox" data-role-id="${r.id}" data-menu="${menu}" data-action="add" ${addChecked} ${disabledAttr}> Add
+              </label>
+            ` : ''}
+            ${showEdit ? `
+              <label style="display: flex; align-items: center; gap: 4px; cursor: ${isAdmin ? 'default' : 'pointer'}; color: #fff;">
+                <input type="checkbox" class="perm-checkbox" data-role-id="${r.id}" data-menu="${menu}" data-action="edit" ${editChecked} ${disabledAttr}> Edit
+              </label>
+            ` : ''}
+            ${showDelete ? `
+              <label style="display: flex; align-items: center; gap: 4px; cursor: ${isAdmin ? 'default' : 'pointer'}; color: #fff;">
+                <input type="checkbox" class="perm-checkbox" data-role-id="${r.id}" data-menu="${menu}" data-action="delete" ${deleteChecked} ${disabledAttr}> Del
+              </label>
+            ` : ''}
+          </div>
+        </td>
+      `;
+    }).join('');
+
+    return `
+      <tr style="border-bottom: 1px solid var(--border-glass);">
+        <td style="padding: 12px; border-bottom: 1px solid var(--border-glass); vertical-align: middle;">
+          <span class="badge ${isAdmin ? 'success' : 'info'}" style="text-transform: capitalize; font-weight: 700;">${r.role_name}</span>
+        </td>
+        ${columnsHtml}
+      </tr>
+    `;
+  }).join('');
+}
+
+async function saveRolePrivileges() {
+  const checkboxes = document.querySelectorAll('.perm-checkbox');
+  const rolePermissions = {};
+
+  rolesData.forEach(r => {
+    if (r.role_name === 'admin') return;
+    rolePermissions[r.id] = {
+      dashboard: { view: false, add: false, edit: false, delete: false },
+      billing: { view: false, add: false, edit: false, delete: false },
+      inventory: { view: false, add: false, edit: false, delete: false },
+      customers: { view: false, add: false, edit: false, delete: false },
+      users: { view: false, add: false, edit: false, delete: false }
+    };
+  });
+
+  checkboxes.forEach(cb => {
+    const roleId = cb.getAttribute('data-role-id');
+    const menu = cb.getAttribute('data-menu');
+    const action = cb.getAttribute('data-action');
+    const checked = cb.checked;
+
+    if (rolePermissions[roleId]) {
+      rolePermissions[roleId][menu][action] = checked;
+    }
+  });
+
+  try {
+    for (const [roleId, perms] of Object.entries(rolePermissions)) {
+      await apiRequest(`/auth/roles/${roleId}/permissions`, {
+        method: 'PUT',
+        body: { permissions: perms }
+      });
+    }
+
+    showToast('Role privileges updated successfully!', 'success');
+    
+    // If the active user's permissions changed, update locally
+    const activeRole = rolesData.find(r => r.role_name === currentUser.role);
+    if (activeRole && rolePermissions[activeRole.id]) {
+      currentUser.permissions = rolePermissions[activeRole.id];
+      localStorage.setItem('user', JSON.stringify(currentUser));
+      showAppLayout();
+    }
+
+    await loadRolesData();
   } catch (err) {
     showToast(err.message, 'danger');
   }

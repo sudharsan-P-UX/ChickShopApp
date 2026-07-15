@@ -20,5 +20,6 @@ router.delete('/users/:id', authMiddleware, adminOnly, authController.deleteUser
 router.get('/roles', authMiddleware, authController.listRoles);
 router.post('/roles', authMiddleware, adminOnly, authController.createRole);
 router.delete('/roles/:id', authMiddleware, adminOnly, authController.deleteRole);
+router.put('/roles/:id/permissions', authMiddleware, adminOnly, authController.updateRolePermissions);
 
 module.exports = router;
