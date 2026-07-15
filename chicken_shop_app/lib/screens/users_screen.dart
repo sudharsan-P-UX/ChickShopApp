@@ -532,11 +532,6 @@ class _UsersScreenState extends State<UsersScreen> {
                                         icon: const Icon(Icons.edit, color: Colors.blue, size: 20),
                                         onPressed: () => _showEditUserDialog(userId, username, role, state),
                                       ),
-                                      ElevatedButton(
-                                        onPressed: () => _toggleUserRole(userId, role, state),
-                                        style: ElevatedButton.styleFrom(backgroundColor: Colors.grey[800], foregroundColor: Colors.white, padding: const EdgeInsets.symmetric(horizontal: 8), minimumSize: const Size(60, 32)),
-                                        child: const Text('Role', style: TextStyle(fontSize: 10)),
-                                      ),
                                       const SizedBox(width: 4),
                                       IconButton(
                                         icon: const Icon(Icons.delete, color: Colors.red, size: 20),

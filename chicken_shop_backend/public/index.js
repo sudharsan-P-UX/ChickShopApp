@@ -1516,9 +1516,6 @@ function renderUsersTable(users) {
             <button type="button" class="btn-primary" style="padding: 6px 12px; font-size: 12px;" onclick="openUserEditModal(${u.id}, '${u.username}', '${u.role}')">
               Edit
             </button>
-            <button type="button" class="btn-secondary" style="padding: 6px 12px; font-size: 12px; margin-left: 6px;" onclick="toggleUserRole(${u.id}, '${u.role}')">
-              Role
-            </button>
             <button type="button" class="btn-danger" style="padding: 6px 12px; font-size: 12px; margin-left: 6px;" onclick="deleteUserAccount(${u.id})">
               Delete
             </button>
@@ -1944,3 +1941,8 @@ async function handleEditUserFormSubmit(e) {
     showToast(err.message, 'danger');
   }
 }
+
+// Expose functions globally for inline HTML event handlers
+window.openUserEditModal = openUserEditModal;
+window.closeUserEditModal = closeUserEditModal;
+window.deleteUserAccount = deleteUserAccount;
