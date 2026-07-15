@@ -426,9 +426,21 @@ function renderPOSProducts(products) {
       ? `<img src="${imgUrl}" alt="${item.item_name}" class="product-image">`
       : `<div class="product-image"><ion-icon name="fast-food-outline"></ion-icon></div>`;
 
+    const cartItem = cart[item.id];
+    const qtyInCart = cartItem ? cartItem.qty : 0;
+    
+    const minusBtn = qtyInCart > 0 
+      ? `<div class="btn-minus-badge" onclick="event.stopPropagation(); updateCartQty(${item.id}, -1)"><ion-icon name="remove"></ion-icon></div>`
+      : '';
+    const qtyBadge = qtyInCart > 0 
+      ? `<div class="cart-qty-badge">${qtyInCart} in cart</div>`
+      : '';
+
     return `
       <div class="product-card" onclick="addToPOSCart(${item.id})">
         <div class="btn-add-badge"><ion-icon name="add"></ion-icon></div>
+        ${minusBtn}
+        ${qtyBadge}
         ${imgTag}
         <h4>${item.item_name}</h4>
         <div class="price">₹${item.price}</div>

@@ -832,6 +832,43 @@ select:focus {
   transform: scale(1);
 }
 
+.product-card .btn-minus-badge {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: #555;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  cursor: pointer;
+  transition: var(--transition-smooth);
+  z-index: 5;
+}
+
+.product-card .btn-minus-badge:hover {
+  background: #ff3b30;
+  transform: scale(1.1);
+}
+
+.product-card .cart-qty-badge {
+  position: absolute;
+  top: 8px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--accent-orange);
+  color: #fff;
+  padding: 2px 8px;
+  border-radius: 10px;
+  font-size: 10px;
+  font-weight: bold;
+  z-index: 4;
+}
+
 .pos-cart {
   flex: 1.5;
   min-width: 340px;
