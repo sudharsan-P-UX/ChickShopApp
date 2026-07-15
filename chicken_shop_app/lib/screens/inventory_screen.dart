@@ -38,10 +38,11 @@ class _InventoryScreenState extends State<InventoryScreen> {
     showDialog(
       context: context,
       builder: (context) {
+        final state = Provider.of<AppState>(context, listen: false);
         return StatefulBuilder(
           builder: (context, setStateDialog) {
             return AlertDialog(
-              title: Text(isEdit ? 'Edit Inventory Item' : 'Add New Menu Item'),
+              title: Text(isEdit ? 'Edit Inventory Item' : state.getLabel('inv_add_item_title', 'Add New Inventory Item')),
               content: SingleChildScrollView(
                 child: SizedBox(
                   width: 400,
@@ -52,13 +53,13 @@ class _InventoryScreenState extends State<InventoryScreen> {
                       children: [
                         TextFormField(
                           controller: nameController,
-                          decoration: const InputDecoration(labelText: 'Item Name', border: OutlineInputBorder()),
+                          decoration: InputDecoration(labelText: state.getLabel('inv_item_name_label', 'Item Name'), border: const OutlineInputBorder()),
                           validator: (val) => val == null || val.trim().isEmpty ? 'Name is required' : null,
                         ),
                         const SizedBox(height: 12),
                         TextFormField(
                           controller: descController,
-                          decoration: const InputDecoration(labelText: 'Description', border: OutlineInputBorder()),
+                          decoration: InputDecoration(labelText: state.getLabel('inv_description_label', 'Description'), border: const OutlineInputBorder()),
                           maxLines: 2,
                         ),
                         const SizedBox(height: 12),
@@ -68,7 +69,7 @@ class _InventoryScreenState extends State<InventoryScreen> {
                               child: TextFormField(
                                 controller: qtyController,
                                 keyboardType: TextInputType.number,
-                                decoration: const InputDecoration(labelText: 'Stock Qty', border: OutlineInputBorder()),
+                                decoration: InputDecoration(labelText: state.getLabel('inv_qty_label', 'Quantity (Stock)'), border: const OutlineInputBorder()),
                                 validator: (val) => val == null || int.tryParse(val) == null ? 'Invalid qty' : null,
                               ),
                             ),
@@ -77,7 +78,7 @@ class _InventoryScreenState extends State<InventoryScreen> {
                               child: TextFormField(
                                 controller: priceController,
                                 keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                                decoration: const InputDecoration(labelText: 'Price (₹)', border: OutlineInputBorder()),
+                                decoration: InputDecoration(labelText: state.getLabel('inv_price_label', 'Price (₹)'), border: const OutlineInputBorder()),
                                 validator: (val) => val == null || double.tryParse(val) == null ? 'Invalid price' : null,
                               ),
                             ),
@@ -155,7 +156,7 @@ class _InventoryScreenState extends State<InventoryScreen> {
                     }
                   },
                   style: ElevatedButton.styleFrom(backgroundColor: Colors.deepOrange, foregroundColor: Colors.white),
-                  child: Text(isEdit ? 'Save Changes' : 'Add Item'),
+                  child: Text(isEdit ? 'Save Changes' : state.getLabel('inv_add_button', 'Add Item')),
                 ),
               ],
             );

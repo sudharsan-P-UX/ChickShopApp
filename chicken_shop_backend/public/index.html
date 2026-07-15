@@ -316,33 +316,33 @@
           <div class="inventory-container">
             <!-- Left Panel: Add/Edit Item Form -->
             <div class="inventory-form glass">
-              <h3 id="inventory-form-title">Add New Inventory Item</h3>
+              <h3 id="inventory-form-title" class="label-inv_add_item_title">Add New Inventory Item</h3>
               <form id="inventory-item-form">
                 <input type="hidden" id="edit-item-id">
                 
                 <div class="input-group">
-                  <label for="item_name">Item Name</label>
+                  <label for="item_name" class="label-inv_item_name_label">Item Name</label>
                   <input type="text" id="item_name" required placeholder="e.g. Fried Chicken (2pcs)">
                 </div>
 
                 <div class="input-group">
-                  <label for="item_description">Description</label>
+                  <label for="item_description" class="label-inv_description_label">Description</label>
                   <textarea id="item_description" placeholder="Item ingredients or sizing info..." rows="3"></textarea>
                 </div>
 
                 <div class="input-row">
                   <div class="input-group">
-                    <label for="item_qty">Quantity (Stock)</label>
+                    <label for="item_qty" class="label-inv_qty_label">Quantity (Stock)</label>
                     <input type="number" id="item_qty" min="0" required placeholder="e.g. 50">
                   </div>
                   <div class="input-group">
-                    <label for="item_price">Price (₹)</label>
+                    <label for="item_price" class="label-inv_price_label">Price (₹)</label>
                     <input type="number" id="item_price" min="0.01" step="0.01" required placeholder="e.g. 199.00">
                   </div>
                 </div>
 
                 <div class="input-group">
-                  <label for="item_image">Item Image</label>
+                  <label for="item_image" class="label-inv_image_label">Item Image</label>
                   <div class="file-upload-wrapper">
                     <input type="file" id="item_image" accept="image/*">
                     <div class="upload-placeholder">
@@ -360,7 +360,7 @@
 
                 <div class="form-actions">
                   <button type="button" id="btn-cancel-edit" class="btn-secondary hidden">Cancel Edit</button>
-                  <button type="submit" id="btn-save-item" class="btn-primary">Add Item</button>
+                  <button type="submit" id="btn-save-item" class="btn-primary label-inv_add_button">Add Item</button>
                 </div>
               </form>
             </div>
@@ -368,7 +368,7 @@
             <!-- Right Panel: Inventory List -->
             <div class="inventory-list-wrapper glass">
               <div class="list-header">
-                <h3>Inventory Items</h3>
+                <h3 class="label-inv_items_title">Inventory Items</h3>
                 <div class="search-box">
                   <ion-icon name="search-outline"></ion-icon>
                   <input type="text" id="inventory-search-input" placeholder="Search inventory...">
@@ -378,12 +378,12 @@
                 <table class="data-table">
                   <thead>
                     <tr>
-                      <th>Image</th>
-                      <th>Item Name</th>
-                      <th>Price</th>
-                      <th>Stock Qty</th>
-                      <th>Status</th>
-                      <th>Actions</th>
+                      <th class="label-inv_th_image">Image</th>
+                      <th class="label-inv_th_name">Item Name</th>
+                      <th class="label-inv_th_price">Price</th>
+                      <th class="label-inv_th_stock">Stock Qty</th>
+                      <th class="label-inv_th_status">Status</th>
+                      <th class="label-inv_th_actions">Actions</th>
                     </tr>
                   </thead>
                   <tbody id="inventory-table-body">
@@ -400,24 +400,24 @@
           <div class="customers-container">
             <!-- Left Panel: Register Customer -->
             <div class="customer-form glass">
-              <h3>Register Customer</h3>
+              <h3 class="label-cust_register_title">Register Customer</h3>
               <form id="customer-register-form">
                 <div class="input-group">
-                  <label for="customer_phone">Phone Number</label>
+                  <label for="customer_phone" class="label-cust_phone_label">Phone Number</label>
                   <input type="text" id="customer_phone" required placeholder="e.g. 9876543210" maxlength="15">
                 </div>
                 <div class="input-group">
-                  <label for="customer_name">Customer Name</label>
+                  <label for="customer_name" class="label-cust_name_label">Customer Name</label>
                   <input type="text" id="customer_name" required placeholder="e.g. Sudharsan R">
                 </div>
-                <button type="submit" class="btn-primary">Register Customer</button>
+                <button type="submit" class="btn-primary label-cust_register_button">Register Customer</button>
               </form>
             </div>
 
             <!-- Right Panel: Customers List -->
             <div class="customers-list-wrapper glass">
               <div class="list-header">
-                <h3>Customer Directory</h3>
+                <h3 class="label-cust_list_title">Customer Directory</h3>
                 <div class="search-box">
                   <ion-icon name="search-outline"></ion-icon>
                   <input type="text" id="customers-search-input" placeholder="Search by name or phone...">
@@ -427,9 +427,9 @@
                 <table class="data-table">
                   <thead>
                     <tr>
-                      <th>Phone Number</th>
-                      <th>Customer Name</th>
-                      <th>Registered Date</th>
+                      <th class="label-cust_th_phone">Phone Number</th>
+                      <th class="label-cust_th_name">Customer Name</th>
+                      <th class="label-cust_th_date">Registered Date</th>
                     </tr>
                   </thead>
                   <tbody id="customers-table-body">
@@ -469,7 +469,7 @@
                   <button type="submit" class="btn-primary" style="padding: 10px 16px;">Add</button>
                 </form>
                 
-                <h4 style="font-size: 13px; color: var(--text-muted); margin-bottom: 6px;">Custom System Roles</h4>
+                <h4 style="font-size: 13px; color: var(--text-muted); margin-bottom: 6px;" class="label-user_roles_title">Custom System Roles</h4>
                 <div id="roles-list-container" style="display: flex; flex-wrap: wrap; gap: 6px;">
                   <!-- Dynamic role tags loaded here -->
                 </div>
@@ -478,18 +478,18 @@
               <hr style="border: 0; border-top: 1px dashed rgba(255,255,255,0.15); margin: 8px 0;">
 
               <div>
-                <h3 style="margin-bottom: 12px;">Register New User</h3>
+                <h3 style="margin-bottom: 12px;" class="label-user_register_title">Register New User</h3>
                 <form id="new-user-form" style="display: flex; flex-direction: column; gap: 12px;">
                   <div class="input-group">
-                    <label for="new_username">Username</label>
+                    <label for="new_username" class="label-user_username_label">Username</label>
                     <input type="text" id="new_username" required placeholder="e.g. cashier_john" style="background: rgba(0,0,0,0.2); color: #fff; padding: 10px;">
                   </div>
                   <div class="input-group">
-                    <label for="new_password">Password</label>
+                    <label for="new_password" class="label-user_password_label">Password</label>
                     <input type="password" id="new_password" required placeholder="e.g. Min 6 characters" style="background: rgba(0,0,0,0.2); color: #fff; padding: 10px;">
                   </div>
                   <div class="input-group">
-                    <label for="new_role">User Role</label>
+                    <label for="new_role" class="label-user_role_label">User Role</label>
                     <select id="new_role" required style="width: 100%; padding: 10px; background: rgba(0,0,0,0.3); border: 1px solid var(--border-glass); border-radius: var(--border-radius-md); color: #fff; cursor: pointer;">
                       <!-- Populated dynamically -->
                     </select>
@@ -502,16 +502,16 @@
             <!-- Right Panel: Users Directory -->
             <div class="inventory-table glass" style="flex: 2; padding: 24px; display: flex; flex-direction: column;">
               <div class="card-header">
-                <h3>System Users</h3>
+                <h3 class="label-user_list_title">System Users</h3>
               </div>
               <div class="table-container" style="overflow-y: auto; max-height: 450px;">
                 <table class="data-table">
                   <thead>
                     <tr>
-                      <th>User ID</th>
-                      <th>Username</th>
-                      <th>System Role</th>
-                      <th>Actions</th>
+                      <th class="label-user_th_id">User ID</th>
+                      <th class="label-user_th_username">Username</th>
+                      <th class="label-user_th_role">System Role</th>
+                      <th class="label-user_th_actions">Actions</th>
                     </tr>
                   </thead>
                   <tbody id="users-table-body">
@@ -526,24 +526,24 @@
           <div class="inventory-table glass" style="margin-top: 24px; padding: 24px; display: flex; flex-direction: column; width: 100%;">
             <div class="card-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
               <div>
-                <h3 style="margin-bottom: 4px;">Role Access Control (Privilege Matrix)</h3>
-                <p style="font-size: 12px; color: var(--text-muted); margin: 0;">Configure dynamic view and action (Add, Edit, Delete) authorization privileges for each role</p>
+                <h3 style="margin-bottom: 4px;" class="label-user_rbac_title">Role Access Control (Privilege Matrix)</h3>
+                <p style="font-size: 12px; color: var(--text-muted); margin: 0;" class="label-user_rbac_subtitle">Configure dynamic view and action (Add, Edit, Delete) authorization privileges for each role</p>
               </div>
               <button type="button" class="btn-primary" onclick="saveRolePrivileges()" style="padding: 10px 24px;">
                 <ion-icon name="save-outline" style="font-size: 16px; margin-right: 6px;"></ion-icon>
-                <span>Save Privileges</span>
+                <span class="label-user_rbac_save_button">Save Privileges</span>
               </button>
             </div>
             <div class="table-container" style="overflow-x: auto; background: rgba(0,0,0,0.15); border-radius: 8px; border: 1px solid var(--border-glass);">
               <table class="data-table" style="width: 100%; border-collapse: collapse;">
                 <thead>
                   <tr style="border-bottom: 1px solid var(--border-glass);">
-                    <th style="width: 130px; padding: 12px; text-align: left; color: var(--text-secondary);">System Role</th>
-                    <th style="padding: 12px; text-align: center; color: var(--text-secondary);">Dashboard Overview</th>
-                    <th style="padding: 12px; text-align: center; color: var(--text-secondary);">Billing & POS</th>
-                    <th style="padding: 12px; text-align: center; color: var(--text-secondary);">Inventory</th>
-                    <th style="padding: 12px; text-align: center; color: var(--text-secondary);">Customers</th>
-                    <th style="padding: 12px; text-align: center; color: var(--text-secondary);">User & Role Management</th>
+                    <th style="width: 130px; padding: 12px; text-align: left; color: var(--text-secondary);" class="label-user_rbac_th_role">System Role</th>
+                    <th style="padding: 12px; text-align: center; color: var(--text-secondary);" class="label-user_rbac_th_overview">Dashboard Overview</th>
+                    <th style="padding: 12px; text-align: center; color: var(--text-secondary);" class="label-user_rbac_th_billing">Billing & POS</th>
+                    <th style="padding: 12px; text-align: center; color: var(--text-secondary);" class="label-user_rbac_th_inventory">Inventory</th>
+                    <th style="padding: 12px; text-align: center; color: var(--text-secondary);" class="label-user_rbac_th_customers">Customers</th>
+                    <th style="padding: 12px; text-align: center; color: var(--text-secondary);" class="label-user_rbac_th_users">User & Role Management</th>
                   </tr>
                 </thead>
                 <tbody id="privilege-matrix-body">

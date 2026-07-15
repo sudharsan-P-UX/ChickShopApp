@@ -77,18 +77,18 @@ class _CustomersScreenState extends State<CustomersScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text(
-                      'Register Loyalty Customer',
-                      style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
+                    Text(
+                      state.getLabel('cust_register_title', 'Register Customer'),
+                      style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
                     ),
                     const SizedBox(height: 12),
                     TextFormField(
                       controller: _phoneController,
                       keyboardType: TextInputType.phone,
-                      decoration: const InputDecoration(
-                        labelText: 'Phone Number',
-                        prefixIcon: Icon(Icons.phone),
-                        border: OutlineInputBorder(),
+                      decoration: InputDecoration(
+                        labelText: state.getLabel('cust_phone_label', 'Phone Number'),
+                        prefixIcon: const Icon(Icons.phone),
+                        border: const OutlineInputBorder(),
                       ),
                       validator: (value) {
                         if (value == null || value.trim().isEmpty) {
@@ -100,10 +100,10 @@ class _CustomersScreenState extends State<CustomersScreen> {
                     const SizedBox(height: 12),
                     TextFormField(
                       controller: _nameController,
-                      decoration: const InputDecoration(
-                        labelText: 'Full Name',
-                        prefixIcon: Icon(Icons.person),
-                        border: OutlineInputBorder(),
+                      decoration: InputDecoration(
+                        labelText: state.getLabel('cust_name_label', 'Customer Name'),
+                        prefixIcon: const Icon(Icons.person),
+                        border: const OutlineInputBorder(),
                       ),
                       validator: (value) {
                         if (value == null || value.trim().isEmpty) {
@@ -121,7 +121,7 @@ class _CustomersScreenState extends State<CustomersScreen> {
                         minimumSize: const Size.fromHeight(45),
                       ),
                       icon: const Icon(Icons.person_add),
-                      label: const Text('Add Loyalty Customer'),
+                      label: Text(state.getLabel('cust_register_button', 'Register Customer')),
                     ),
                   ],
                 ),
@@ -131,12 +131,12 @@ class _CustomersScreenState extends State<CustomersScreen> {
           const SizedBox(height: 20),
           // Directory Title and Search Box
           Row(
-            children: const [
-              Icon(Icons.people_outline, color: Colors.deepOrange),
-              SizedBox(width: 8),
+            children: [
+              const Icon(Icons.people_outline, color: Colors.deepOrange),
+              const SizedBox(width: 8),
               Text(
-                'Customer Directory',
-                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                state.getLabel('cust_list_title', 'Customer Directory'),
+                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
               ),
             ],
           ),

@@ -51,32 +51,73 @@ const uploadToImgBB = (base64Data) => {
 };
 
 const defaultLabels = [
-  // Billing & POS
-  { menu_key: 'billing', label_key: 'billing_menu', label_name: 'Billing & POS', custom_label: 'Billing & POS' },
-  { menu_key: 'billing', label_key: 'view_cart', label_name: 'View Cart', custom_label: 'View Cart' },
-  { menu_key: 'billing', label_key: 'add_button', label_name: 'Add', custom_label: 'Add' },
-  { menu_key: 'billing', label_key: 'out_of_stock', label_name: 'Out of Stock', custom_label: 'Out of Stock' },
-  { menu_key: 'billing', label_key: 'pending_orders', label_name: 'Pending Orders', custom_label: 'Pending Orders' },
+  // Billing & POS Menu Headers & Buttons
+  { menu_key: 'billing', label_key: 'billing_menu', label_name: 'Billing & POS Menu Title', custom_label: 'Billing & POS' },
+  { menu_key: 'billing', label_key: 'view_cart', label_name: 'View Cart Label', custom_label: 'View Cart' },
+  { menu_key: 'billing', label_key: 'add_button', label_name: 'Add Button Label', custom_label: 'Add' },
+  { menu_key: 'billing', label_key: 'out_of_stock', label_name: 'Out of Stock Label', custom_label: 'Out of Stock' },
+  { menu_key: 'billing', label_key: 'pending_orders', label_name: 'Pending Orders Label', custom_label: 'Pending Orders' },
 
-  // Overview
-  { menu_key: 'overview', label_key: 'overview_menu', label_name: 'Overview', custom_label: 'Overview' },
-  { menu_key: 'overview', label_key: 'total_revenue', label_name: 'Total Revenue', custom_label: 'Total Revenue' },
-  { menu_key: 'overview', label_key: 'completed_bills', label_name: 'Completed Bills', custom_label: 'Completed Bills' },
-  { menu_key: 'overview', label_key: 'low_stock_alert', label_name: 'Low Stock Alert', custom_label: 'Low Stock Alert' },
-  { menu_key: 'overview', label_key: 'registered_customers', label_name: 'Registered Customers', custom_label: 'Registered Customers' },
+  // Overview Dashboard
+  { menu_key: 'overview', label_key: 'overview_menu', label_name: 'Overview Menu Title', custom_label: 'Overview' },
+  { menu_key: 'overview', label_key: 'total_revenue', label_name: 'Total Revenue Card Title', custom_label: 'Total Revenue' },
+  { menu_key: 'overview', label_key: 'completed_bills', label_name: 'Completed Bills Card Title', custom_label: 'Completed Bills' },
+  { menu_key: 'overview', label_key: 'low_stock_alert', label_name: 'Low Stock Alert Card Title', custom_label: 'Low Stock Alert' },
+  { menu_key: 'overview', label_key: 'registered_customers', label_name: 'Registered Customers Card Title', custom_label: 'Registered Customers' },
 
-  // Inventory
-  { menu_key: 'inventory', label_key: 'inventory_menu', label_name: 'Inventory Control', custom_label: 'Inventory Control' },
+  // Inventory Control View
+  { menu_key: 'inventory', label_key: 'inventory_menu', label_name: 'Inventory Menu Title', custom_label: 'Inventory Control' },
+  { menu_key: 'inventory', label_key: 'inv_add_item_title', label_name: 'Add Item Header', custom_label: 'Add New Inventory Item' },
+  { menu_key: 'inventory', label_key: 'inv_item_name_label', label_name: 'Item Name Input Label', custom_label: 'Item Name' },
+  { menu_key: 'inventory', label_key: 'inv_description_label', label_name: 'Description Input Label', custom_label: 'Description' },
+  { menu_key: 'inventory', label_key: 'inv_qty_label', label_name: 'Quantity (Stock) Input Label', custom_label: 'Quantity (Stock)' },
+  { menu_key: 'inventory', label_key: 'inv_price_label', label_name: 'Price (₹) Input Label', custom_label: 'Price (₹)' },
+  { menu_key: 'inventory', label_key: 'inv_image_label', label_name: 'Item Image Input Label', custom_label: 'Item Image' },
+  { menu_key: 'inventory', label_key: 'inv_add_button', label_name: 'Add Item Button', custom_label: 'Add Item' },
+  { menu_key: 'inventory', label_key: 'inv_items_title', label_name: 'Inventory Items Header', custom_label: 'Inventory Items' },
+  { menu_key: 'inventory', label_key: 'inv_th_image', label_name: 'Table Header: Image', custom_label: 'Image' },
+  { menu_key: 'inventory', label_key: 'inv_th_name', label_name: 'Table Header: Item Name', custom_label: 'Item Name' },
+  { menu_key: 'inventory', label_key: 'inv_th_price', label_name: 'Table Header: Price', custom_label: 'Price' },
+  { menu_key: 'inventory', label_key: 'inv_th_stock', label_name: 'Table Header: Stock Qty', custom_label: 'Stock Qty' },
+  { menu_key: 'inventory', label_key: 'inv_th_status', label_name: 'Table Header: Status', custom_label: 'Status' },
+  { menu_key: 'inventory', label_key: 'inv_th_actions', label_name: 'Table Header: Actions', custom_label: 'Actions' },
 
-  // Customers
-  { menu_key: 'customers', label_key: 'customers_menu', label_name: 'Customer Directory', custom_label: 'Customer Directory' },
+  // Customer Directory View
+  { menu_key: 'customers', label_key: 'customers_menu', label_name: 'Customers Menu Title', custom_label: 'Customer Directory' },
+  { menu_key: 'customers', label_key: 'cust_register_title', label_name: 'Register Customer Header', custom_label: 'Register Customer' },
+  { menu_key: 'customers', label_key: 'cust_phone_label', label_name: 'Phone Number Input Label', custom_label: 'Phone Number' },
+  { menu_key: 'customers', label_key: 'cust_name_label', label_name: 'Customer Name Input Label', custom_label: 'Customer Name' },
+  { menu_key: 'customers', label_key: 'cust_register_button', label_name: 'Register Customer Button', custom_label: 'Register Customer' },
+  { menu_key: 'customers', label_key: 'cust_list_title', label_name: 'Customer Directory Header', custom_label: 'Customer Directory' },
+  { menu_key: 'customers', label_key: 'cust_th_phone', label_name: 'Table Header: Phone Number', custom_label: 'Phone Number' },
+  { menu_key: 'customers', label_key: 'cust_th_name', label_name: 'Table Header: Customer Name', custom_label: 'Customer Name' },
+  { menu_key: 'customers', label_key: 'cust_th_date', label_name: 'Table Header: Registered Date', custom_label: 'Registered Date' },
 
-  // Users
-  { menu_key: 'users', label_key: 'users_menu', label_name: 'User Management', custom_label: 'User Management' },
+  // User Management View
+  { menu_key: 'users', label_key: 'users_menu', label_name: 'Users Menu Title', custom_label: 'User Management' },
+  { menu_key: 'users', label_key: 'user_register_title', label_name: 'Register New User Header', custom_label: 'Register New User' },
+  { menu_key: 'users', label_key: 'user_roles_title', label_name: 'Custom System Roles Header', custom_label: 'Custom System Roles' },
+  { menu_key: 'users', label_key: 'user_username_label', label_name: 'Username Input Label', custom_label: 'Username' },
+  { menu_key: 'users', label_key: 'user_password_label', label_name: 'Password Input Label', custom_label: 'Password' },
+  { menu_key: 'users', label_key: 'user_role_label', label_name: 'User Role Dropdown Label', custom_label: 'User Role' },
+  { menu_key: 'users', label_key: 'user_list_title', label_name: 'System Users Header', custom_label: 'System Users' },
+  { menu_key: 'users', label_key: 'user_th_id', label_name: 'Table Header: User ID', custom_label: 'User ID' },
+  { menu_key: 'users', label_key: 'user_th_username', label_name: 'Table Header: Username', custom_label: 'Username' },
+  { menu_key: 'users', label_key: 'user_th_role', label_name: 'Table Header: System Role', custom_label: 'System Role' },
+  { menu_key: 'users', label_key: 'user_th_actions', label_name: 'Table Header: Actions', custom_label: 'Actions' },
+  { menu_key: 'users', label_key: 'user_rbac_title', label_name: 'RBAC Card Header', custom_label: 'Role Access Control (Privilege Matrix)' },
+  { menu_key: 'users', label_key: 'user_rbac_subtitle', label_name: 'RBAC Card Description', custom_label: 'Configure dynamic view and action (Add, Edit, Delete) authorization privileges for each role' },
+  { menu_key: 'users', label_key: 'user_rbac_save_button', label_name: 'Save Privileges Button', custom_label: 'Save Privileges' },
+  { menu_key: 'users', label_key: 'user_rbac_th_role', label_name: 'Matrix Table: System Role', custom_label: 'System Role' },
+  { menu_key: 'users', label_key: 'user_rbac_th_overview', label_name: 'Matrix Table: Dashboard Overview', custom_label: 'Dashboard Overview' },
+  { menu_key: 'users', label_key: 'user_rbac_th_billing', label_name: 'Matrix Table: Billing & POS', custom_label: 'Billing & POS' },
+  { menu_key: 'users', label_key: 'user_rbac_th_inventory', label_name: 'Matrix Table: Inventory', custom_label: 'Inventory' },
+  { menu_key: 'users', label_key: 'user_rbac_th_customers', label_name: 'Matrix Table: Customers', custom_label: 'Customers' },
+  { menu_key: 'users', label_key: 'user_rbac_th_users', label_name: 'Matrix Table: User & Role Management', custom_label: 'User & Role Management' },
 
-  // Custom Label
-  { menu_key: 'custom_labels', label_key: 'custom_labels_menu', label_name: 'Custom Label', custom_label: 'Custom Label' },
-  { menu_key: 'custom_labels', label_key: 'app_logo', label_name: 'App Logo Image', custom_label: '' }
+  // Custom Label Settings View
+  { menu_key: 'custom_labels', label_key: 'custom_labels_menu', label_name: 'Custom Label Menu Title', custom_label: 'Custom Label' },
+  { menu_key: 'custom_labels', label_key: 'app_logo', label_name: 'App Logo Image Uploader', custom_label: '' }
 ];
 
 exports.getAllLabels = async (req, res) => {

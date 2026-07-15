@@ -386,7 +386,7 @@ class _UsersScreenState extends State<UsersScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text('Manage Custom Roles', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
+                  Text(state.getLabel('user_roles_title', 'Custom System Roles'), style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
                   const SizedBox(height: 12),
                   Form(
                     key: _roleFormKey,
@@ -439,20 +439,20 @@ class _UsersScreenState extends State<UsersScreen> {
               child: Form(
                 key: _userFormKey,
                 child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text('Register System User Account', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
+                    Text(state.getLabel('user_register_title', 'Register New User'), style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
                     const SizedBox(height: 12),
                     TextFormField(
                       controller: _usernameController,
-                      decoration: const InputDecoration(labelText: 'Username', prefixIcon: Icon(Icons.person_outline), border: OutlineInputBorder()),
+                      decoration: InputDecoration(labelText: state.getLabel('user_username_label', 'Username'), prefixIcon: const Icon(Icons.person_outline), border: const OutlineInputBorder()),
                       validator: (value) => value == null || value.trim().isEmpty ? 'Username is required' : null,
                     ),
                     const SizedBox(height: 12),
                     TextFormField(
                       controller: _passwordController,
                       obscureText: true,
-                      decoration: const InputDecoration(labelText: 'Password', prefixIcon: Icon(Icons.lock_outline), border: OutlineInputBorder()),
+                      decoration: InputDecoration(labelText: state.getLabel('user_password_label', 'Password'), prefixIcon: const Icon(Icons.lock_outline), border: const OutlineInputBorder()),
                       validator: (value) {
                         if (value == null || value.isEmpty) return 'Password is required';
                         if (value.length < 6) return 'Password must be at least 6 characters';
@@ -462,7 +462,7 @@ class _UsersScreenState extends State<UsersScreen> {
                     const SizedBox(height: 12),
                     DropdownButtonFormField<String>(
                       value: _selectedRole,
-                      decoration: const InputDecoration(labelText: 'User Role', prefixIcon: Icon(Icons.shield_outlined), border: OutlineInputBorder()),
+                      decoration: InputDecoration(labelText: state.getLabel('user_role_label', 'User Role'), prefixIcon: const Icon(Icons.shield_outlined), border: const OutlineInputBorder()),
                       items: availableRoles.map((role) {
                         return DropdownMenuItem<String>(
                           value: role,
@@ -482,7 +482,7 @@ class _UsersScreenState extends State<UsersScreen> {
                       onPressed: () => _createUser(state),
                       style: ElevatedButton.styleFrom(backgroundColor: Colors.deepOrange, foregroundColor: Colors.white, minimumSize: const Size.fromHeight(45)),
                       icon: const Icon(Icons.add_moderator),
-                      label: const Text('Create User Account'),
+                      label: Text(state.getLabel('user_register_title', 'Register New User')),
                     ),
                   ],
                 ),
@@ -492,10 +492,10 @@ class _UsersScreenState extends State<UsersScreen> {
           const SizedBox(height: 20),
           // Active Users List
           Row(
-            children: const [
-              Icon(Icons.shield, color: Colors.deepOrange),
-              SizedBox(width: 8),
-              Text('Active System Users', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+            children: [
+              const Icon(Icons.shield, color: Colors.deepOrange),
+              const SizedBox(width: 8),
+              Text(state.getLabel('user_list_title', 'System Users'), style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
             ],
           ),
           const SizedBox(height: 12),
@@ -554,10 +554,10 @@ class _UsersScreenState extends State<UsersScreen> {
                 ),
           const SizedBox(height: 24),
           Row(
-            children: const [
-              Icon(Icons.lock_open, color: Colors.deepOrange),
-              SizedBox(width: 8),
-              Text('Role Access Control (Privilege Matrix)', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+            children: [
+              const Icon(Icons.lock_open, color: Colors.deepOrange),
+              const SizedBox(width: 8),
+              Text(state.getLabel('user_rbac_title', 'Role Access Control (Privilege Matrix)'), style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
             ],
           ),
           const SizedBox(height: 12),
@@ -568,9 +568,9 @@ class _UsersScreenState extends State<UsersScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text(
-                    'Configure dynamic view and action authorization privileges for each role.',
-                    style: TextStyle(fontSize: 12, color: Colors.grey),
+                  Text(
+                    state.getLabel('user_rbac_subtitle', 'Configure dynamic view and action (Add, Edit, Delete) authorization privileges for each role'),
+                    style: const TextStyle(fontSize: 12, color: Colors.grey),
                   ),
                   const SizedBox(height: 12),
                   ...state.roles.map((r) {
@@ -588,11 +588,11 @@ class _UsersScreenState extends State<UsersScreen> {
                       ),
                       subtitle: Text(isAdminRole ? 'Full Access Granted' : 'Custom Privilege Access rules'),
                       children: [
-                        _buildMenuPermissionRow(roleId, 'dashboard', 'Dashboard Overview', isAdminRole, ['view']),
-                        _buildMenuPermissionRow(roleId, 'billing', 'Billing & POS', isAdminRole, ['view', 'add', 'delete']),
-                        _buildMenuPermissionRow(roleId, 'inventory', 'Inventory Control', isAdminRole, ['view', 'add', 'edit', 'delete']),
-                        _buildMenuPermissionRow(roleId, 'customers', 'Customer Directory', isAdminRole, ['view', 'add']),
-                        _buildMenuPermissionRow(roleId, 'users', 'User Management', isAdminRole, ['view', 'add', 'edit', 'delete']),
+                        _buildMenuPermissionRow(roleId, 'dashboard', state.getLabel('user_rbac_th_overview', 'Dashboard Overview'), isAdminRole, ['view']),
+                        _buildMenuPermissionRow(roleId, 'billing', state.getLabel('user_rbac_th_billing', 'Billing & POS'), isAdminRole, ['view', 'add', 'delete']),
+                        _buildMenuPermissionRow(roleId, 'inventory', state.getLabel('user_rbac_th_inventory', 'Inventory'), isAdminRole, ['view', 'add', 'edit', 'delete']),
+                        _buildMenuPermissionRow(roleId, 'customers', state.getLabel('user_rbac_th_customers', 'Customers'), isAdminRole, ['view', 'add']),
+                        _buildMenuPermissionRow(roleId, 'users', state.getLabel('user_rbac_th_users', 'User & Role Management'), isAdminRole, ['view', 'add', 'edit', 'delete']),
                       ],
                     );
                   }).toList(),
@@ -607,7 +607,7 @@ class _UsersScreenState extends State<UsersScreen> {
                     icon: _isSavingPrivileges
                         ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
                         : const Icon(Icons.save),
-                    label: const Text('Save Privileges'),
+                    label: Text(state.getLabel('user_rbac_save_button', 'Save Privileges')),
                   ),
                 ],
               ),
