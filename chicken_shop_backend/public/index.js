@@ -457,21 +457,28 @@ function renderPOSProducts(products) {
     const cartItem = cart[item.id];
     const qtyInCart = cartItem ? cartItem.qty : 0;
     
-    const minusBtn = qtyInCart > 0 
-      ? `<div class="btn-minus-badge" onclick="event.stopPropagation(); updateCartQty(${item.id}, -1)"><ion-icon name="remove"></ion-icon></div>`
-      : '';
     const qtyBadge = qtyInCart > 0 
       ? `<div class="cart-qty-badge">${qtyInCart} in cart</div>`
       : '';
 
     const isOutOfStock = item.qty <= 0;
-    const addBtn = isOutOfStock
-      ? `<button class="btn-add-to-cart" style="background: #333; color: #777; cursor: not-allowed;" disabled><ion-icon name="ban-outline"></ion-icon> Out of Stock</button>`
-      : `<button class="btn-add-to-cart" onclick="event.stopPropagation(); addToPOSCart(${item.id})"><ion-icon name="basket-outline"></ion-icon> Add</button>`;
+    let addBtn;
+    if (isOutOfStock) {
+      addBtn = `<button class="btn-add-to-cart" style="background: #333; color: #777; cursor: not-allowed;" disabled><ion-icon name="ban-outline"></ion-icon> Out of Stock</button>`;
+    } else if (qtyInCart > 0) {
+      addBtn = `
+        <div class="btn-add-to-cart" style="display: flex; justify-content: space-between; align-items: center; padding: 0 12px; background: var(--accent-orange); color: #fff; cursor: default;">
+          <button onclick="event.stopPropagation(); updateCartQty(${item.id}, -1)" style="background: none; border: none; color: #fff; cursor: pointer; display: flex; align-items: center; justify-content: center; width: 30px; height: 100%; font-size: 20px; font-weight: bold; padding: 0;">-</button>
+          <span style="font-weight: 700; font-size: 14px; user-select: none;">${qtyInCart}</span>
+          <button onclick="event.stopPropagation(); updateCartQty(${item.id}, 1)" style="background: none; border: none; color: #fff; cursor: pointer; display: flex; align-items: center; justify-content: center; width: 30px; height: 100%; font-size: 20px; font-weight: bold; padding: 0;">+</button>
+        </div>
+      `;
+    } else {
+      addBtn = `<button class="btn-add-to-cart" onclick="event.stopPropagation(); addToPOSCart(${item.id})"><ion-icon name="basket-outline"></ion-icon> Add</button>`;
+    }
 
     return `
       <div class="product-card">
-        ${minusBtn}
         ${qtyBadge}
         ${imgTag}
         <h4>${item.item_name}</h4>
