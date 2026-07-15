@@ -1729,7 +1729,7 @@ function applyCustomLabels() {
   const titles = {
     'dashboard-view': overviewTitle,
     'billing-view': billingTitle,
-    'cart-view': getCustomLabelValue('cart_details_title', 'Shopping Cart Details'),
+    'cart-view': getCustomLabelValue('view_cart_details', 'View Cart Details'),
     'inventory-view': inventoryTitle,
     'customers-view': customersTitle,
     'pending-view': pendingOrdersTitle,

@@ -54,6 +54,7 @@ const defaultLabels = [
   // Billing & POS Menu Headers & Buttons
   { menu_key: 'billing', label_key: 'billing_menu', label_name: 'Billing & POS Menu Title', custom_label: 'Billing & POS' },
   { menu_key: 'billing', label_key: 'view_cart', label_name: 'View Cart Label', custom_label: 'View Cart' },
+  { menu_key: 'billing', label_key: 'view_cart_details', label_name: 'View Cart Details Title', custom_label: 'View Cart Details' },
   { menu_key: 'billing', label_key: 'add_button', label_name: 'Add Button Label', custom_label: 'Add' },
   { menu_key: 'billing', label_key: 'out_of_stock', label_name: 'Out of Stock Label', custom_label: 'Out of Stock' },
   { menu_key: 'billing', label_key: 'pending_orders', label_name: 'Pending Orders Label', custom_label: 'Pending Orders' },

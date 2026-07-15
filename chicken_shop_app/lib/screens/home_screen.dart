@@ -36,7 +36,7 @@ class _HomeScreenState extends State<HomeScreen> {
       case 1:
         return appState.getLabel('overview_menu', 'Overview');
       case 2:
-        return appState.getLabel('view_cart', 'View Cart');
+        return appState.getLabel('view_cart_details', 'View Cart Details');
       case 3:
         return appState.getLabel('pending_orders', 'Pending Orders');
       case 4:
