@@ -7,6 +7,7 @@ const authRoutes = require('./routes/authRoutes');
 const customerRoutes = require('./routes/customerRoutes');
 const inventoryRoutes = require('./routes/inventoryRoutes');
 const billingRoutes = require('./routes/billingRoutes');
+const labelRoutes = require('./routes/labelRoutes');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -31,6 +32,9 @@ app.use('/inventory', inventoryRoutes);
 
 app.use('/api/billing', billingRoutes);
 app.use('/billing', billingRoutes);
+
+app.use('/api/custom-labels', labelRoutes);
+app.use('/custom-labels', labelRoutes);
 
 
 // Export the app for Vercel Serverless Functions

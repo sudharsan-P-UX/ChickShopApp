@@ -314,4 +314,27 @@ class ApiService {
       throw Exception(body['message'] ?? 'Failed to delete pending bill');
     }
   }
+
+  static Future<List<dynamic>> getCustomLabels() async {
+    final headers = await _getHeaders();
+    final response = await http.get(Uri.parse('$baseUrl/custom-labels'), headers: headers);
+    if (response.statusCode == 200) {
+      return jsonDecode(response.body);
+    }
+    throw Exception('Failed to load custom labels');
+  }
+
+  static Future<List<dynamic>> updateCustomLabels(List<Map<String, dynamic>> labels) async {
+    final headers = await _getHeaders();
+    final response = await http.put(
+      Uri.parse('$baseUrl/custom-labels'),
+      headers: headers,
+      body: jsonEncode({'labels': labels}),
+    );
+    if (response.statusCode == 200) {
+      return jsonDecode(response.body);
+    }
+    final body = jsonDecode(response.body);
+    throw Exception(body['message'] ?? 'Failed to update custom labels');
+  }
 }

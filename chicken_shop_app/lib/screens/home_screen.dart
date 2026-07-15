@@ -8,6 +8,7 @@ import 'pending_orders_screen.dart';
 import 'inventory_screen.dart';
 import 'customers_screen.dart';
 import 'users_screen.dart';
+import 'labels_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -25,24 +26,27 @@ class _HomeScreenState extends State<HomeScreen> {
     const InventoryScreen(),
     const CustomersScreen(),
     const UsersScreen(),
+    const LabelsScreen(),
   ];
 
-  String _getScreenTitle(int index) {
+  String _getScreenTitle(int index, AppState appState) {
     switch (index) {
       case 0:
-        return 'Billing & POS';
+        return appState.getLabel('billing_menu', 'Billing & POS');
       case 1:
-        return 'Overview';
+        return appState.getLabel('overview_menu', 'Overview');
       case 2:
-        return 'View Cart';
+        return appState.getLabel('view_cart', 'View Cart');
       case 3:
-        return 'Pending Orders';
+        return appState.getLabel('pending_orders', 'Pending Orders');
       case 4:
-        return 'Inventory Control';
+        return appState.getLabel('inventory_menu', 'Inventory Control');
       case 5:
-        return 'Customer Directory';
+        return appState.getLabel('customers_menu', 'Customer Directory');
       case 6:
-        return 'User Management';
+        return appState.getLabel('users_menu', 'User Management');
+      case 7:
+        return appState.getLabel('custom_labels_menu', 'Custom Label');
       default:
         return 'Chicken Shop POS';
     }
@@ -61,6 +65,7 @@ class _HomeScreenState extends State<HomeScreen> {
       case 4: menuKey = 'inventory'; break;
       case 5: menuKey = 'customers'; break;
       case 6: menuKey = 'users'; break;
+      case 7: menuKey = 'custom_labels'; break;
     }
     if (menuKey != null && !appState.hasPermission(menuKey, 'view')) {
       index = 0; // Fallback to Billing POS
@@ -74,7 +79,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 onPressed: () => appState.setScreenIndex(0),
               )
             : null,
-        title: Text(_getScreenTitle(index)),
+        title: Text(_getScreenTitle(index, appState)),
         elevation: 2,
         actions: [
           if (index == 0) // Billing screen cart icon shortcut
@@ -149,7 +154,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         ListTile(
                           contentPadding: const EdgeInsets.only(left: 24, right: 16),
                           leading: const Icon(Icons.calculate_outlined),
-                          title: const Text('Billing & POS'),
+                          title: Text(appState.getLabel('billing_menu', 'Billing & POS')),
                           selected: index == 0,
                           onTap: () {
                             appState.setScreenIndex(0);
@@ -160,7 +165,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         ListTile(
                           contentPadding: const EdgeInsets.only(left: 24, right: 16),
                           leading: const Icon(Icons.shopping_cart_outlined),
-                          title: const Text('View Cart'),
+                          title: Text(appState.getLabel('view_cart', 'View Cart')),
                           selected: index == 2,
                           trailing: appState.cartCount > 0
                               ? Badge(
@@ -177,7 +182,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         ListTile(
                           contentPadding: const EdgeInsets.only(left: 24, right: 16),
                           leading: const Icon(Icons.bookmark_outline),
-                          title: const Text('Pending Orders'),
+                          title: Text(appState.getLabel('pending_orders', 'Pending Orders')),
                           selected: index == 3,
                           onTap: () {
                             appState.setScreenIndex(3);
@@ -195,7 +200,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         ListTile(
                           contentPadding: const EdgeInsets.only(left: 24, right: 16),
                           leading: const Icon(Icons.dashboard_outlined),
-                          title: const Text('Overview'),
+                          title: Text(appState.getLabel('overview_menu', 'Overview')),
                           selected: index == 1,
                           onTap: () {
                             appState.setScreenIndex(1);
@@ -206,7 +211,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         ListTile(
                           contentPadding: const EdgeInsets.only(left: 24, right: 16),
                           leading: const Icon(Icons.inventory_2_outlined),
-                          title: const Text('Inventory Control'),
+                          title: Text(appState.getLabel('inventory_menu', 'Inventory Control')),
                           selected: index == 4,
                           onTap: () {
                             appState.setScreenIndex(4);
@@ -217,7 +222,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         ListTile(
                           contentPadding: const EdgeInsets.only(left: 24, right: 16),
                           leading: const Icon(Icons.people_outline),
-                          title: const Text('Customer Directory'),
+                          title: Text(appState.getLabel('customers_menu', 'Customer Directory')),
                           selected: index == 5,
                           onTap: () {
                             appState.setScreenIndex(5);
@@ -228,10 +233,21 @@ class _HomeScreenState extends State<HomeScreen> {
                         ListTile(
                           contentPadding: const EdgeInsets.only(left: 24, right: 16),
                           leading: const Icon(Icons.admin_panel_settings_outlined),
-                          title: const Text('User Management'),
+                          title: Text(appState.getLabel('users_menu', 'User Management')),
                           selected: index == 6,
                           onTap: () {
                             appState.setScreenIndex(6);
+                            Navigator.pop(context);
+                          },
+                        ),
+                      if (appState.hasPermission('custom_labels', 'view'))
+                        ListTile(
+                          contentPadding: const EdgeInsets.only(left: 24, right: 16),
+                          leading: const Icon(Icons.create_outlined),
+                          title: Text(appState.getLabel('custom_labels_menu', 'Custom Label')),
+                          selected: index == 7,
+                          onTap: () {
+                            appState.setScreenIndex(7);
                             Navigator.pop(context);
                           },
                         ),

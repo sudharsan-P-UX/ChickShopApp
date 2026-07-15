@@ -17,6 +17,7 @@ class AppState with ChangeNotifier {
   List<dynamic> completedBills = [];
   List<dynamic> users = [];
   List<dynamic> roles = [];
+  List<dynamic> customLabels = [];
 
   // Active Cart State
   final Map<int, int> cart = {}; // itemId -> quantity
@@ -74,6 +75,8 @@ class AppState with ChangeNotifier {
     await prefs.setString('username', username);
     await prefs.setString('permissions', jsonEncode(_permissions));
     
+    await fetchCustomLabels();
+    
     notifyListeners();
   }
 
@@ -96,6 +99,24 @@ class AppState with ChangeNotifier {
   void setScreenIndex(int index) {
     _screenIndex = index;
     notifyListeners();
+  }
+
+  Future<void> fetchCustomLabels() async {
+    try {
+      customLabels = await ApiService.getCustomLabels();
+      notifyListeners();
+    } catch (e) {
+      debugPrint('Error fetching custom labels: $e');
+    }
+  }
+
+  String getLabel(String key, String defaultVal) {
+    if (customLabels.isEmpty) return defaultVal;
+    final item = customLabels.firstWhere(
+      (l) => l['label_key'] == key,
+      orElse: () => null,
+    );
+    return item != null ? item['custom_label'] : defaultVal;
   }
 
   // Load API Data

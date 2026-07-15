@@ -253,7 +253,7 @@ class _OverviewScreenState extends State<OverviewScreen> {
             childAspectRatio: 0.82,
             children: [
               _buildStatCard(
-                title: 'Total Revenue',
+                title: state.getLabel('total_revenue', 'Total Revenue'),
                 value: '₹${totalRevenue.toStringAsFixed(2)}',
                 subtitle: 'All completed orders',
                 icon: Icons.monetization_on,
@@ -261,7 +261,7 @@ class _OverviewScreenState extends State<OverviewScreen> {
                 onTap: () => _showSalesHistoryDialog(context, state),
               ),
               _buildStatCard(
-                title: 'Completed Bills',
+                title: state.getLabel('completed_bills', 'Completed Bills'),
                 value: '$completedBillsCount',
                 subtitle: 'Successfully processed',
                 icon: Icons.receipt_long,
@@ -269,7 +269,7 @@ class _OverviewScreenState extends State<OverviewScreen> {
                 onTap: () => _showSalesHistoryDialog(context, state),
               ),
               _buildStatCard(
-                title: 'Low Stock Alert',
+                title: state.getLabel('low_stock_alert', 'Low Stock Alert'),
                 value: '$lowStockCount',
                 subtitle: 'Quantity < 5 warning',
                 icon: Icons.warning,
@@ -277,7 +277,7 @@ class _OverviewScreenState extends State<OverviewScreen> {
                 onTap: () => state.setScreenIndex(4), // Go to Inventory Control
               ),
               _buildStatCard(
-                title: 'Registered Customers',
+                title: state.getLabel('registered_customers', 'Registered Customers'),
                 value: '$registeredCustomersCount',
                 subtitle: 'Total loyalty database',
                 icon: Icons.people,

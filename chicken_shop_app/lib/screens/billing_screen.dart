@@ -158,10 +158,10 @@ class _BillingScreenState extends State<BillingScreen> {
                                           color: Colors.grey[800],
                                           borderRadius: BorderRadius.circular(4),
                                         ),
-                                        child: const Center(
+                                        child: Center(
                                           child: Text(
-                                            'Out of Stock',
-                                            style: TextStyle(color: Colors.grey, fontSize: 11, fontWeight: FontWeight.bold),
+                                            state.getLabel('out_of_stock', 'Out of Stock'),
+                                            style: const TextStyle(color: Colors.grey, fontSize: 11, fontWeight: FontWeight.bold),
                                           ),
                                         ),
                                       )
@@ -229,7 +229,10 @@ class _BillingScreenState extends State<BillingScreen> {
                                               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
                                               elevation: 0,
                                             ),
-                                            child: const Text('Add', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
+                                            child: Text(
+                                              state.getLabel('add_button', 'Add'),
+                                              style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
+                                            ),
                                           ),
                               ),
                             ],
@@ -245,9 +248,9 @@ class _BillingScreenState extends State<BillingScreen> {
                                     child: Container(
                                       padding: const EdgeInsets.all(4),
                                       color: Colors.red,
-                                      child: const Text(
-                                        'OUT OF STOCK',
-                                        style: TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold),
+                                      child: Text(
+                                        state.getLabel('out_of_stock', 'OUT OF STOCK').toUpperCase(),
+                                        style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold),
                                       ),
                                     ),
                                   ),

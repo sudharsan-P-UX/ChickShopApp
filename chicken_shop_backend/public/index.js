@@ -39,6 +39,7 @@ function updateClock() {
 // Initialize Application UI / Auth State
 function initApp() {
   if (authToken && currentUser) {
+    loadCustomLabels();
     showAppLayout();
     switchView('billing-view');
     loadDashboardData();
@@ -63,7 +64,8 @@ function getPermissionKeyForView(viewId) {
     'pending-view': 'billing',
     'inventory-view': 'inventory',
     'customers-view': 'customers',
-    'users-view': 'users'
+    'users-view': 'users',
+    'labels-view': 'custom_labels'
   };
   return mapping[viewId] || null;
 }
@@ -193,6 +195,8 @@ function switchView(viewId) {
     loadPendingOrdersData();
   } else if (viewId === 'users-view') {
     loadUsersData();
+  } else if (viewId === 'labels-view') {
+    loadLabelsView();
   }
 }
 
@@ -333,6 +337,9 @@ function setupEventListeners() {
 
   // New Role Form
   document.getElementById('new-role-form').addEventListener('submit', handleNewRoleSubmit);
+
+  // Custom Labels Form
+  document.getElementById('custom-labels-form').addEventListener('submit', handleLabelsFormSubmit);
 }
 
 // Authentication Logic
@@ -353,6 +360,7 @@ async function handleLogin(e) {
     localStorage.setItem('user', JSON.stringify(currentUser));
 
     showToast('Signed in successfully!');
+    loadCustomLabels();
     showAppLayout();
     switchView('billing-view');
     
@@ -495,9 +503,11 @@ function renderPOSProducts(products) {
       : '';
 
     const isOutOfStock = item.qty <= 0;
+    const labelOutOfStock = getCustomLabelValue('out_of_stock', 'Out of Stock');
+    const labelAdd = getCustomLabelValue('add_button', 'Add');
     let addBtn;
     if (isOutOfStock) {
-      addBtn = `<button class="btn-add-to-cart" style="background: #333; color: #777; cursor: not-allowed;" disabled><ion-icon name="ban-outline"></ion-icon> Out of Stock</button>`;
+      addBtn = `<button class="btn-add-to-cart" style="background: #333; color: #777; cursor: not-allowed;" disabled><ion-icon name="ban-outline"></ion-icon> ${labelOutOfStock}</button>`;
     } else if (qtyInCart > 0) {
       addBtn = `
         <div class="btn-add-to-cart" style="display: flex; justify-content: space-between; align-items: center; padding: 0 12px; background: var(--accent-orange); color: #fff; cursor: default;">
@@ -507,7 +517,7 @@ function renderPOSProducts(products) {
         </div>
       `;
     } else {
-      addBtn = `<button class="btn-add-to-cart" onclick="event.stopPropagation(); addToPOSCart(${item.id})"><ion-icon name="basket-outline"></ion-icon> Add</button>`;
+      addBtn = `<button class="btn-add-to-cart" onclick="event.stopPropagation(); addToPOSCart(${item.id})"><ion-icon name="basket-outline"></ion-icon> ${labelAdd}</button>`;
     }
 
     return `
@@ -1651,9 +1661,133 @@ async function saveRolePrivileges() {
       localStorage.setItem('user', JSON.stringify(currentUser));
       showAppLayout();
     }
-
     await loadRolesData();
   } catch (err) {
     showToast(err.message, 'danger');
+  }
+}
+
+// Custom Labels Management System
+let customLabels = [];
+
+async function loadCustomLabels() {
+  try {
+    const data = await apiRequest('/custom-labels');
+    customLabels = data;
+    applyCustomLabels();
+  } catch (err) {
+    console.error('Failed to load custom labels:', err);
+  }
+}
+
+function applyCustomLabels() {
+  // Update spans/paragraphs with class label-XYZ
+  customLabels.forEach(item => {
+    const elements = document.querySelectorAll(`.label-${item.label_key}`);
+    elements.forEach(el => {
+      if (el.children.length === 0) {
+        el.textContent = item.custom_label;
+      } else {
+        for (const child of el.childNodes) {
+          if (child.nodeType === Node.TEXT_NODE) {
+            child.nodeValue = item.custom_label;
+          }
+        }
+      }
+    });
+  });
+  
+  // Also update specific headings and titles dynamically!
+  const billingTitle = getCustomLabelValue('billing_menu', 'Billing & POS');
+  const viewCartTitle = getCustomLabelValue('view_cart', 'View Cart');
+  const pendingOrdersTitle = getCustomLabelValue('pending_orders', 'Pending Orders');
+  const overviewTitle = getCustomLabelValue('overview_menu', 'Overview');
+  const inventoryTitle = getCustomLabelValue('inventory_menu', 'Inventory');
+  const customersTitle = getCustomLabelValue('customers_menu', 'Customers');
+  const usersTitle = getCustomLabelValue('users_menu', 'User Management');
+  const customLabelsTitle = getCustomLabelValue('custom_labels_menu', 'Custom Label');
+
+  const titles = {
+    'dashboard-view': overviewTitle + ' details',
+    'billing-view': billingTitle + ' System',
+    'cart-view': viewCartTitle + ' & Checkout',
+    'inventory-view': inventoryTitle + ' & Stock Control',
+    'customers-view': customersTitle + ' Directory',
+    'pending-view': pendingOrdersTitle,
+    'users-view': usersTitle + ' & Role Management',
+    'labels-view': customLabelsTitle + ' Manager'
+  };
+  
+  const activeView = document.querySelector('.app-view.active');
+  if (activeView) {
+    document.getElementById('page-title').textContent = titles[activeView.id] || 'Chicken Shop POS';
+  }
+}
+
+function getCustomLabelValue(key, defaultVal) {
+  const item = customLabels.find(l => l.label_key === key);
+  return item ? item.custom_label : defaultVal;
+}
+
+function loadLabelsView() {
+  const container = document.getElementById('labels-editor-container');
+  container.innerHTML = '';
+  
+  const groups = {};
+  customLabels.forEach(l => {
+    if (!groups[l.menu_key]) {
+      groups[l.menu_key] = [];
+    }
+    groups[l.menu_key].push(l);
+  });
+  
+  Object.keys(groups).forEach(menuKey => {
+    let sectionTitle = menuKey.toUpperCase();
+    if (menuKey === 'billing') sectionTitle = 'Billing & POS';
+    else if (menuKey === 'overview') sectionTitle = 'Overview & Dashboard';
+    else if (menuKey === 'inventory') sectionTitle = 'Inventory Control';
+    else if (menuKey === 'customers') sectionTitle = 'Customer Directory';
+    else if (menuKey === 'users') sectionTitle = 'User Management';
+    else if (menuKey === 'custom_labels') sectionTitle = 'Custom Labels';
+
+    const sectionHTML = `
+      <div style="background: rgba(255,255,255,0.02); padding: 16px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.05);">
+        <h3 style="margin-bottom: 12px; border-bottom: 1px dashed rgba(255,255,255,0.1); padding-bottom: 6px; color: var(--accent-orange);">${sectionTitle}</h3>
+        <div style="display: flex; flex-direction: column; gap: 12px;">
+          ${groups[menuKey].map(l => `
+            <div style="display: flex; align-items: center; justify-content: space-between; gap: 16px;">
+              <span style="font-size: 13px; font-weight: 500; color: #fff; flex: 1;">${l.label_name}</span>
+              <input type="text" data-key="${l.label_key}" value="${l.custom_label}" style="background: rgba(0,0,0,0.2); color: #fff; border: 1px solid var(--border-glass); padding: 8px 12px; border-radius: 4px; flex: 1.5; font-size: 13px;">
+            </div>
+          `).join('')}
+        </div>
+      </div>
+    `;
+    container.insertAdjacentHTML('beforeend', sectionHTML);
+  });
+}
+
+async function handleLabelsFormSubmit(e) {
+  e.preventDefault();
+  const inputs = document.querySelectorAll('#labels-editor-container input');
+  const labelsToUpdate = [];
+  
+  inputs.forEach(input => {
+    labelsToUpdate.push({
+      label_key: input.getAttribute('data-key'),
+      custom_label: input.value.trim()
+    });
+  });
+  
+  try {
+    const updated = await apiRequest('/custom-labels', {
+      method: 'PUT',
+      body: { labels: labelsToUpdate }
+    });
+    customLabels = updated;
+    applyCustomLabels();
+    showToast('Custom labels updated successfully!', 'success');
+  } catch (err) {
+    showToast('Failed to save labels: ' + err.message, 'danger');
   }
 }
