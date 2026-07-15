@@ -789,6 +789,16 @@ function removeImagePreview() {
   document.querySelector('.upload-placeholder').classList.remove('hidden');
 }
 
+// Helper to convert file to base64
+function fileToBase64(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result);
+    reader.onerror = error => reject(error);
+    reader.readAsDataURL(file);
+  });
+}
+
 // Submit Add / Edit Form
 async function handleInventoryFormSubmit(e) {
   e.preventDefault();
@@ -799,30 +809,33 @@ async function handleInventoryFormSubmit(e) {
   const price = parseFloat(document.getElementById('item_price').value);
   const fileInput = document.getElementById('item_image');
 
-  const formData = new FormData();
-  formData.append('item_name', name);
-  formData.append('description', description);
-  formData.append('qty', qty);
-  formData.append('price', price);
-
-  if (fileInput.files[0]) {
-    formData.append('image', fileInput.files[0]);
-  }
-
   try {
+    let base64Image = null;
+    if (fileInput.files[0]) {
+      base64Image = await fileToBase64(fileInput.files[0]);
+    }
+
+    const payload = {
+      item_name: name,
+      description,
+      qty,
+      price,
+      image_url: base64Image
+    };
+
     let response;
     if (editingItemId) {
       // Edit mode
       response = await apiRequest(`/inventory/${editingItemId}`, {
         method: 'PUT',
-        body: formData
+        body: payload
       });
       showToast(`Updated item: ${response.item_name}`);
     } else {
       // Add mode
       response = await apiRequest('/inventory', {
         method: 'POST',
-        body: formData
+        body: payload
       });
       showToast(`Added new item: ${response.item_name}`);
     }

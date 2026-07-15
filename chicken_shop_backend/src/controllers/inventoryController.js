@@ -2,7 +2,6 @@ const db = require('../config/db');
 const https = require('https');
 
 // Pure Node.js manual buffer multipart compiler for Catbox.moe
-// Safe for all Node versions on Vercel (no global FormData/Blob dependencies)
 const uploadToCatbox = (file) => {
   if (!file) return Promise.resolve(null);
   return new Promise((resolve) => {
@@ -47,6 +46,29 @@ const uploadToCatbox = (file) => {
   });
 };
 
+// Helper to decode Base64 data and upload it
+const uploadBase64ToCatbox = async (base64Data) => {
+  if (!base64Data || !base64Data.startsWith('data:')) return base64Data;
+  try {
+    const matches = base64Data.match(/^data:([A-Za-z-+\/]+);base64,(.+)$/);
+    if (!matches) return null;
+    
+    const mimeType = matches[1];
+    const buffer = Buffer.from(matches[2], 'base64');
+    const extension = mimeType.split('/')[1] || 'png';
+    const originalname = `upload.${extension}`;
+    
+    return await uploadToCatbox({
+      buffer,
+      originalname,
+      mimetype: mimeType
+    });
+  } catch (err) {
+    console.error('Base64 upload failed:', err);
+  }
+  return null;
+};
+
 exports.getAllItems = async (req, res) => {
   try {
     const { rows } = await db.query('SELECT * FROM inventory ORDER BY id ASC');
@@ -57,12 +79,12 @@ exports.getAllItems = async (req, res) => {
 };
 
 exports.addItem = async (req, res) => {
-  const { item_name, description, qty, price } = req.body;
+  const { item_name, description, qty, price, image_url } = req.body;
   try {
-    const image_url = req.file ? await uploadToCatbox(req.file) : null;
+    const uploadedUrl = image_url ? await uploadBase64ToCatbox(image_url) : null;
     const { rows } = await db.query(
       'INSERT INTO inventory (item_name, description, qty, price, image_url) VALUES ($1, $2, $3, $4, $5) RETURNING *',
-      [item_name, description, qty, price, image_url]
+      [item_name, description, qty, price, uploadedUrl]
     );
     res.status(201).json(rows[0]);
   } catch (err) {
@@ -72,12 +94,12 @@ exports.addItem = async (req, res) => {
 
 exports.updateItem = async (req, res) => {
   const { id } = req.params;
-  const { item_name, description, qty, price } = req.body;
+  const { item_name, description, qty, price, image_url } = req.body;
   try {
-    const image_url = req.file ? await uploadToCatbox(req.file) : req.body.image_url;
+    const uploadedUrl = image_url ? await uploadBase64ToCatbox(image_url) : req.body.image_url;
     const { rows } = await db.query(
       'UPDATE inventory SET item_name = $1, description = $2, qty = $3, price = $4, image_url = $5 WHERE id = $6 RETURNING *',
-      [item_name, description, qty, price, image_url, id]
+      [item_name, description, qty, price, uploadedUrl, id]
     );
     if (rows.length === 0) return res.status(404).json({ message: 'Item not found' });
     res.json(rows[0]);
