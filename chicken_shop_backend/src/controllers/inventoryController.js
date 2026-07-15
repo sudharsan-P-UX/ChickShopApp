@@ -11,7 +11,7 @@ exports.getAllItems = async (req, res) => {
 
 exports.addItem = async (req, res) => {
   const { item_name, description, qty, price } = req.body;
-  const image_url = req.file ? 'https://images.unsplash.com/photo-1548550022-c141e82e1577?auto=format&fit=crop&w=400&q=80' : null;
+  const image_url = req.file ? 'https://picsum.photos/200' : null;
   try {
     const { rows } = await db.query(
       'INSERT INTO inventory (item_name, description, qty, price, image_url) VALUES ($1, $2, $3, $4, $5) RETURNING *',
@@ -26,7 +26,7 @@ exports.addItem = async (req, res) => {
 exports.updateItem = async (req, res) => {
   const { id } = req.params;
   const { item_name, description, qty, price } = req.body;
-  const image_url = req.file ? 'https://images.unsplash.com/photo-1548550022-c141e82e1577?auto=format&fit=crop&w=400&q=80' : req.body.image_url;
+  const image_url = req.file ? 'https://picsum.photos/200' : req.body.image_url;
   try {
     const { rows } = await db.query(
       'UPDATE inventory SET item_name = $1, description = $2, qty = $3, price = $4, image_url = $5 WHERE id = $6 RETURNING *',
