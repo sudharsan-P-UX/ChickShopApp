@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:provider/provider.dart';
 import 'package:image_picker/image_picker.dart';
 import '../providers/app_state.dart';
@@ -95,7 +96,9 @@ class _InventoryScreenState extends State<InventoryScreen> {
                                 borderRadius: BorderRadius.circular(4),
                               ),
                               child: pickedImage != null
-                                  ? Image.file(File(pickedImage!.path), fit: BoxFit.cover)
+                                  ? (kIsWeb
+                                      ? Image.network(pickedImage!.path, fit: BoxFit.cover)
+                                      : Image.file(File(pickedImage!.path), fit: BoxFit.cover))
                                   : (isEdit && item['image_url'] != null
                                       ? Image.network('${ApiService.baseUrl.replaceAll('/api', '')}${item['image_url']}', fit: BoxFit.cover)
                                       : const Icon(Icons.image, color: Colors.grey)),

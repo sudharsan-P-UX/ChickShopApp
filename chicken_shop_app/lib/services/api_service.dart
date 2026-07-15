@@ -3,7 +3,7 @@ import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 
 class ApiService {
-  static const String baseUrl = 'https://c85blc-ip-49-37-209-75.tunnelmole.net/api'; 
+  static const String baseUrl = 'https://chick-shop-app.vercel.app/api'; 
 
   static Future<String?> _getToken() async {
     final prefs = await SharedPreferences.getInstance();
