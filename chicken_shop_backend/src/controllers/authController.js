@@ -68,6 +68,38 @@ exports.updateRole = async (req, res) => {
   }
 };
 
+exports.updateUser = async (req, res) => {
+  const { id } = req.params;
+  const { username, password, role } = req.body;
+  try {
+    const existing = await db.query('SELECT * FROM users WHERE id = $1', [id]);
+    if (existing.rows.length === 0) return res.status(404).json({ message: 'User not found' });
+    
+    let hash = existing.rows[0].password_hash;
+    if (password && password.trim().length > 0) {
+      hash = await bcrypt.hash(password, 10);
+    }
+    
+    const finalUsername = username && username.trim().length > 0 ? username.trim() : existing.rows[0].username;
+    const finalRole = role && role.trim().length > 0 ? role.trim() : existing.rows[0].role;
+    
+    if (finalRole !== existing.rows[0].role) {
+      const roleCheck = await db.query('SELECT 1 FROM roles WHERE role_name = $1', [finalRole]);
+      if (roleCheck.rows.length === 0) {
+        return res.status(400).json({ message: 'Invalid role. Role does not exist in system.' });
+      }
+    }
+    
+    const { rows } = await db.query(
+      'UPDATE users SET username = $1, password_hash = $2, role = $3 WHERE id = $4 RETURNING id, username, role',
+      [finalUsername, hash, finalRole, id]
+    );
+    res.json(rows[0]);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
 exports.deleteUser = async (req, res) => {
   const { id } = req.params;
   try {

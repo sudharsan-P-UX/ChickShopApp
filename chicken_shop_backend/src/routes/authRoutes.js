@@ -14,6 +14,7 @@ router.post('/login', authController.login);
 router.post('/register', authMiddleware, adminOnly, authController.register);
 router.get('/users', authMiddleware, adminOnly, authController.listUsers);
 router.put('/users/:id/role', authMiddleware, adminOnly, authController.updateRole);
+router.put('/users/:id', authMiddleware, adminOnly, authController.updateUser);
 router.delete('/users/:id', authMiddleware, adminOnly, authController.deleteUser);
 
 // Roles routing

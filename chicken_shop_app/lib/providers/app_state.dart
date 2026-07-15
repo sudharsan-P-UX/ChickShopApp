@@ -176,6 +176,11 @@ class AppState with ChangeNotifier {
     }
   }
 
+  Future<void> updateUserAccount(int id, String username, String? password, String role) async {
+    await ApiService.updateUser(id, username, password, role);
+    await fetchUsers();
+  }
+
   // Cart Management
   void addToCart(dynamic item) {
     final int itemId = item['id'];

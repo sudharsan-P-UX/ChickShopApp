@@ -26,7 +26,8 @@ const defaultLabels = [
   { menu_key: 'users', label_key: 'users_menu', label_name: 'User Management', custom_label: 'User Management' },
 
   // Custom Label
-  { menu_key: 'custom_labels', label_key: 'custom_labels_menu', label_name: 'Custom Label', custom_label: 'Custom Label' }
+  { menu_key: 'custom_labels', label_key: 'custom_labels_menu', label_name: 'Custom Label', custom_label: 'Custom Label' },
+  { menu_key: 'custom_labels', label_key: 'app_logo', label_name: 'App Logo Image', custom_label: '' }
 ];
 
 async function run() {

@@ -22,7 +22,7 @@
   <div id="login-screen" class="screen active">
     <div class="login-card glass">
       <div class="brand">
-        <div class="brand-logo">
+        <div class="brand-logo" id="login-logo-container">
           <ion-icon name="restaurant"></ion-icon>
         </div>
         <h1>Chicken Shop POS</h1>
@@ -38,9 +38,10 @@
         </div>
         <div class="input-group">
           <label for="password">Password</label>
-          <div class="input-wrapper">
+          <div class="input-wrapper" style="position: relative;">
             <ion-icon name="lock-closed-outline"></ion-icon>
-            <input type="password" id="password" required placeholder="Enter password">
+            <input type="password" id="password" required placeholder="Enter password" style="width: 100%; padding-right: 40px;">
+            <ion-icon name="eye-outline" id="toggle-login-password" style="position: absolute; right: 12px; cursor: pointer; color: var(--text-muted); font-size: 18px; z-index: 10;"></ion-icon>
           </div>
         </div>
         <button type="submit" class="btn-primary btn-block">
@@ -55,7 +56,7 @@
   <div id="app-layout" class="app-layout screen">
     <!-- Sidebar Navigation -->
     <aside class="sidebar glass">
-      <div class="sidebar-header">
+      <div class="sidebar-header" id="sidebar-logo-container">
         <ion-icon name="restaurant" class="logo-icon"></ion-icon>
         <h2>Chicken Shop</h2>
       </div>
@@ -664,6 +665,41 @@
         <div style="margin-top: 24px; text-align: center;">
           <button type="button" class="btn-primary" onclick="closeReceiptModal()" style="width: 100%; padding: 10px;">Close Receipt</button>
         </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal for Updating User Account -->
+  <div id="user-edit-modal" class="modal-overlay hidden">
+    <div class="modal-content glass" style="max-width: 400px;">
+      <div class="modal-header">
+        <h3>Update User Account</h3>
+        <button type="button" class="btn-close-modal" onclick="closeUserEditModal()">
+          <ion-icon name="close"></ion-icon>
+        </button>
+      </div>
+      <div class="modal-body">
+        <form id="edit-user-form" style="display: flex; flex-direction: column; gap: 16px;">
+          <input type="hidden" id="edit_user_id">
+          <div class="input-group">
+            <label for="edit_username">Username</label>
+            <input type="text" id="edit_username" required style="background: rgba(0,0,0,0.2); color: #fff; padding: 10px; border: 1px solid var(--border-glass); border-radius: 6px;">
+          </div>
+          <div class="input-group">
+            <label for="edit_password">New Password (leave blank to keep current)</label>
+            <input type="password" id="edit_password" placeholder="Min 6 characters if editing" style="background: rgba(0,0,0,0.2); color: #fff; padding: 10px; border: 1px solid var(--border-glass); border-radius: 6px;">
+          </div>
+          <div class="input-group">
+            <label for="edit_role">User Role</label>
+            <select id="edit_role" style="background: rgba(0,0,0,0.2); color: #fff; padding: 10px; border: 1px solid var(--border-glass); border-radius: 6px;">
+              <!-- Dynamic options -->
+            </select>
+          </div>
+          <div style="display: flex; gap: 8px; justify-content: flex-end; margin-top: 12px;">
+            <button type="button" class="btn-secondary" onclick="closeUserEditModal()">Cancel</button>
+            <button type="submit" class="btn-primary">Save Changes</button>
+          </div>
+        </form>
       </div>
     </div>
   </div>

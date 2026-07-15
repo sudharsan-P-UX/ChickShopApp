@@ -136,9 +136,19 @@ class _HomeScreenState extends State<HomeScreen> {
                 'Role: ${appState.userRole.toUpperCase()}',
                 style: TextStyle(color: Colors.white.withOpacity(0.8)),
               ),
-              currentAccountPicture: const CircleAvatar(
+              currentAccountPicture: CircleAvatar(
                 backgroundColor: Colors.white,
-                child: Icon(Icons.person, color: Colors.deepOrange, size: 40),
+                child: appState.getLabel('app_logo', '').isNotEmpty
+                    ? ClipOval(
+                        child: Image.network(
+                          appState.getLabel('app_logo', ''),
+                          width: 72,
+                          height: 72,
+                          fit: BoxFit.cover,
+                          errorBuilder: (context, error, stackTrace) => const Icon(Icons.person, color: Colors.deepOrange, size: 40),
+                        ),
+                      )
+                    : const Icon(Icons.person, color: Colors.deepOrange, size: 40),
               ),
             ),
             Expanded(

@@ -340,6 +340,20 @@ function setupEventListeners() {
 
   // Custom Labels Form
   document.getElementById('custom-labels-form').addEventListener('submit', handleLabelsFormSubmit);
+
+  // Edit User Form
+  document.getElementById('edit-user-form').addEventListener('submit', handleEditUserFormSubmit);
+
+  // Toggle Login Password Eye Icon Visibility
+  const togglePassBtn = document.getElementById('toggle-login-password');
+  if (togglePassBtn) {
+    togglePassBtn.addEventListener('click', function() {
+      const passwordInput = document.getElementById('password');
+      const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+      passwordInput.setAttribute('type', type);
+      this.setAttribute('name', type === 'password' ? 'eye-outline' : 'eye-off-outline');
+    });
+  }
 }
 
 // Authentication Logic
@@ -1487,10 +1501,13 @@ function renderUsersTable(users) {
         <td><span class="${badgeClass}">${u.role}</span></td>
         <td>
           ${isSelf ? '<span style="font-size:12px; color: var(--text-muted);">No actions</span>' : `
-            <button type="button" class="btn-primary" style="padding: 6px 12px; font-size: 12px;" onclick="toggleUserRole(${u.id}, '${u.role}')">
-              Change Role
+            <button type="button" class="btn-primary" style="padding: 6px 12px; font-size: 12px;" onclick="openUserEditModal(${u.id}, '${u.username}', '${u.role}')">
+              Edit
             </button>
-            <button type="button" class="btn-danger" style="padding: 6px 12px; font-size: 12px; margin-left: 8px;" onclick="deleteUserAccount(${u.id})">
+            <button type="button" class="btn-secondary" style="padding: 6px 12px; font-size: 12px; margin-left: 6px;" onclick="toggleUserRole(${u.id}, '${u.role}')">
+              Role
+            </button>
+            <button type="button" class="btn-danger" style="padding: 6px 12px; font-size: 12px; margin-left: 6px;" onclick="deleteUserAccount(${u.id})">
               Delete
             </button>
           `}
@@ -1722,6 +1739,32 @@ function applyCustomLabels() {
   if (activeView) {
     document.getElementById('page-title').textContent = titles[activeView.id] || 'Chicken Shop POS';
   }
+
+  // Apply Custom Logo Image
+  const logoUrl = getCustomLabelValue('app_logo', '');
+  const loginLogo = document.getElementById('login-logo-container');
+  if (loginLogo) {
+    if (logoUrl) {
+      loginLogo.innerHTML = `<img src="${logoUrl}" style="width: 100%; height: 100%; object-fit: contain; border-radius: 8px;">`;
+    } else {
+      loginLogo.innerHTML = `<ion-icon name="restaurant"></ion-icon>`;
+    }
+  }
+
+  const sidebarLogo = document.getElementById('sidebar-logo-container');
+  if (sidebarLogo) {
+    if (logoUrl) {
+      sidebarLogo.innerHTML = `
+        <img src="${logoUrl}" style="width: 32px; height: 32px; object-fit: contain; border-radius: 4px;">
+        <h2 class="label-billing_menu">${billingTitle}</h2>
+      `;
+    } else {
+      sidebarLogo.innerHTML = `
+        <ion-icon name="restaurant" class="logo-icon"></ion-icon>
+        <h2 class="label-billing_menu">${billingTitle}</h2>
+      `;
+    }
+  }
 }
 
 function getCustomLabelValue(key, defaultVal) {
@@ -1754,17 +1797,62 @@ function loadLabelsView() {
       <div style="background: rgba(255,255,255,0.02); padding: 16px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.05);">
         <h3 style="margin-bottom: 12px; border-bottom: 1px dashed rgba(255,255,255,0.1); padding-bottom: 6px; color: var(--accent-orange);">${sectionTitle}</h3>
         <div style="display: flex; flex-direction: column; gap: 12px;">
-          ${groups[menuKey].map(l => `
-            <div style="display: flex; align-items: center; justify-content: space-between; gap: 16px;">
-              <span style="font-size: 13px; font-weight: 500; color: #fff; flex: 1;">${l.label_name}</span>
-              <input type="text" data-key="${l.label_key}" value="${l.custom_label}" style="background: rgba(0,0,0,0.2); color: #fff; border: 1px solid var(--border-glass); padding: 8px 12px; border-radius: 4px; flex: 1.5; font-size: 13px;">
-            </div>
-          `).join('')}
+          ${groups[menuKey].map(l => {
+            if (l.label_key === 'app_logo') {
+              return `
+                <div style="display: flex; flex-direction: column; gap: 8px;">
+                  <div style="display: flex; align-items: center; justify-content: space-between; gap: 16px;">
+                    <span style="font-size: 13px; font-weight: 500; color: #fff; flex: 1;">${l.label_name}</span>
+                    <div style="display: flex; align-items: center; gap: 12px; flex: 1.5;">
+                      <input type="hidden" data-key="${l.label_key}" id="app_logo_url_input" value="${l.custom_label}">
+                      <input type="file" id="app_logo_file_input" accept="image/*" style="display: none;" onchange="handleAppLogoUpload(this)">
+                      <button type="button" class="btn-secondary" onclick="document.getElementById('app_logo_file_input').click()" style="padding: 6px 12px; font-size: 12px; border-radius: 4px;">Choose Image</button>
+                      <span id="app_logo_filename" style="font-size: 11px; color: var(--text-muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 150px;">
+                        ${l.custom_label ? 'Custom Logo Active' : 'No Logo Uploaded'}
+                      </span>
+                    </div>
+                  </div>
+                  ${l.custom_label ? `
+                    <div style="margin-top: 4px; display: flex; align-items: center; gap: 8px;">
+                      <img src="${l.custom_label}" style="max-height: 40px; border-radius: 4px; border: 1px solid var(--border-glass);">
+                      <button type="button" class="btn-icon-delete" onclick="removeAppLogo()" title="Remove Logo"><ion-icon name="trash-outline"></ion-icon></button>
+                    </div>
+                  ` : ''}
+                </div>
+              `;
+            }
+            return `
+              <div style="display: flex; align-items: center; justify-content: space-between; gap: 16px;">
+                <span style="font-size: 13px; font-weight: 500; color: #fff; flex: 1;">${l.label_name}</span>
+                <input type="text" data-key="${l.label_key}" value="${l.custom_label}" style="background: rgba(0,0,0,0.2); color: #fff; border: 1px solid var(--border-glass); padding: 8px 12px; border-radius: 4px; flex: 1.5; font-size: 13px;">
+              </div>
+            `;
+          }).join('')}
         </div>
       </div>
     `;
     container.insertAdjacentHTML('beforeend', sectionHTML);
   });
+}
+
+function handleAppLogoUpload(input) {
+  if (input.files && input.files[0]) {
+    const file = input.files[0];
+    document.getElementById('app_logo_filename').textContent = file.name;
+    const reader = new FileReader();
+    reader.onload = function(e) {
+      document.getElementById('app_logo_url_input').value = e.target.result;
+    };
+    reader.readAsDataURL(file);
+  }
+}
+
+function removeAppLogo() {
+  if (confirm('Are you sure you want to remove the custom app logo and revert to the default icon?')) {
+    document.getElementById('app_logo_url_input').value = '';
+    const btnSave = document.querySelector('#custom-labels-form button[type="submit"]');
+    if (btnSave) btnSave.click();
+  }
 }
 
 async function handleLabelsFormSubmit(e) {
@@ -1787,7 +1875,57 @@ async function handleLabelsFormSubmit(e) {
     customLabels = updated;
     applyCustomLabels();
     showToast('Custom labels updated successfully!', 'success');
+    loadLabelsView(); // Refresh uploader layout state
   } catch (err) {
     showToast('Failed to save labels: ' + err.message, 'danger');
+  }
+}
+
+// User Edit Modal Logic
+function openUserEditModal(id, username, role) {
+  document.getElementById('edit_user_id').value = id;
+  document.getElementById('edit_username').value = username;
+  document.getElementById('edit_password').value = '';
+  
+  const roleSelect = document.getElementById('edit_role');
+  roleSelect.innerHTML = '';
+  rolesData.forEach(r => {
+    const opt = document.createElement('option');
+    opt.value = r.role_name;
+    opt.textContent = r.role_name;
+    if (r.role_name === role) opt.selected = true;
+    roleSelect.appendChild(opt);
+  });
+  
+  document.getElementById('user-edit-modal').classList.remove('hidden');
+}
+
+function closeUserEditModal() {
+  document.getElementById('user-edit-modal').classList.add('hidden');
+}
+
+async function handleEditUserFormSubmit(e) {
+  e.preventDefault();
+  const id = document.getElementById('edit_user_id').value;
+  const username = document.getElementById('edit_username').value.trim();
+  const password = document.getElementById('edit_password').value.trim();
+  const role = document.getElementById('edit_role').value;
+  
+  if (password && password.length < 6) {
+    showToast('Password must be at least 6 characters long', 'warning');
+    return;
+  }
+  
+  try {
+    await apiRequest(`/auth/users/${id}`, {
+      method: 'PUT',
+      body: { username, password, role }
+    });
+    
+    showToast('User account updated successfully!', 'success');
+    closeUserEditModal();
+    loadUsersData();
+  } catch (err) {
+    showToast(err.message, 'danger');
   }
 }

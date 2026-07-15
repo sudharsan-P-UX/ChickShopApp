@@ -219,6 +219,121 @@ class _UsersScreenState extends State<UsersScreen> {
     }
   }
 
+  void _showEditUserDialog(int userId, String initialUsername, String initialRole, AppState state) {
+    final editUsernameController = TextEditingController(text: initialUsername);
+    final editPasswordController = TextEditingController();
+    String editSelectedRole = initialRole;
+    bool obscurePassword = true;
+
+    showDialog(
+      context: context,
+      builder: (context) {
+        return StatefulBuilder(
+          builder: (context, setDialogState) {
+            return AlertDialog(
+              title: const Text('Update User Account'),
+              content: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    TextField(
+                      controller: editUsernameController,
+                      decoration: const InputDecoration(
+                        labelText: 'Username',
+                        border: OutlineInputBorder(),
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    TextField(
+                      controller: editPasswordController,
+                      obscureText: obscurePassword,
+                      decoration: InputDecoration(
+                        labelText: 'New Password (optional)',
+                        helperText: 'Leave blank to keep current password',
+                        border: const OutlineInputBorder(),
+                        suffixIcon: IconButton(
+                          icon: Icon(obscurePassword ? Icons.visibility : Icons.visibility_off),
+                          onPressed: () {
+                            setDialogState(() {
+                              obscurePassword = !obscurePassword;
+                            });
+                          },
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    DropdownButtonFormField<String>(
+                      value: state.roles.any((r) => r['role_name'] == editSelectedRole) ? editSelectedRole : null,
+                      decoration: const InputDecoration(
+                        labelText: 'System Role',
+                        border: OutlineInputBorder(),
+                      ),
+                      items: state.roles.map<DropdownMenuItem<String>>((r) {
+                        final name = r['role_name'].toString();
+                        return DropdownMenuItem<String>(
+                          value: name,
+                          child: Text(name.toUpperCase()),
+                        );
+                      }).toList(),
+                      onChanged: (val) {
+                        if (val != null) {
+                          setDialogState(() {
+                            editSelectedRole = val;
+                          });
+                        }
+                      },
+                    ),
+                  ],
+                ),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(context),
+                  child: const Text('Cancel'),
+                ),
+                ElevatedButton(
+                  onPressed: () async {
+                    final u = editUsernameController.text.trim();
+                    final p = editPasswordController.text.trim();
+                    if (u.isEmpty) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('Username cannot be empty')),
+                      );
+                      return;
+                    }
+                    if (p.isNotEmpty && p.length < 6) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('Password must be at least 6 characters')),
+                      );
+                      return;
+                    }
+                    
+                    try {
+                      await state.updateUserAccount(userId, u, p.isEmpty ? null : p, editSelectedRole);
+                      if (context.mounted) {
+                        Navigator.pop(context);
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text('User updated successfully!')),
+                        );
+                      }
+                    } catch (e) {
+                      if (context.mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(content: Text('Update failed: $e')),
+                        );
+                      }
+                    }
+                  },
+                  child: const Text('Save Changes'),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final state = Provider.of<AppState>(context);
@@ -413,10 +528,14 @@ class _UsersScreenState extends State<UsersScreen> {
                                 : Row(
                                     mainAxisSize: MainAxisSize.min,
                                     children: [
+                                      IconButton(
+                                        icon: const Icon(Icons.edit, color: Colors.blue, size: 20),
+                                        onPressed: () => _showEditUserDialog(userId, username, role, state),
+                                      ),
                                       ElevatedButton(
                                         onPressed: () => _toggleUserRole(userId, role, state),
                                         style: ElevatedButton.styleFrom(backgroundColor: Colors.grey[800], foregroundColor: Colors.white, padding: const EdgeInsets.symmetric(horizontal: 8), minimumSize: const Size(60, 32)),
-                                        child: const Text('Change', style: TextStyle(fontSize: 10)),
+                                        child: const Text('Role', style: TextStyle(fontSize: 10)),
                                       ),
                                       const SizedBox(width: 4),
                                       IconButton(

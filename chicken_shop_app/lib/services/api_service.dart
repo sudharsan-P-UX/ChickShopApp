@@ -84,6 +84,24 @@ class ApiService {
     }
   }
 
+  static Future<dynamic> updateUser(int id, String username, String? password, String role) async {
+    final headers = await _getHeaders();
+    final response = await http.put(
+      Uri.parse('$baseUrl/auth/users/$id'),
+      headers: headers,
+      body: jsonEncode({
+        'username': username,
+        if (password != null && password.trim().isNotEmpty) 'password': password.trim(),
+        'role': role,
+      }),
+    );
+    if (response.statusCode == 200) {
+      return jsonDecode(response.body);
+    }
+    final body = jsonDecode(response.body);
+    throw Exception(body['message'] ?? 'Failed to update user account');
+  }
+
   // Roles Operations
   static Future<List<dynamic>> getRoles() async {
     final headers = await _getHeaders();
