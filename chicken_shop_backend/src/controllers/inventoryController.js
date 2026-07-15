@@ -1,37 +1,42 @@
 const db = require('../config/db');
 const https = require('https');
 
-// Pure Node.js manual buffer multipart compiler for Catbox.moe
-const uploadToCatbox = (file) => {
-  if (!file) return Promise.resolve(null);
+// Secure programatic image upload helper using ImgBB
+// Falls back to Picsum Photos if no API key is configured
+const uploadToImgBB = (base64Data) => {
+  const apiKey = process.env.IMGBB_API_KEY;
+  if (!apiKey) {
+    console.warn('IMGBB_API_KEY is not defined, returning fallback placeholder');
+    return Promise.resolve('https://picsum.photos/200');
+  }
+  
   return new Promise((resolve) => {
-    const boundary = '----WebKitFormBoundary' + Math.random().toString(36).substring(2);
+    // Strip base64 data prefix (e.g. "data:image/png;base64,")
+    const cleanBase64 = base64Data.replace(/^data:image\/[a-z]+;base64,/, '');
     
-    const header1 = Buffer.from(
-      `--${boundary}\r\nContent-Disposition: form-data; name="reqtype"\r\n\r\nfileupload\r\n`
-    );
-    const header2 = Buffer.from(
-      `--${boundary}\r\nContent-Disposition: form-data; name="fileToUpload"; filename="${file.originalname}"\r\nContent-Type: ${file.mimetype}\r\n\r\n`
-    );
-    const footer = Buffer.from(`\r\n--${boundary}--\r\n`);
+    const postData = new URLSearchParams({
+      image: cleanBase64
+    }).toString();
     
-    const bodyBuffer = Buffer.concat([header1, header2, file.buffer, footer]);
-    
-    const req = https.request('https://catbox.moe/user/api.php', {
+    const req = https.request(`https://api.imgbb.com/1/upload?key=${apiKey}`, {
       method: 'POST',
       headers: {
-        'Content-Type': `multipart/form-data; boundary=${boundary}`,
-        'Content-Length': bodyBuffer.length,
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
+        'Content-Type': 'application/x-www-form-urlencoded',
+        'Content-Length': Buffer.byteLength(postData)
       }
     }, (res) => {
       let data = '';
       res.on('data', (chunk) => { data += chunk; });
       res.on('end', () => {
-        if (res.statusCode === 200) {
-          resolve(data.trim());
-        } else {
-          resolve(`UPLOAD_ERROR: Status ${res.statusCode} - ${data.trim()}`);
+        try {
+          const json = JSON.parse(data);
+          if (json.success) {
+            resolve(json.data.url);
+          } else {
+            resolve(`UPLOAD_ERROR: ImgBB status ${res.statusCode} - ${json.error.message}`);
+          }
+        } catch (e) {
+          resolve(`UPLOAD_ERROR: JSON parse error - ${data.trim()}`);
         }
       });
     });
@@ -40,31 +45,9 @@ const uploadToCatbox = (file) => {
       resolve(`UPLOAD_ERROR: Connection failed - ${err.message}`);
     });
     
-    req.write(bodyBuffer);
+    req.write(postData);
     req.end();
   });
-};
-
-// Helper to decode Base64 data and upload it
-const uploadBase64ToCatbox = async (base64Data) => {
-  if (!base64Data || !base64Data.startsWith('data:')) return base64Data;
-  try {
-    const matches = base64Data.match(/^data:([A-Za-z-+\/]+);base64,(.+)$/);
-    if (!matches) return 'UPLOAD_ERROR: Invalid base64 regex match';
-    
-    const mimeType = matches[1];
-    const buffer = Buffer.from(matches[2], 'base64');
-    const extension = mimeType.split('/')[1] || 'png';
-    const originalname = `upload.${extension}`;
-    
-    return await uploadToCatbox({
-      buffer,
-      originalname,
-      mimetype: mimeType
-    });
-  } catch (err) {
-    return `UPLOAD_ERROR: Base64 decode error - ${err.message}`;
-  }
 };
 
 exports.getAllItems = async (req, res) => {
@@ -81,9 +64,10 @@ exports.addItem = async (req, res) => {
   try {
     let uploadedUrl = null;
     if (image_url) {
-      uploadedUrl = await uploadBase64ToCatbox(image_url);
+      uploadedUrl = await uploadToImgBB(image_url);
     } else if (req.file) {
-      uploadedUrl = await uploadToCatbox(req.file);
+      const base64Str = `data:${req.file.mimetype};base64,${req.file.buffer.toString('base64')}`;
+      uploadedUrl = await uploadToImgBB(base64Str);
     }
     
     if (uploadedUrl && uploadedUrl.startsWith('UPLOAD_ERROR:')) {
@@ -106,9 +90,10 @@ exports.updateItem = async (req, res) => {
   try {
     let uploadedUrl = req.body.image_url;
     if (image_url && image_url.startsWith('data:')) {
-      uploadedUrl = await uploadBase64ToCatbox(image_url);
+      uploadedUrl = await uploadToImgBB(image_url);
     } else if (req.file) {
-      uploadedUrl = await uploadToCatbox(req.file);
+      const base64Str = `data:${req.file.mimetype};base64,${req.file.buffer.toString('base64')}`;
+      uploadedUrl = await uploadToImgBB(base64Str);
     }
     
     if (uploadedUrl && uploadedUrl.startsWith('UPLOAD_ERROR:')) {
