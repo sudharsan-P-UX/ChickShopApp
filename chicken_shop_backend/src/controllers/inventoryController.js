@@ -81,7 +81,13 @@ exports.getAllItems = async (req, res) => {
 exports.addItem = async (req, res) => {
   const { item_name, description, qty, price, image_url } = req.body;
   try {
-    const uploadedUrl = image_url ? await uploadBase64ToCatbox(image_url) : null;
+    let uploadedUrl = null;
+    if (image_url) {
+      uploadedUrl = await uploadBase64ToCatbox(image_url);
+    } else if (req.file) {
+      uploadedUrl = await uploadToCatbox(req.file);
+    }
+    
     const { rows } = await db.query(
       'INSERT INTO inventory (item_name, description, qty, price, image_url) VALUES ($1, $2, $3, $4, $5) RETURNING *',
       [item_name, description, qty, price, uploadedUrl]
@@ -96,7 +102,13 @@ exports.updateItem = async (req, res) => {
   const { id } = req.params;
   const { item_name, description, qty, price, image_url } = req.body;
   try {
-    const uploadedUrl = image_url ? await uploadBase64ToCatbox(image_url) : req.body.image_url;
+    let uploadedUrl = req.body.image_url;
+    if (image_url && image_url.startsWith('data:')) {
+      uploadedUrl = await uploadBase64ToCatbox(image_url);
+    } else if (req.file) {
+      uploadedUrl = await uploadToCatbox(req.file);
+    }
+    
     const { rows } = await db.query(
       'UPDATE inventory SET item_name = $1, description = $2, qty = $3, price = $4, image_url = $5 WHERE id = $6 RETURNING *',
       [item_name, description, qty, price, uploadedUrl, id]
