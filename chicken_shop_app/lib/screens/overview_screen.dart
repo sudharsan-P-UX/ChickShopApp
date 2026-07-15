@@ -122,7 +122,7 @@ class _OverviewScreenState extends State<OverviewScreen> {
             children: const [
               Icon(Icons.restaurant, color: Colors.deepOrange),
               SizedBox(width: 8),
-              Text('Chicken Shop Invoice'),
+              Expanded(child: Text('Chicken Shop Invoice')),
             ],
           ),
           content: SingleChildScrollView(
@@ -250,7 +250,7 @@ class _OverviewScreenState extends State<OverviewScreen> {
             physics: const NeverScrollableScrollPhysics(),
             crossAxisSpacing: 16,
             mainAxisSpacing: 16,
-            childAspectRatio: 1.1,
+            childAspectRatio: 0.82,
             children: [
               _buildStatCard(
                 title: 'Total Revenue',
