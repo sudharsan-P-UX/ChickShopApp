@@ -1,27 +1,50 @@
 const db = require('../config/db');
+const https = require('https');
 
-// Helper function to upload files anonymously to Catbox.moe
-const uploadToCatbox = async (file) => {
-  if (!file) return null;
-  try {
-    const formData = new FormData();
-    formData.append('reqtype', 'fileupload');
-    const blob = new Blob([file.buffer]);
-    formData.append('fileToUpload', blob, file.originalname);
-
-    const response = await fetch('https://catbox.moe/user/api.php', {
+// Pure Node.js manual buffer multipart compiler for Catbox.moe
+// Safe for all Node versions on Vercel (no global FormData/Blob dependencies)
+const uploadToCatbox = (file) => {
+  if (!file) return Promise.resolve(null);
+  return new Promise((resolve) => {
+    const boundary = '----WebKitFormBoundary' + Math.random().toString(36).substring(2);
+    
+    const header1 = Buffer.from(
+      `--${boundary}\r\nContent-Disposition: form-data; name="reqtype"\r\n\r\nfileupload\r\n`
+    );
+    const header2 = Buffer.from(
+      `--${boundary}\r\nContent-Disposition: form-data; name="fileToUpload"; filename="${file.originalname}"\r\nContent-Type: ${file.mimetype}\r\n\r\n`
+    );
+    const footer = Buffer.from(`\r\n--${boundary}--\r\n`);
+    
+    const bodyBuffer = Buffer.concat([header1, header2, file.buffer, footer]);
+    
+    const req = https.request('https://catbox.moe/user/api.php', {
       method: 'POST',
-      body: formData
+      headers: {
+        'Content-Type': `multipart/form-data; boundary=${boundary}`,
+        'Content-Length': bodyBuffer.length,
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
+      }
+    }, (res) => {
+      let data = '';
+      res.on('data', (chunk) => { data += chunk; });
+      res.on('end', () => {
+        if (res.statusCode === 200) {
+          resolve(data.trim());
+        } else {
+          resolve(null);
+        }
+      });
     });
-
-    if (response.ok) {
-      const url = await response.text();
-      return url.trim();
-    }
-  } catch (err) {
-    console.error('Catbox upload failed:', err);
-  }
-  return null;
+    
+    req.on('error', (err) => {
+      console.error('Catbox upload error:', err);
+      resolve(null);
+    });
+    
+    req.write(bodyBuffer);
+    req.end();
+  });
 };
 
 exports.getAllItems = async (req, res) => {
