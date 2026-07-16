@@ -4,7 +4,8 @@ const authController = require('../controllers/authController');
 const authMiddleware = require('../middlewares/authMiddleware');
 
 const adminOnly = (req, res, next) => {
-  if (!req.user || req.user.role !== 'admin') {
+  const role = req.user ? req.user.role : null;
+  if (!role || (role !== 'admin' && role !== 'super_admin' && role !== 'superadmin')) {
     return res.status(403).json({ message: 'Access Denied: Admin Privilege Required' });
   }
   next();
