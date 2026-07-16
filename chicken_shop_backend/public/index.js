@@ -1910,9 +1910,11 @@ function openUserEditModal(id, username, role) {
   });
   
   document.getElementById('user-edit-modal').classList.remove('hidden');
+  document.getElementById('user-edit-modal').classList.add('active');
 }
 
 function closeUserEditModal() {
+  document.getElementById('user-edit-modal').classList.remove('active');
   document.getElementById('user-edit-modal').classList.add('hidden');
 }
 
