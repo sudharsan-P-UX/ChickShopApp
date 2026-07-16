@@ -6,11 +6,11 @@ exports.login = async (req, res) => {
   const { username, password } = req.body;
   try {
     const { rows } = await db.query('SELECT * FROM users WHERE username = $1', [username]);
-    if (rows.length === 0) return res.status(401).json({ message: 'Invalid credentials' });
+    if (rows.length === 0) return res.status(401).json({ message: 'Invalid Username or Password' });
 
     const user = rows[0];
     const match = await bcrypt.compare(password, user.password_hash);
-    if (!match) return res.status(401).json({ message: 'Invalid credentials' });
+    if (!match) return res.status(401).json({ message: 'Invalid Username or Password' });
 
     // Fetch role permissions
     const roleQuery = await db.query('SELECT permissions FROM roles WHERE role_name = $1', [user.role]);
