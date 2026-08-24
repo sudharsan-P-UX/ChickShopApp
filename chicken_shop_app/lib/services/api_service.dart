@@ -383,4 +383,26 @@ class ApiService {
     final body = jsonDecode(response.body);
     throw Exception(body['message'] ?? 'Failed to update custom labels');
   }
+
+  static Future<List<dynamic>> getMenuOrders() async {
+    final headers = await _getHeaders();
+    final response = await http.get(Uri.parse('$baseUrl/menus'), headers: headers);
+    if (response.statusCode == 200) {
+      return jsonDecode(response.body);
+    }
+    throw Exception('Failed to load menu configurations');
+  }
+
+  static Future<void> updateMenuOrders(List<dynamic> updates) async {
+    final headers = await _getHeaders();
+    final response = await http.post(
+      Uri.parse('$baseUrl/menus/order'),
+      headers: headers,
+      body: jsonEncode({'updates': updates}),
+    );
+    if (response.statusCode != 200) {
+      final body = jsonDecode(response.body);
+      throw Exception(body['message'] ?? 'Failed to update menu orders');
+    }
+  }
 }

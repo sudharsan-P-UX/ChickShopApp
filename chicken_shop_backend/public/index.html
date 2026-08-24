@@ -758,6 +758,8 @@
                     <th style="padding: 12px; text-align: center; color: var(--text-secondary);" class="label-user_rbac_th_labels">Custom Labels</th>
                     <th style="padding: 12px; text-align: center; color: var(--text-secondary);" class="label-user_rbac_th_custom_bill">Custom Bill</th>
                     <th style="padding: 12px; text-align: center; color: var(--text-secondary);" class="label-user_rbac_th_custom_bill_inventory">Custom Bill Inventory</th>
+                    <th style="padding: 12px; text-align: center; color: var(--text-secondary);" class="label-user_rbac_th_menu_control">Menu Control</th>
+                    <th style="padding: 12px; text-align: center; color: var(--text-secondary);" class="label-user_rbac_th_menu_order">Menu Order</th>
                   </tr>
                 </thead>
                 <tbody id="privilege-matrix-body">
@@ -792,6 +794,50 @@
                   </button>
                 </div>
               </form>
+            </div>
+          </div>
+        </section>
+
+        <!-- Menu Order Section -->
+        <section id="menu-order-view" class="app-view">
+          <div class="inventory-container" style="display: flex; flex-direction: column; gap: 24px; height: 100%; overflow-y: auto; padding: 12px 24px;">
+            <div class="glass" style="padding: 24px; border-radius: 12px; overflow-y: auto;">
+              <h2 style="margin-bottom: 12px; display: flex; align-items: center; gap: 10px;">
+                <ion-icon name="list-outline" style="color: var(--accent-orange);"></ion-icon>
+                Menu Order Control
+              </h2>
+              <p style="color: var(--text-muted); font-size: 14px; margin-bottom: 24px;">
+                Configure display orders and active states for all application menus. Grouped submenus must have unique order values.
+              </p>
+
+              <form id="menu-order-form" style="display: flex; flex-direction: column; gap: 24px;">
+                <div id="menu-order-editor-container" style="display: flex; flex-direction: column; gap: 24px;">
+                  <!-- Dynamic content rendered by JS -->
+                </div>
+                
+                <div style="display: flex; gap: 12px; margin-top: 12px;">
+                  <button type="button" id="btn-reset-menu-order" class="btn-secondary" style="padding: 12px 24px; border-radius: 8px;">
+                    Reset Changes
+                  </button>
+                  <button type="submit" class="btn-primary" style="padding: 12px 24px; font-weight: bold; border-radius: 8px; display: flex; align-items: center; gap: 8px;">
+                    <ion-icon name="save-outline"></ion-icon>
+                    Save Menu Order
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </section>
+
+        <!-- Menu Control Section -->
+        <section id="menu-control-view" class="app-view">
+          <div class="inventory-container" style="display: flex; flex-direction: column; gap: 24px; height: 100%; padding: 24px;">
+            <div class="glass" style="padding: 24px; border-radius: 12px; text-align: center;">
+              <ion-icon name="options-outline" style="font-size: 64px; color: var(--accent-orange); margin-bottom: 16px;"></ion-icon>
+              <h2>Menu Control Panel</h2>
+              <p style="color: var(--text-muted); font-size: 14px; margin-top: 8px;">
+                This panel is a placeholder for advanced route guard configurations and runtime features.
+              </p>
             </div>
           </div>
         </section>

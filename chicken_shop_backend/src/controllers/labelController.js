@@ -139,7 +139,13 @@ const defaultLabels = [
   { menu_key: 'custom_bill', label_key: 'custom_pending_orders', label_name: 'Custom Pending Orders Label', custom_label: 'Custom Pending Orders' },
 
   // Custom Bill Inventory Control
-  { menu_key: 'custom_bill_inventory', label_key: 'custom_inventory_menu', label_name: 'Custom Inventory Menu Title', custom_label: 'Custom Bill Inventory' }
+  { menu_key: 'custom_bill_inventory', label_key: 'custom_inventory_menu', label_name: 'Custom Inventory Menu Title', custom_label: 'Custom Bill Inventory' },
+
+  // Menu Control and Menu Order Controls
+  { menu_key: 'menu_control', label_key: 'menu_control_menu', label_name: 'Menu Control Menu Title', custom_label: 'Menu Control' },
+  { menu_key: 'menu_order', label_key: 'menu_order_menu', label_name: 'Menu Order Menu Title', custom_label: 'Menu Order' },
+  { menu_key: 'users', label_key: 'user_rbac_th_menu_control', label_name: 'Matrix Table: Menu Control', custom_label: 'Menu Control' },
+  { menu_key: 'users', label_key: 'user_rbac_th_menu_order', label_name: 'Matrix Table: Menu Order', custom_label: 'Menu Order' }
 ];
 
 exports.getAllLabels = async (req, res) => {

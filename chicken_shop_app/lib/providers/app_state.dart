@@ -18,6 +18,7 @@ class AppState with ChangeNotifier {
   List<dynamic> users = [];
   List<dynamic> roles = [];
   List<dynamic> customLabels = [];
+  List<dynamic> menuOrders = [];
 
   // Active Cart State
   final Map<int, int> cart = {}; // itemId -> quantity
@@ -76,6 +77,7 @@ class AppState with ChangeNotifier {
     await prefs.setString('permissions', jsonEncode(_permissions));
     
     await fetchCustomLabels();
+    await fetchMenuOrders();
     
     notifyListeners();
   }
@@ -108,6 +110,76 @@ class AppState with ChangeNotifier {
     } catch (e) {
       debugPrint('Error fetching custom labels: $e');
     }
+  }
+
+  Future<void> fetchMenuOrders() async {
+    try {
+      menuOrders = await ApiService.getMenuOrders();
+      notifyListeners();
+    } catch (e) {
+      debugPrint('Error fetching menu orders: $e');
+    }
+  }
+
+  Future<void> saveMenuOrders(List<dynamic> updates) async {
+    try {
+      await ApiService.updateMenuOrders(updates);
+      await fetchMenuOrders();
+    } catch (e) {
+      debugPrint('Error saving menu orders: $e');
+      rethrow;
+    }
+  }
+
+  bool isMenuVisible(String submenuKey) {
+    if (menuOrders.isEmpty) return true; // Default visible if not loaded yet
+    final item = menuOrders.firstWhere(
+      (m) => m['submenu_key'] == submenuKey,
+      orElse: () => null,
+    );
+    if (item == null) return true;
+    if (item['is_active'] != true) return false;
+
+    String? permKey;
+    switch (submenuKey) {
+      case 'billing':
+      case 'cart':
+      case 'pending':
+        permKey = 'billing';
+        break;
+      case 'custom_bill':
+      case 'custom_cart':
+      case 'custom_pending':
+        permKey = 'custom_bill';
+        break;
+      case 'dashboard':
+        permKey = 'dashboard';
+        break;
+      case 'customers':
+        permKey = 'customers';
+        break;
+      case 'users':
+        permKey = 'users';
+        break;
+      case 'inventory':
+        permKey = 'inventory';
+        break;
+      case 'custom_bill_inventory':
+        permKey = 'custom_bill_inventory';
+        break;
+      case 'custom_labels':
+        permKey = 'custom_labels';
+        break;
+      case 'menu_control':
+        permKey = 'menu_control';
+        break;
+      case 'menu_order':
+        permKey = 'menu_order';
+        break;
+    }
+
+    if (permKey == null) return true;
+    return hasPermission(permKey, 'view');
   }
 
   String getLabel(String key, String defaultVal) {

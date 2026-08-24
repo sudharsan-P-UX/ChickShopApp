@@ -69,7 +69,9 @@ function getPermissionKeyForView(viewId) {
     'custom-bill-inventory-view': 'custom_bill_inventory',
     'customers-view': 'customers',
     'users-view': 'users',
-    'labels-view': 'custom_labels'
+    'labels-view': 'custom_labels',
+    'menu-control-view': 'menu_control',
+    'menu-order-view': 'menu_order'
   };
   return mapping[viewId] || null;
 }
@@ -118,7 +120,7 @@ function adjustActionPrivileges() {
   }
 }
 
-function showAppLayout() {
+async function showAppLayout() {
   document.getElementById('login-screen').classList.remove('active');
   document.getElementById('app-layout').classList.add('active');
   
@@ -126,24 +128,9 @@ function showAppLayout() {
   document.getElementById('user-display-name').textContent = currentUser.username;
   document.getElementById('user-display-role').textContent = currentUser.role;
 
-  // Toggle role-based links visibility in navigation drawer
-  const permissions = currentUser.permissions;
-  document.querySelectorAll('.nav-item').forEach(item => {
-    const target = item.getAttribute('data-target');
-    const permKey = getPermissionKeyForView(target);
-    
-    if (currentUser && (currentUser.role === 'super_admin' || currentUser.role === 'superadmin')) {
-      item.classList.remove('hidden');
-    } else if (permKey && permissions && permissions[permKey]) {
-      if (permissions[permKey].view) {
-        item.classList.remove('hidden');
-      } else {
-        item.classList.add('hidden');
-      }
-    } else {
-      item.classList.remove('hidden');
-    }
-  });
+  // Load app menus and render sidebar dynamically
+  await loadAppMenus();
+  renderSidebarNavMenu();
 
   // Apply button and form privileges
   adjustActionPrivileges();
@@ -236,6 +223,8 @@ function switchView(viewId) {
     loadCustomPendingOrdersData();
   } else if (viewId === 'labels-view') {
     loadLabelsView();
+  } else if (viewId === 'menu-order-view') {
+    loadMenuOrderData();
   }
 }
 
@@ -417,6 +406,10 @@ function setupEventListeners() {
 
   // Custom Labels Form
   document.getElementById('custom-labels-form').addEventListener('submit', handleLabelsFormSubmit);
+
+  // Menu Order Form
+  document.getElementById('menu-order-form').addEventListener('submit', handleMenuOrderFormSubmit);
+  document.getElementById('btn-reset-menu-order').addEventListener('click', loadMenuOrderData);
 
   // Edit User Form
   document.getElementById('edit-user-form').addEventListener('submit', handleEditUserFormSubmit);
@@ -1653,7 +1646,7 @@ function renderPrivilegeMatrix(roles) {
     return;
   }
 
-  const menus = ['dashboard', 'billing', 'cart', 'pending', 'inventory', 'customers', 'users', 'custom_labels', 'custom_bill', 'custom_bill_inventory'];
+  const menus = ['dashboard', 'billing', 'cart', 'pending', 'inventory', 'customers', 'users', 'custom_labels', 'custom_bill', 'custom_bill_inventory', 'menu_control', 'menu_order'];
 
   container.innerHTML = roles.map(r => {
     const isSuperAdmin = r.role_name === 'super_admin' || r.role_name === 'superadmin';
@@ -1663,7 +1656,7 @@ function renderPrivilegeMatrix(roles) {
       const menuPerms = permissions[menu] || { view: false, add: false, edit: false, delete: false };
       
       const showAdd = menu === 'billing' || menu === 'inventory' || menu === 'customers' || menu === 'users' || menu === 'custom_bill' || menu === 'custom_bill_inventory';
-      const showEdit = menu === 'inventory' || menu === 'users' || menu === 'custom_bill_inventory';
+      const showEdit = menu === 'inventory' || menu === 'users' || menu === 'custom_bill_inventory' || menu === 'menu_order';
       const showDelete = menu === 'billing' || menu === 'inventory' || menu === 'users' || menu === 'pending' || menu === 'custom_bill' || menu === 'custom_bill_inventory';
       
       const viewChecked = menuPerms.view ? 'checked' : '';
@@ -2635,3 +2628,245 @@ window.recallCustomPendingOrder = recallCustomPendingOrder;
 window.deleteCustomPendingOrder = deleteCustomPendingOrder;
 window.editCustomItem = editCustomItem;
 window.deleteCustomItem = deleteCustomItem;
+
+// ==========================================
+// Dynamic Menu Order Control Features
+// ==========================================
+let appMenus = [];
+
+const menuMetadata = {
+  billing: { icon: 'cart-outline', target: 'billing-view', labelClass: 'label-billing_menu', name: 'Billing & POS' },
+  custom_bill: { icon: 'calculator-outline', target: 'custom-bill-view', labelClass: 'label-custom_bill_menu', name: 'Custom Bill' },
+  cart: { icon: 'basket-outline', target: 'cart-view', labelClass: 'label-view_cart', name: 'View Cart', badgeId: 'cart-badge-count' },
+  custom_cart: { icon: 'basket-outline', target: 'custom-cart-view', labelClass: 'label-custom_view_cart', name: 'View Custom Cart', badgeId: 'custom-cart-badge-count' },
+  pending: { icon: 'bookmark-outline', target: 'pending-view', labelClass: 'label-pending_orders', name: 'Pending Orders' },
+  custom_pending: { icon: 'bookmark-outline', target: 'custom-pending-view', labelClass: 'label-custom_pending_orders', name: 'Custom Pending Orders' },
+  dashboard: { icon: 'grid-outline', target: 'dashboard-view', labelClass: 'label-overview_menu', name: 'Overview' },
+  customers: { icon: 'people-outline', target: 'customers-view', labelClass: 'label-customers_menu', name: 'Customer Directory' },
+  users: { icon: 'shield-half-outline', target: 'users-view', labelClass: 'label-users_menu', name: 'User Management' },
+  inventory: { icon: 'cube-outline', target: 'inventory-view', labelClass: 'label-inventory_menu', name: 'Inventory' },
+  custom_bill_inventory: { icon: 'cube-outline', target: 'custom-bill-inventory-view', labelClass: 'label-custom_inventory_menu', name: 'Custom Bill Inventory' },
+  custom_labels: { icon: 'create-outline', target: 'labels-view', labelClass: 'label-custom_labels_menu', name: 'Custom Label' },
+  menu_control: { icon: 'options-outline', target: 'menu-control-view', labelClass: 'label-menu_control_menu', name: 'Menu Control' },
+  menu_order: { icon: 'list-outline', target: 'menu-order-view', labelClass: 'label-menu_order_menu', name: 'Menu Order' }
+};
+
+async function loadAppMenus() {
+  try {
+    appMenus = await apiRequest('/menus');
+  } catch (err) {
+    console.error('Failed to load menu configurations:', err);
+  }
+}
+
+function renderSidebarNavMenu() {
+  const container = document.querySelector('.nav-menu');
+  if (!container) return;
+
+  container.innerHTML = '';
+
+  const groupsOrder = ['Create Billing', 'Cart', 'Orders', 'Dashboards', 'Customer', 'Admin'];
+
+  // Group by main_menu
+  const grouped = {};
+  appMenus.forEach(item => {
+    if (!grouped[item.main_menu]) grouped[item.main_menu] = [];
+    grouped[item.main_menu].push(item);
+  });
+
+  groupsOrder.forEach(groupName => {
+    const items = grouped[groupName] || [];
+    // Filter active & permissions
+    const visibleItems = items.filter(item => {
+      // 1. Must be active
+      if (!item.is_active) return false;
+      // 2. Check permissions
+      const meta = menuMetadata[item.submenu_key];
+      if (!meta) return false;
+      const permKey = getPermissionKeyForView(meta.target);
+      if (currentUser && (currentUser.role === 'super_admin' || currentUser.role === 'superadmin')) {
+        return true;
+      }
+      if (permKey && currentUser && currentUser.permissions && currentUser.permissions[permKey]) {
+        return currentUser.permissions[permKey].view === true;
+      }
+      // default: view if no key
+      return true;
+    });
+
+    // Sort by display_order
+    visibleItems.sort((a, b) => a.display_order - b.display_order);
+
+    if (visibleItems.length > 0) {
+      // Add group header
+      const headerDiv = document.createElement('div');
+      headerDiv.className = 'nav-group-header';
+      headerDiv.style.cssText = 'padding: 14px 16px 6px; font-size: 11px; font-weight: bold; text-transform: uppercase; color: var(--text-muted); opacity: 0.6; letter-spacing: 0.8px;';
+      headerDiv.textContent = groupName;
+      container.appendChild(headerDiv);
+
+      // Append items
+      visibleItems.forEach(item => {
+        const meta = menuMetadata[item.submenu_key];
+        if (!meta) return;
+
+        const a = document.createElement('a');
+        a.href = '#';
+        a.className = 'nav-item';
+        a.setAttribute('data-target', meta.target);
+
+        // Add active class if this is the active view
+        const currentActiveView = document.querySelector('.app-view.active')?.id;
+        if (currentActiveView === meta.target) {
+          a.classList.add('active');
+        }
+
+        let innerContent = `<ion-icon name="${meta.icon}"></ion-icon>`;
+        if (meta.badgeId) {
+          innerContent += `<span><span class="${meta.labelClass}">${meta.name}</span> <span id="${meta.badgeId}" class="badge danger hidden" style="font-size: 9px; padding: 2px 6px; margin-left: auto;">0</span></span>`;
+        } else {
+          innerContent += `<span class="${meta.labelClass}">${meta.name}</span>`;
+        }
+
+        a.innerHTML = innerContent;
+        
+        a.addEventListener('click', (e) => {
+          e.preventDefault();
+          switchView(meta.target);
+        });
+
+        container.appendChild(a);
+      });
+    }
+  });
+
+  // Re-apply custom labels and badges sync
+  if (typeof applyCustomLabels === 'function') applyCustomLabels();
+  if (typeof updateCartBadges === 'function') updateCartBadges();
+  if (typeof updateCustomCartBadges === 'function') updateCustomCartBadges();
+}
+
+async function loadMenuOrderData() {
+  try {
+    await loadAppMenus();
+    renderMenuOrderEditor();
+  } catch (err) {
+    showToast(err.message, 'danger');
+  }
+}
+
+function renderMenuOrderEditor() {
+  const container = document.getElementById('menu-order-editor-container');
+  if (!container) return;
+
+  container.innerHTML = '';
+
+  const groupsOrder = ['Create Billing', 'Cart', 'Orders', 'Dashboards', 'Customer', 'Admin'];
+
+  // Group by main_menu
+  const grouped = {};
+  appMenus.forEach(item => {
+    if (!grouped[item.main_menu]) grouped[item.main_menu] = [];
+    grouped[item.main_menu].push(item);
+  });
+
+  groupsOrder.forEach(groupName => {
+    const items = grouped[groupName] || [];
+    if (items.length === 0) return;
+
+    // Sort items by display_order
+    items.sort((a, b) => a.display_order - b.display_order);
+
+    const section = document.createElement('div');
+    section.className = 'menu-order-section';
+    section.style.cssText = 'background: rgba(0,0,0,0.15); padding: 18px; border-radius: 8px; border: 1px solid var(--border-glass);';
+
+    let tableRows = items.map((item, idx) => {
+      const activeChecked = item.is_active ? 'checked' : '';
+      return `
+        <tr>
+          <td style="padding: 10px; text-align: center;">${idx + 1}</td>
+          <td style="padding: 10px;"><strong>${item.submenu_name}</strong> <small style="color: var(--text-muted);">(${item.submenu_key})</small></td>
+          <td style="padding: 10px; text-align: center;">
+            <input type="number" class="menu-order-input" data-submenu-key="${item.submenu_key}" data-group="${groupName}" min="1" max="50" value="${item.display_order}" style="width: 70px; text-align: center; background: rgba(0,0,0,0.3); border: 1px solid var(--border-glass); color: #fff; padding: 4px; border-radius: 4px;">
+          </td>
+          <td style="padding: 10px; text-align: center;">
+            <label style="cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px;">
+              <input type="checkbox" class="menu-active-checkbox" data-submenu-key="${item.submenu_key}" ${activeChecked}> Active
+            </label>
+          </td>
+        </tr>
+      `;
+    }).join('');
+
+    section.innerHTML = `
+      <h3 style="margin-bottom: 12px; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 6px; color: var(--accent-orange); font-size: 15px; font-weight: bold; text-transform: uppercase;">${groupName}</h3>
+      <table class="data-table" style="width: 100%; border-collapse: collapse;">
+        <thead>
+          <tr style="border-bottom: 1px solid var(--border-glass); font-size: 12px;">
+            <th style="width: 70px; text-align: center; color: var(--text-secondary);">SI.No</th>
+            <th style="text-align: left; color: var(--text-secondary);">Menu Name</th>
+            <th style="width: 100px; text-align: center; color: var(--text-secondary);">Order</th>
+            <th style="width: 120px; text-align: center; color: var(--text-secondary);">Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${tableRows}
+        </tbody>
+      </table>
+    `;
+
+    container.appendChild(section);
+  });
+}
+
+async function handleMenuOrderFormSubmit(e) {
+  e.preventDefault();
+
+  const updates = [];
+  const groupsValidation = {};
+
+  // Extract values
+  const orderInputs = document.querySelectorAll('.menu-order-input');
+  let hasDuplicates = false;
+
+  orderInputs.forEach(input => {
+    const key = input.getAttribute('data-submenu-key');
+    const group = input.getAttribute('data-group');
+    const val = parseInt(input.value);
+
+    if (!groupsValidation[group]) groupsValidation[group] = [];
+    if (groupsValidation[group].includes(val)) {
+      hasDuplicates = true;
+    }
+    groupsValidation[group].push(val);
+
+    const checkbox = document.querySelector(`.menu-active-checkbox[data-submenu-key="${key}"]`);
+    const isActive = checkbox ? checkbox.checked : true;
+
+    updates.push({
+      submenu_key: key,
+      display_order: val,
+      is_active: isActive
+    });
+  });
+
+  if (hasDuplicates) {
+    showToast('Error: Display order values must be unique within each menu section!', 'danger');
+    return;
+  }
+
+  try {
+    const res = await apiRequest('/menus/order', {
+      method: 'POST',
+      body: { updates }
+    });
+
+    showToast(res.message || 'Menu order saved successfully!', 'success');
+    await loadAppMenus();
+    renderSidebarNavMenu();
+    renderMenuOrderEditor();
+  } catch (err) {
+    showToast(err.message, 'danger');
+  }
+}

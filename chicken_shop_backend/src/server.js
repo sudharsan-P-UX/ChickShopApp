@@ -8,6 +8,7 @@ const customerRoutes = require('./routes/customerRoutes');
 const inventoryRoutes = require('./routes/inventoryRoutes');
 const billingRoutes = require('./routes/billingRoutes');
 const labelRoutes = require('./routes/labelRoutes');
+const menuRoutes = require('./routes/menuRoutes');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -36,6 +37,9 @@ app.use('/billing', billingRoutes);
 app.use('/api/custom-labels', labelRoutes);
 app.use('/custom-labels', labelRoutes);
 
+app.use('/api/menus', menuRoutes);
+app.use('/menus', menuRoutes);
+
 
 // Dynamic self-healing super_admin and admin roles/users seeding
 const bcrypt = require('bcryptjs');
@@ -51,6 +55,46 @@ async function initSuperAdmin() {
     await db.query('ALTER TABLE inventory ALTER COLUMN qty TYPE DECIMAL(10, 2)');
     await db.query('ALTER TABLE pending_bills ADD COLUMN IF NOT EXISTS is_custom_bill BOOLEAN DEFAULT FALSE');
 
+    // Run schema migrations for Menu Order features
+    await db.query(`
+      CREATE TABLE IF NOT EXISTS menu_order (
+        id SERIAL PRIMARY KEY,
+        main_menu VARCHAR(100) NOT NULL,
+        submenu_key VARCHAR(100) UNIQUE NOT NULL,
+        submenu_name VARCHAR(150) NOT NULL,
+        display_order INT NOT NULL,
+        is_active BOOLEAN DEFAULT TRUE
+      )
+    `);
+
+    // Seed default menus if menu_order is empty
+    const menuCheck = await db.query("SELECT COUNT(*) FROM menu_order");
+    if (parseInt(menuCheck.rows[0].count) === 0) {
+      console.log("Seeding default menu structure into menu_order...");
+      const defaultMenus = [
+        { main_menu: 'Create Billing', submenu_key: 'billing', submenu_name: 'Billing & POS', display_order: 1, is_active: true },
+        { main_menu: 'Create Billing', submenu_key: 'custom_bill', submenu_name: 'Custom Bill', display_order: 2, is_active: true },
+        { main_menu: 'Cart', submenu_key: 'cart', submenu_name: 'View Cart', display_order: 1, is_active: true },
+        { main_menu: 'Cart', submenu_key: 'custom_cart', submenu_name: 'View Custom Cart', display_order: 2, is_active: true },
+        { main_menu: 'Orders', submenu_key: 'pending', submenu_name: 'Pending Orders', display_order: 1, is_active: true },
+        { main_menu: 'Orders', submenu_key: 'custom_pending', submenu_name: 'Custom Pending Orders', display_order: 2, is_active: true },
+        { main_menu: 'Dashboards', submenu_key: 'dashboard', submenu_name: 'Overview', display_order: 1, is_active: true },
+        { main_menu: 'Customer', submenu_key: 'customers', submenu_name: 'Customer Directory', display_order: 1, is_active: true },
+        { main_menu: 'Admin', submenu_key: 'users', submenu_name: 'User Management', display_order: 1, is_active: true },
+        { main_menu: 'Admin', submenu_key: 'inventory', submenu_name: 'Inventory Control', display_order: 2, is_active: true },
+        { main_menu: 'Admin', submenu_key: 'custom_bill_inventory', submenu_name: 'Custom Bill Inventory', display_order: 3, is_active: true },
+        { main_menu: 'Admin', submenu_key: 'custom_labels', submenu_name: 'Custom Label', display_order: 4, is_active: true },
+        { main_menu: 'Admin', submenu_key: 'menu_control', submenu_name: 'Menu Control', display_order: 5, is_active: true },
+        { main_menu: 'Admin', submenu_key: 'menu_order', submenu_name: 'Menu Order', display_order: 6, is_active: true }
+      ];
+      for (const m of defaultMenus) {
+        await db.query(
+          "INSERT INTO menu_order (main_menu, submenu_key, submenu_name, display_order, is_active) VALUES ($1, $2, $3, $4, $5)",
+          [m.main_menu, m.submenu_key, m.submenu_name, m.display_order, m.is_active]
+        );
+      }
+    }
+
     // 2. Ensure super_admin role exists in roles table
     const superAdminRoleCheck = await db.query("SELECT 1 FROM roles WHERE role_name = 'super_admin'");
     if (superAdminRoleCheck.rows.length === 0) {
@@ -65,7 +109,9 @@ async function initSuperAdmin() {
         users: { view: true, add: true, edit: true, delete: true },
         custom_labels: { view: true, add: true, edit: true, delete: true },
         custom_bill: { view: true, add: true, edit: true, delete: true },
-        custom_bill_inventory: { view: true, add: true, edit: true, delete: true }
+        custom_bill_inventory: { view: true, add: true, edit: true, delete: true },
+        menu_control: { view: true, add: true, edit: true, delete: true },
+        menu_order: { view: true, add: true, edit: true, delete: true }
       };
       await db.query(
         "INSERT INTO roles (role_name, permissions) VALUES ('super_admin', $1)",
@@ -97,7 +143,9 @@ async function initSuperAdmin() {
         users: { view: true, add: true, edit: true, delete: true },
         custom_labels: { view: true, add: true, edit: true, delete: true },
         custom_bill: { view: true, add: true, edit: true, delete: true },
-        custom_bill_inventory: { view: true, add: true, edit: true, delete: true }
+        custom_bill_inventory: { view: true, add: true, edit: true, delete: true },
+        menu_control: { view: true, add: true, edit: true, delete: true },
+        menu_order: { view: true, add: true, edit: true, delete: true }
       };
       await db.query(
         "UPDATE roles SET permissions = $1 WHERE role_name = 'admin'",

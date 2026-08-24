@@ -593,6 +593,8 @@ class _UsersScreenState extends State<UsersScreen> {
                         _buildMenuPermissionRow(roleId, 'custom_labels', state.getLabel('user_rbac_th_labels', 'Custom Labels'), isSuperAdminRole, ['view']),
                         _buildMenuPermissionRow(roleId, 'custom_bill', state.getLabel('user_rbac_th_custom_bill', 'Custom Bill'), isSuperAdminRole, ['view', 'add', 'delete']),
                         _buildMenuPermissionRow(roleId, 'custom_bill_inventory', state.getLabel('user_rbac_th_custom_bill_inventory', 'Custom Bill Inventory'), isSuperAdminRole, ['view', 'add', 'edit', 'delete']),
+                        _buildMenuPermissionRow(roleId, 'menu_control', state.getLabel('user_rbac_th_menu_control', 'Menu Control'), isSuperAdminRole, ['view']),
+                        _buildMenuPermissionRow(roleId, 'menu_order', state.getLabel('user_rbac_th_menu_order', 'Menu Order'), isSuperAdminRole, ['view', 'edit']),
                       ],
                     );
                   }).toList(),
