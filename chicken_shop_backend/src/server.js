@@ -67,27 +67,27 @@ async function initSuperAdmin() {
       )
     `);
 
-    // Seed default menus if menu_order is empty
-    const menuCheck = await db.query("SELECT COUNT(*) FROM menu_order");
-    if (parseInt(menuCheck.rows[0].count) === 0) {
-      console.log("Seeding default menu structure into menu_order...");
-      const defaultMenus = [
-        { main_menu: 'Create Billing', submenu_key: 'billing', submenu_name: 'Billing & POS', display_order: 1, is_active: true },
-        { main_menu: 'Create Billing', submenu_key: 'custom_bill', submenu_name: 'Custom Bill', display_order: 2, is_active: true },
-        { main_menu: 'Cart', submenu_key: 'cart', submenu_name: 'View Cart', display_order: 1, is_active: true },
-        { main_menu: 'Cart', submenu_key: 'custom_cart', submenu_name: 'View Custom Cart', display_order: 2, is_active: true },
-        { main_menu: 'Orders', submenu_key: 'pending', submenu_name: 'Pending Orders', display_order: 1, is_active: true },
-        { main_menu: 'Orders', submenu_key: 'custom_pending', submenu_name: 'Custom Pending Orders', display_order: 2, is_active: true },
-        { main_menu: 'Dashboards', submenu_key: 'dashboard', submenu_name: 'Overview', display_order: 1, is_active: true },
-        { main_menu: 'Customer', submenu_key: 'customers', submenu_name: 'Customer Directory', display_order: 1, is_active: true },
-        { main_menu: 'Admin', submenu_key: 'users', submenu_name: 'User Management', display_order: 1, is_active: true },
-        { main_menu: 'Admin', submenu_key: 'inventory', submenu_name: 'Inventory Control', display_order: 2, is_active: true },
-        { main_menu: 'Admin', submenu_key: 'custom_bill_inventory', submenu_name: 'Custom Bill Inventory', display_order: 3, is_active: true },
-        { main_menu: 'Admin', submenu_key: 'custom_labels', submenu_name: 'Custom Label', display_order: 4, is_active: true },
-        { main_menu: 'Admin', submenu_key: 'menu_control', submenu_name: 'Menu Control', display_order: 5, is_active: true },
-        { main_menu: 'Admin', submenu_key: 'menu_order', submenu_name: 'Menu Order', display_order: 6, is_active: true }
-      ];
-      for (const m of defaultMenus) {
+    // Seed default menus if any are missing
+    const defaultMenus = [
+      { main_menu: 'Create Billing', submenu_key: 'billing', submenu_name: 'Billing & POS', display_order: 1, is_active: true },
+      { main_menu: 'Create Billing', submenu_key: 'custom_bill', submenu_name: 'Custom Bill', display_order: 2, is_active: true },
+      { main_menu: 'Cart', submenu_key: 'cart', submenu_name: 'View Cart', display_order: 1, is_active: true },
+      { main_menu: 'Cart', submenu_key: 'custom_cart', submenu_name: 'View Custom Cart', display_order: 2, is_active: true },
+      { main_menu: 'Orders', submenu_key: 'pending', submenu_name: 'Pending Orders', display_order: 1, is_active: true },
+      { main_menu: 'Orders', submenu_key: 'custom_pending', submenu_name: 'Custom Pending Orders', display_order: 2, is_active: true },
+      { main_menu: 'Dashboards', submenu_key: 'dashboard', submenu_name: 'Overview', display_order: 1, is_active: true },
+      { main_menu: 'Customer', submenu_key: 'customers', submenu_name: 'Customer Directory', display_order: 1, is_active: true },
+      { main_menu: 'Admin', submenu_key: 'users', submenu_name: 'User Management', display_order: 1, is_active: true },
+      { main_menu: 'Admin', submenu_key: 'inventory', submenu_name: 'Inventory Control', display_order: 2, is_active: true },
+      { main_menu: 'Admin', submenu_key: 'custom_bill_inventory', submenu_name: 'Custom Bill Inventory', display_order: 3, is_active: true },
+      { main_menu: 'Admin', submenu_key: 'custom_labels', submenu_name: 'Custom Label', display_order: 4, is_active: true },
+      { main_menu: 'Admin', submenu_key: 'menu_control', submenu_name: 'Menu Control', display_order: 5, is_active: true },
+      { main_menu: 'Admin', submenu_key: 'menu_order', submenu_name: 'Menu Order', display_order: 6, is_active: true }
+    ];
+    for (const m of defaultMenus) {
+      const existCheck = await db.query("SELECT 1 FROM menu_order WHERE submenu_key = $1", [m.submenu_key]);
+      if (existCheck.rows.length === 0) {
+        console.log(`Seeding missing menu: ${m.submenu_name}`);
         await db.query(
           "INSERT INTO menu_order (main_menu, submenu_key, submenu_name, display_order, is_active) VALUES ($1, $2, $3, $4, $5)",
           [m.main_menu, m.submenu_key, m.submenu_name, m.display_order, m.is_active]
@@ -95,11 +95,10 @@ async function initSuperAdmin() {
       }
     }
 
-    // 2. Ensure super_admin role exists in roles table
-    const superAdminRoleCheck = await db.query("SELECT 1 FROM roles WHERE role_name = 'super_admin'");
-    if (superAdminRoleCheck.rows.length === 0) {
-      console.log("Seeding 'super_admin' role...");
-      const superPerms = {
+    // 2. Seed and merge role permissions dynamically
+    const rolesToSeed = ['super_admin', 'admin'];
+    const defaultPermsMap = {
+      super_admin: {
         billing: { view: true, add: true, edit: true, delete: true },
         cart: { view: true, add: true, edit: true, delete: true },
         pending: { view: true, add: true, edit: true, delete: true },
@@ -112,11 +111,57 @@ async function initSuperAdmin() {
         custom_bill_inventory: { view: true, add: true, edit: true, delete: true },
         menu_control: { view: true, add: true, edit: true, delete: true },
         menu_order: { view: true, add: true, edit: true, delete: true }
-      };
-      await db.query(
-        "INSERT INTO roles (role_name, permissions) VALUES ('super_admin', $1)",
-        [JSON.stringify(superPerms)]
-      );
+      },
+      admin: {
+        billing: { view: true, add: true, edit: true, delete: true },
+        cart: { view: true, add: true, edit: true, delete: true },
+        pending: { view: true, add: true, edit: true, delete: true },
+        dashboard: { view: true, add: true, edit: true, delete: true },
+        inventory: { view: true, add: true, edit: true, delete: true },
+        customers: { view: true, add: true, edit: true, delete: true },
+        users: { view: true, add: true, edit: true, delete: true },
+        custom_labels: { view: true, add: true, edit: true, delete: true },
+        custom_bill: { view: true, add: true, edit: true, delete: true },
+        custom_bill_inventory: { view: true, add: true, edit: true, delete: true },
+        menu_control: { view: true, add: true, edit: true, delete: true },
+        menu_order: { view: true, add: true, edit: true, delete: true }
+      }
+    };
+
+    for (const roleName of rolesToSeed) {
+      const check = await db.query("SELECT permissions FROM roles WHERE role_name = $1", [roleName]);
+      if (check.rows.length === 0) {
+        console.log(`Seeding missing role: ${roleName}`);
+        await db.query(
+          "INSERT INTO roles (role_name, permissions) VALUES ($1, $2)",
+          [roleName, JSON.stringify(defaultPermsMap[roleName])]
+        );
+      } else {
+        const currentPerms = check.rows[0].permissions || {};
+        let updated = false;
+        const targetPerms = defaultPermsMap[roleName];
+        
+        for (const menuKey of Object.keys(targetPerms)) {
+          if (!currentPerms[menuKey]) {
+            currentPerms[menuKey] = { ...targetPerms[menuKey] };
+            updated = true;
+          } else {
+            for (const act of Object.keys(targetPerms[menuKey])) {
+              if (currentPerms[menuKey][act] === undefined) {
+                currentPerms[menuKey][act] = targetPerms[menuKey][act];
+                updated = true;
+              }
+            }
+          }
+        }
+        if (updated) {
+          console.log(`Updating permissions for role: ${roleName}`);
+          await db.query(
+            "UPDATE roles SET permissions = $1 WHERE role_name = $2",
+            [JSON.stringify(currentPerms), roleName]
+          );
+        }
+      }
     }
 
     // 3. Ensure superadmin user exists in users table
@@ -127,29 +172,6 @@ async function initSuperAdmin() {
       await db.query(
         "INSERT INTO users (username, password_hash, role) VALUES ('superadmin', $1, 'super_admin')",
         [hash]
-      );
-    }
-
-    // 4. Ensure admin role has permissions column set if empty
-    const adminRoleCheck = await db.query("SELECT permissions FROM roles WHERE role_name = 'admin'");
-    if (adminRoleCheck.rows.length > 0 && !adminRoleCheck.rows[0].permissions) {
-      const defaultAdminPerms = {
-        billing: { view: true, add: true, edit: true, delete: true },
-        cart: { view: true, add: true, edit: true, delete: true },
-        pending: { view: true, add: true, edit: true, delete: true },
-        dashboard: { view: true, add: true, edit: true, delete: true },
-        inventory: { view: true, add: true, edit: true, delete: true },
-        customers: { view: true, add: true, edit: true, delete: true },
-        users: { view: true, add: true, edit: true, delete: true },
-        custom_labels: { view: true, add: true, edit: true, delete: true },
-        custom_bill: { view: true, add: true, edit: true, delete: true },
-        custom_bill_inventory: { view: true, add: true, edit: true, delete: true },
-        menu_control: { view: true, add: true, edit: true, delete: true },
-        menu_order: { view: true, add: true, edit: true, delete: true }
-      };
-      await db.query(
-        "UPDATE roles SET permissions = $1 WHERE role_name = 'admin'",
-        [JSON.stringify(defaultAdminPerms)]
       );
     }
   } catch (err) {

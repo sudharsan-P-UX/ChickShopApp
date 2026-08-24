@@ -2678,8 +2678,9 @@ function renderSidebarNavMenu() {
     const items = grouped[groupName] || [];
     // Filter active & permissions
     const visibleItems = items.filter(item => {
-      // 1. Must be active
-      if (!item.is_active) return false;
+      // 1. Must be active (except menu_order for admin roles to prevent lockout)
+      const isAdminUser = currentUser && (currentUser.role === 'super_admin' || currentUser.role === 'superadmin' || currentUser.role === 'admin');
+      if (!item.is_active && !(item.submenu_key === 'menu_order' && isAdminUser)) return false;
       // 2. Check permissions
       const meta = menuMetadata[item.submenu_key];
       if (!meta) return false;

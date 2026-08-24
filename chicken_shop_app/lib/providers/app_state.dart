@@ -138,7 +138,8 @@ class AppState with ChangeNotifier {
       orElse: () => null,
     );
     if (item == null) return true;
-    if (item['is_active'] != true) return false;
+    final bool isAdminUser = _userRole == 'super_admin' || _userRole == 'superadmin' || _userRole == 'admin';
+    if (item['is_active'] != true && !(submenuKey == 'menu_order' && isAdminUser)) return false;
 
     String? permKey;
     switch (submenuKey) {
