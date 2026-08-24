@@ -27,8 +27,9 @@ module.exports = (menu, action) => {
 
       const permissions = roleRes.rows[0].permissions;
 
-      // Verify that this role has the requested permission
-      if (!permissions || !permissions[menu] || !permissions[menu][action]) {
+      // Verify that this role has the requested permission (map update to edit)
+      const targetAction = action === 'update' ? 'edit' : action;
+      if (!permissions || !permissions[menu] || !permissions[menu][targetAction]) {
         return res.status(403).json({ message: `Access Denied: Insufficient privileges to perform ${action} on ${menu}.` });
       }
 

@@ -70,8 +70,7 @@ class _MenuControlScreenState extends State<MenuControlScreen> {
       _perms[key] = {
         'view': menuPerms['view'] == true,
         'add': menuPerms['add'] == true,
-        'edit': menuPerms['edit'] == true,
-        'update': menuPerms['update'] == true,
+        'edit': menuPerms['edit'] == true || menuPerms['update'] == true,
         'delete': menuPerms['delete'] == true,
         'home': menuPerms['home'] == true,
       };
@@ -85,7 +84,6 @@ class _MenuControlScreenState extends State<MenuControlScreen> {
         // If view is unchecked, uncheck all action permissions too!
         _perms[key]!['add'] = false;
         _perms[key]!['edit'] = false;
-        _perms[key]!['update'] = false;
         _perms[key]!['delete'] = false;
         _perms[key]!['home'] = false;
       }
@@ -253,16 +251,6 @@ class _MenuControlScreenState extends State<MenuControlScreen> {
                                         onChanged: isViewActive ? (val) => setState(() => p['edit'] = val == true) : null,
                                       ),
                                       const Text('Edit'),
-                                    ],
-                                  ),
-                                  Row(
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      Checkbox(
-                                        value: p['update'] == true,
-                                        onChanged: isViewActive ? (val) => setState(() => p['update'] = val == true) : null,
-                                      ),
-                                      const Text('Update'),
                                     ],
                                   ),
                                   Row(

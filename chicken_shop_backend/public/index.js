@@ -70,12 +70,10 @@ function showLoginScreen() {
 
 function hasPermission(menu, action) {
   const permissions = currentUser ? currentUser.permissions : null;
+  const targetAction = action === 'update' ? 'edit' : action;
   if (permissions && permissions[menu]) {
-    if (action === 'update' && permissions[menu]['update'] === undefined) {
-      return permissions[menu]['edit'] === true;
-    }
-    if (permissions[menu][action] !== undefined) {
-      return permissions[menu][action] === true;
+    if (permissions[menu][targetAction] !== undefined) {
+      return permissions[menu][targetAction] === true;
     }
   }
   if (currentUser && (currentUser.role === 'super_admin' || currentUser.role === 'superadmin')) {
@@ -2956,7 +2954,7 @@ function renderRoleMenuControlMatrix() {
   
   // Make sure we have appMenus loaded
   if (appMenus.length === 0) {
-    tbody.innerHTML = '<tr><td colspan="8" style="text-align: center; padding: 20px; color: var(--text-muted);">No menus loaded. Please try again.</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="7" style="text-align: center; padding: 20px; color: var(--text-muted);">No menus loaded. Please try again.</td></tr>';
     return;
   }
   
@@ -2972,8 +2970,10 @@ function renderRoleMenuControlMatrix() {
   
   tbody.innerHTML = sortedMenus.map((menu, idx) => {
     const key = menu.submenu_key;
-    const perms = permissions[key] || { view: false, add: false, edit: false, update: false, delete: false, home: false };
+    const perms = permissions[key] || { view: false, add: false, edit: false, delete: false, home: false };
     
+    // Fallback: if edit is false but update was true, treat as edit true
+    const isEdit = perms.edit === true || perms.update === true;
     const isHome = perms.home === true;
     
     return `
@@ -2990,10 +2990,7 @@ function renderRoleMenuControlMatrix() {
           <input type="checkbox" class="perm-cb" data-action="add" ${perms.add ? 'checked' : ''} ${perms.view ? '' : 'disabled'}>
         </td>
         <td style="padding: 12px; text-align: center;">
-          <input type="checkbox" class="perm-cb" data-action="edit" ${perms.edit ? 'checked' : ''} ${perms.view ? '' : 'disabled'}>
-        </td>
-        <td style="padding: 12px; text-align: center;">
-          <input type="checkbox" class="perm-cb" data-action="update" ${perms.update ? 'checked' : ''} ${perms.view ? '' : 'disabled'}>
+          <input type="checkbox" class="perm-cb" data-action="edit" ${isEdit ? 'checked' : ''} ${perms.view ? '' : 'disabled'}>
         </td>
         <td style="padding: 12px; text-align: center;">
           <input type="checkbox" class="perm-cb" data-action="delete" ${perms.delete ? 'checked' : ''} ${perms.view ? '' : 'disabled'}>

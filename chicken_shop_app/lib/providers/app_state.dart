@@ -35,10 +35,16 @@ class AppState with ChangeNotifier {
   int get screenIndex => _screenIndex;
 
   bool hasPermission(String menu, String action) {
+    final String targetAction = action == 'update' ? 'edit' : action;
     if (_permissions.containsKey(menu)) {
       final menuPerms = _permissions[menu];
-      if (menuPerms is Map && menuPerms.containsKey(action)) {
-        return menuPerms[action] == true;
+      if (menuPerms is Map) {
+        if (menuPerms.containsKey(targetAction)) {
+          return menuPerms[targetAction] == true;
+        }
+        if (targetAction == 'edit' && menuPerms.containsKey('update')) {
+          return menuPerms['update'] == true;
+        }
       }
     }
     if (_userRole == 'super_admin' || _userRole == 'superadmin') return true; // Super admin has absolute access
