@@ -36,12 +36,24 @@ function updateClock() {
   }
 }
 
+function getLandingView() {
+  if (currentUser && currentUser.permissions) {
+    for (const key of Object.keys(currentUser.permissions)) {
+      if (currentUser.permissions[key].home === true) {
+        const meta = menuMetadata[key];
+        if (meta) return meta.target;
+      }
+    }
+  }
+  return 'billing-view';
+}
+
 // Initialize Application UI / Auth State
 function initApp() {
   if (authToken && currentUser) {
     loadCustomLabels();
     showAppLayout();
-    switchView('billing-view');
+    switchView(getLandingView());
     loadDashboardData();
   } else {
     showLoginScreen();
@@ -77,22 +89,24 @@ function getPermissionKeyForView(viewId) {
 }
 
 function adjustActionPrivileges() {
-  if (currentUser && (currentUser.role === 'super_admin' || currentUser.role === 'superadmin')) {
-    const invForm = document.querySelector('.inventory-form');
-    if (invForm) invForm.style.display = 'block';
-    const custForm = document.querySelector('.customers-container .inventory-form');
-    if (custForm) custForm.style.display = 'block';
-    const customInvForm = document.querySelector('#custom-bill-inventory-view .inventory-form');
-    if (customInvForm) customInvForm.style.display = 'block';
-    return;
-  }
   const permissions = currentUser ? currentUser.permissions : null;
-  if (!permissions) return;
+
+  function hasPerm(menu, action) {
+    if (permissions && permissions[menu]) {
+      if (permissions[menu][action] !== undefined) {
+        return permissions[menu][action] === true;
+      }
+    }
+    if (currentUser && (currentUser.role === 'super_admin' || currentUser.role === 'superadmin')) {
+      return true;
+    }
+    return false;
+  }
 
   // 1. Inventory View Add Form
   const invForm = document.querySelector('#inventory-view .inventory-form');
   if (invForm) {
-    if (permissions.inventory && permissions.inventory.add) {
+    if (hasPerm('inventory', 'add')) {
       invForm.style.display = 'block';
     } else {
       invForm.style.display = 'none';
@@ -102,7 +116,7 @@ function adjustActionPrivileges() {
   // 1b. Custom Bill Inventory View Add Form
   const customInvForm = document.querySelector('#custom-bill-inventory-view .inventory-form');
   if (customInvForm) {
-    if (permissions.custom_bill_inventory && permissions.custom_bill_inventory.add) {
+    if (hasPerm('custom_bill_inventory', 'add')) {
       customInvForm.style.display = 'block';
     } else {
       customInvForm.style.display = 'none';
@@ -112,7 +126,7 @@ function adjustActionPrivileges() {
   // 2. Customer Add Form
   const custForm = document.querySelector('.customers-container .inventory-form');
   if (custForm) {
-    if (permissions.customers && permissions.customers.add) {
+    if (hasPerm('customers', 'add')) {
       custForm.style.display = 'block';
     } else {
       custForm.style.display = 'none';
@@ -184,7 +198,9 @@ function switchView(viewId) {
     'custom-bill-view': 'Custom Bill POS System',
     'custom-cart-view': 'Custom Shopping Cart & Checkout',
     'custom-pending-view': 'Custom Pending Orders',
-    'custom-bill-inventory-view': 'Custom Bill Inventory & Stock Control'
+    'custom-bill-inventory-view': 'Custom Bill Inventory & Stock Control',
+    'menu-control-view': 'User Access Menu Control',
+    'menu-order-view': 'Menu Order Control'
   };
   document.getElementById('page-title').textContent = titles[viewId] || 'Chicken Shop POS';
 
@@ -225,6 +241,8 @@ function switchView(viewId) {
     loadLabelsView();
   } else if (viewId === 'menu-order-view') {
     loadMenuOrderData();
+  } else if (viewId === 'menu-control-view') {
+    loadMenuControlView();
   }
 }
 
@@ -446,7 +464,7 @@ async function handleLogin(e) {
     showToast('Signed in successfully!');
     loadCustomLabels();
     showAppLayout();
-    switchView('billing-view');
+    switchView(getLandingView());
     
     // Clear login form fields
     document.getElementById('username').value = '';
@@ -2685,11 +2703,11 @@ function renderSidebarNavMenu() {
       const meta = menuMetadata[item.submenu_key];
       if (!meta) return false;
       const permKey = getPermissionKeyForView(meta.target);
-      if (currentUser && (currentUser.role === 'super_admin' || currentUser.role === 'superadmin')) {
-        return true;
-      }
       if (permKey && currentUser && currentUser.permissions && currentUser.permissions[permKey]) {
         return currentUser.permissions[permKey].view === true;
+      }
+      if (currentUser && (currentUser.role === 'super_admin' || currentUser.role === 'superadmin')) {
+        return true;
       }
       // default: view if no key
       return true;
@@ -2871,3 +2889,182 @@ async function handleMenuOrderFormSubmit(e) {
     showToast(err.message, 'danger');
   }
 }
+
+// ==========================================
+// User Access Menu Control Features
+// ==========================================
+let menuControlUsers = [];
+let menuControlSelectedUser = null;
+
+async function loadMenuControlView() {
+  try {
+    // 1. Fetch all users from the system
+    menuControlUsers = await apiRequest('/auth/users');
+    
+    // 2. Populate the select dropdown
+    const select = document.getElementById('menu-control-user-select');
+    if (!select) return;
+    
+    select.innerHTML = menuControlUsers.map(u => 
+      `<option value="${u.id}">${u.username} (${u.role})</option>`
+    ).join('');
+    
+    // 3. Select first user or active editing user
+    if (menuControlUsers.length > 0) {
+      if (!menuControlSelectedUser || !menuControlUsers.find(u => u.id === menuControlSelectedUser.id)) {
+        menuControlSelectedUser = menuControlUsers[0];
+      } else {
+        menuControlSelectedUser = menuControlUsers.find(u => u.id === menuControlSelectedUser.id);
+      }
+      select.value = menuControlSelectedUser.id;
+      renderUserMenuControlMatrix();
+    }
+  } catch (err) {
+    showToast(err.message, 'danger');
+  }
+}
+
+function handleMenuControlUserChange() {
+  const select = document.getElementById('menu-control-user-select');
+  if (!select) return;
+  
+  const userId = parseInt(select.value);
+  menuControlSelectedUser = menuControlUsers.find(u => u.id === userId);
+  if (menuControlSelectedUser) {
+    renderUserMenuControlMatrix();
+  }
+}
+
+function renderUserMenuControlMatrix() {
+  const tbody = document.getElementById('menu-control-matrix-body');
+  if (!tbody || !menuControlSelectedUser) return;
+  
+  // Make sure we have appMenus loaded
+  if (appMenus.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="8" style="text-align: center; padding: 20px; color: var(--text-muted);">No menus loaded. Please try again.</td></tr>';
+    return;
+  }
+  
+  const permissions = menuControlSelectedUser.permissions || {};
+  
+  // Sort appMenus by main_menu and display_order
+  const sortedMenus = [...appMenus].sort((a, b) => {
+    if (a.main_menu !== b.main_menu) {
+      return a.main_menu.localeCompare(b.main_menu);
+    }
+    return a.display_order - b.display_order;
+  });
+  
+  tbody.innerHTML = sortedMenus.map((menu, idx) => {
+    const key = menu.submenu_key;
+    const perms = permissions[key] || { view: false, add: false, edit: false, update: false, delete: false, home: false };
+    
+    const isHome = perms.home === true;
+    
+    return `
+      <tr style="border-bottom: 1px solid var(--border-glass);" data-submenu-key="${key}">
+        <td style="padding: 12px; font-weight: bold; color: var(--text-muted);">${idx + 1}</td>
+        <td style="padding: 12px;">
+          <div style="font-weight: bold; font-size: 14px;">${menu.submenu_name}</div>
+          <div style="font-size: 11px; color: var(--text-muted); opacity: 0.7;">Category: ${menu.main_menu}</div>
+        </td>
+        <td style="padding: 12px; text-align: center;">
+          <input type="checkbox" class="perm-cb perm-cb-view" data-action="view" ${perms.view ? 'checked' : ''} onchange="handleViewCheckboxChange(this, '${key}')">
+        </td>
+        <td style="padding: 12px; text-align: center;">
+          <input type="checkbox" class="perm-cb" data-action="add" ${perms.add ? 'checked' : ''} ${perms.view ? '' : 'disabled'}>
+        </td>
+        <td style="padding: 12px; text-align: center;">
+          <input type="checkbox" class="perm-cb" data-action="edit" ${perms.edit ? 'checked' : ''} ${perms.view ? '' : 'disabled'}>
+        </td>
+        <td style="padding: 12px; text-align: center;">
+          <input type="checkbox" class="perm-cb" data-action="update" ${perms.update ? 'checked' : ''} ${perms.view ? '' : 'disabled'}>
+        </td>
+        <td style="padding: 12px; text-align: center;">
+          <input type="checkbox" class="perm-cb" data-action="delete" ${perms.delete ? 'checked' : ''} ${perms.view ? '' : 'disabled'}>
+        </td>
+        <td style="padding: 12px; text-align: center;">
+          <input type="checkbox" class="perm-cb perm-cb-home" data-action="home" ${isHome ? 'checked' : ''} ${perms.view ? '' : 'disabled'} onchange="handleHomeCheckboxChange(this, '${key}')">
+        </td>
+      </tr>
+    `;
+  }).join('');
+}
+
+function handleViewCheckboxChange(checkbox, menuKey) {
+  const row = checkbox.closest('tr');
+  const otherCbs = row.querySelectorAll('.perm-cb:not(.perm-cb-view)');
+  
+  otherCbs.forEach(cb => {
+    cb.disabled = !checkbox.checked;
+    if (!checkbox.checked) {
+      cb.checked = false;
+    }
+  });
+}
+
+function handleHomeCheckboxChange(checkbox, menuKey) {
+  if (checkbox.checked) {
+    const tbody = document.getElementById('menu-control-matrix-body');
+    const homeCbs = tbody.querySelectorAll('.perm-cb-home');
+    homeCbs.forEach(cb => {
+      if (cb !== checkbox) {
+        cb.checked = false;
+      }
+    });
+  }
+}
+
+async function saveUserMenuPermissions() {
+  if (!menuControlSelectedUser) return;
+  
+  const tbody = document.getElementById('menu-control-matrix-body');
+  if (!tbody) return;
+  
+  const rows = tbody.querySelectorAll('tr');
+  const permissions = {};
+  
+  rows.forEach(row => {
+    const key = row.getAttribute('data-submenu-key');
+    if (!key) return;
+    
+    const checkboxes = row.querySelectorAll('.perm-cb');
+    const menuPerms = {};
+    
+    checkboxes.forEach(cb => {
+      const action = cb.getAttribute('data-action');
+      menuPerms[action] = cb.checked;
+    });
+    
+    permissions[key] = menuPerms;
+  });
+  
+  try {
+    const res = await apiRequest(`/auth/users/${menuControlSelectedUser.id}/permissions`, {
+      method: 'PUT',
+      body: { permissions }
+    });
+    
+    showToast('User menu permissions saved successfully!', 'success');
+    
+    // Update local permissions if editing currently logged in user
+    if (menuControlSelectedUser.id === currentUser.id) {
+      currentUser.permissions = res.permissions;
+      localStorage.setItem('user', JSON.stringify(currentUser));
+      // Re-render navigation bar & actions immediately
+      renderSidebarNavMenu();
+      adjustActionPrivileges();
+    }
+    
+    loadMenuControlView();
+  } catch (err) {
+    showToast(err.message, 'danger');
+  }
+}
+
+// Bind to window context
+window.loadMenuControlView = loadMenuControlView;
+window.handleMenuControlUserChange = handleMenuControlUserChange;
+window.saveUserMenuPermissions = saveUserMenuPermissions;
+window.handleViewCheckboxChange = handleViewCheckboxChange;
+window.handleHomeCheckboxChange = handleHomeCheckboxChange;

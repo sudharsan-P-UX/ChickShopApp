@@ -14,6 +14,7 @@ import 'custom_cart_screen.dart';
 import 'custom_pending_screen.dart';
 import 'custom_inventory_screen.dart';
 import 'menu_order_screen.dart';
+import 'menu_control_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -47,7 +48,7 @@ class _HomeScreenState extends State<HomeScreen> {
     const CustomCartScreen(),
     const CustomPendingScreen(),
     const CustomInventoryScreen(),
-    const MenuControlPlaceholderScreen(),
+    const MenuControlScreen(),
     const MenuOrderScreen(),
   ];
 

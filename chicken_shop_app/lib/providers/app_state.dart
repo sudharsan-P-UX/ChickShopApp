@@ -35,13 +35,13 @@ class AppState with ChangeNotifier {
   int get screenIndex => _screenIndex;
 
   bool hasPermission(String menu, String action) {
-    if (_userRole == 'super_admin' || _userRole == 'superadmin') return true; // Super admin has absolute access
     if (_permissions.containsKey(menu)) {
       final menuPerms = _permissions[menu];
       if (menuPerms is Map && menuPerms.containsKey(action)) {
         return menuPerms[action] == true;
       }
     }
+    if (_userRole == 'super_admin' || _userRole == 'superadmin') return true; // Super admin has absolute access
     return false;
   }
 
@@ -62,13 +62,41 @@ class AppState with ChangeNotifier {
 
   double mathMax(double a, double b) => a > b ? a : b;
 
+  int getLandingIndex() {
+    final Map<String, int> menuIndexMap = {
+      'billing': 0,
+      'dashboard': 1,
+      'cart': 2,
+      'pending': 3,
+      'inventory': 4,
+      'customers': 5,
+      'users': 6,
+      'custom_labels': 7,
+      'custom_bill': 8,
+      'custom_cart': 9,
+      'custom_pending': 10,
+      'custom_bill_inventory': 11,
+      'menu_control': 12,
+      'menu_order': 13,
+    };
+    for (var entry in _permissions.entries) {
+      final value = entry.value;
+      if (value is Map && value['home'] == true) {
+        if (menuIndexMap.containsKey(entry.key)) {
+          return menuIndexMap[entry.key]!;
+        }
+      }
+    }
+    return 0; // Default fallback to Billing & POS
+  }
+
   // Authentication Actions
   Future<void> login(String token, String role, String username, Map<String, dynamic>? permissions) async {
     _userRole = role;
     _username = username;
     _permissions = permissions ?? {};
     _isAuthenticated = true;
-    _screenIndex = 0; // Default to Billing after login
+    _screenIndex = getLandingIndex();
     
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString('token', token);
@@ -79,6 +107,13 @@ class AppState with ChangeNotifier {
     await fetchCustomLabels();
     await fetchMenuOrders();
     
+    notifyListeners();
+  }
+
+  Future<void> updateLocalPermissions(Map<String, dynamic> newPerms) async {
+    _permissions = newPerms;
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('permissions', jsonEncode(_permissions));
     notifyListeners();
   }
 

@@ -12,9 +12,12 @@ exports.login = async (req, res) => {
     const match = await bcrypt.compare(password, user.password_hash);
     if (!match) return res.status(401).json({ message: 'Invalid Username or Password' });
 
-    // Fetch role permissions
-    const roleQuery = await db.query('SELECT permissions FROM roles WHERE role_name = $1', [user.role]);
-    const permissions = roleQuery.rows.length > 0 ? roleQuery.rows[0].permissions : null;
+    // Fetch permissions (user custom permissions, fallback to role default permissions)
+    let permissions = user.permissions;
+    if (!permissions) {
+      const roleQuery = await db.query('SELECT permissions FROM roles WHERE role_name = $1', [user.role]);
+      permissions = roleQuery.rows.length > 0 ? roleQuery.rows[0].permissions : null;
+    }
 
     const token = jwt.sign({ id: user.id, role: user.role }, process.env.JWT_SECRET, { expiresIn: '1d' });
     res.json({ token, user: { id: user.id, username: user.username, role: user.role, permissions } });
@@ -28,7 +31,7 @@ exports.register = async (req, res) => {
   try {
     const hash = await bcrypt.hash(password, 10);
     const { rows } = await db.query(
-      'INSERT INTO users (username, password_hash, role) VALUES ($1, $2, $3) RETURNING id, username, role',
+      'INSERT INTO users (username, password_hash, role) VALUES ($1, $2, $3) RETURNING id, username, role, permissions',
       [username, hash, role || 'cashier']
     );
     res.status(201).json(rows[0]);
@@ -39,7 +42,7 @@ exports.register = async (req, res) => {
 
 exports.listUsers = async (req, res) => {
   try {
-    const { rows } = await db.query('SELECT id, username, role FROM users ORDER BY id ASC');
+    const { rows } = await db.query('SELECT id, username, role, permissions FROM users ORDER BY id ASC');
     res.json(rows);
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -193,6 +196,25 @@ exports.updateRolePermissions = async (req, res) => {
       [JSON.stringify(permissions), id]
     );
     if (rows.length === 0) return res.status(404).json({ message: 'Role not found' });
+    res.json(rows[0]);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
+exports.updateUserPermissions = async (req, res) => {
+  const { id } = req.params;
+  const { permissions } = req.body;
+  if (!permissions) {
+    return res.status(400).json({ message: 'Permissions object is required' });
+  }
+
+  try {
+    const { rows } = await db.query(
+      'UPDATE users SET permissions = $1 WHERE id = $2 RETURNING id, username, role, permissions',
+      [JSON.stringify(permissions), id]
+    );
+    if (rows.length === 0) return res.status(404).json({ message: 'User not found' });
     res.json(rows[0]);
   } catch (err) {
     res.status(500).json({ error: err.message });

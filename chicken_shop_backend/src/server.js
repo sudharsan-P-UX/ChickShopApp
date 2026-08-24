@@ -47,8 +47,9 @@ const db = require('./config/db');
 
 async function initSuperAdmin() {
   try {
-    // 1. Ensure roles table has permissions column if not already
+    // 1. Ensure roles and users tables have permissions columns if not already
     await db.query('ALTER TABLE roles ADD COLUMN IF NOT EXISTS permissions JSONB');
+    await db.query('ALTER TABLE users ADD COLUMN IF NOT EXISTS permissions JSONB');
 
     // Run schema migrations for Custom Bill features
     await db.query('ALTER TABLE inventory ADD COLUMN IF NOT EXISTS is_custom_bill BOOLEAN DEFAULT FALSE');
