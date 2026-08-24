@@ -206,6 +206,7 @@ class _MenuOrderScreenState extends State<MenuOrderScreen> {
                                     padding: const EdgeInsets.symmetric(vertical: 6.0),
                                     child: TextField(
                                       controller: editItem['order'] as TextEditingController,
+                                      enabled: state.hasPermission('menu_order', 'edit') || state.hasPermission('menu_order', 'update'),
                                       keyboardType: TextInputType.number,
                                       textAlign: TextAlign.center,
                                       style: const TextStyle(fontSize: 13),
@@ -223,11 +224,13 @@ class _MenuOrderScreenState extends State<MenuOrderScreen> {
                                       children: [
                                         Checkbox(
                                           value: editItem['active'] == true,
-                                          onChanged: (val) {
-                                            setState(() {
-                                              editItem['active'] = val;
-                                            });
-                                          },
+                                          onChanged: (state.hasPermission('menu_order', 'edit') || state.hasPermission('menu_order', 'update'))
+                                              ? (val) {
+                                                  setState(() {
+                                                    editItem['active'] = val;
+                                                  });
+                                                }
+                                              : null,
                                         ),
                                         const Text('Active', style: TextStyle(fontSize: 11)),
                                       ],
@@ -244,40 +247,42 @@ class _MenuOrderScreenState extends State<MenuOrderScreen> {
                 );
               },
             ),
-      bottomNavigationBar: Container(
-        padding: const EdgeInsets.all(12),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          boxShadow: [
-            BoxShadow(color: Colors.grey.withOpacity(0.3), blurRadius: 4, offset: const Offset(0, -2)),
-          ],
-        ),
-        child: Row(
-          children: [
-            Expanded(
-              child: OutlinedButton(
-                onPressed: _isLoading ? null : () => _loadData(),
-                style: OutlinedButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(vertical: 14),
-                ),
-                child: const Text('Reset Changes'),
+      bottomNavigationBar: (state.hasPermission('menu_order', 'edit') || state.hasPermission('menu_order', 'update'))
+          ? Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                boxShadow: [
+                  BoxShadow(color: Colors.grey.withOpacity(0.3), blurRadius: 4, offset: const Offset(0, -2)),
+                ],
               ),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: ElevatedButton(
-                onPressed: _isLoading ? null : () => _saveChanges(state),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.green,
-                  foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(vertical: 14),
-                ),
-                child: const Text('Save Menu Order'),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: OutlinedButton(
+                      onPressed: _isLoading ? null : () => _loadData(),
+                      style: OutlinedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                      ),
+                      child: const Text('Reset Changes'),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: ElevatedButton(
+                      onPressed: _isLoading ? null : () => _saveChanges(state),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.green,
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                      ),
+                      child: const Text('Save Menu Order'),
+                    ),
+                  ),
+                ],
               ),
-            ),
-          ],
-        ),
-      ),
+            )
+          : null,
     );
   }
 }

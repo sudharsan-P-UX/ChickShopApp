@@ -118,11 +118,13 @@ class _LabelsScreenState extends State<LabelsScreen> {
                               ...items.map((item) {
                                 final key = item['label_key'].toString();
                                 final name = item['label_name'].toString();
+                                final bool canEdit = state.hasPermission('custom_labels', 'edit') || state.hasPermission('custom_labels', 'update');
 
                                 return Padding(
                                   padding: const EdgeInsets.symmetric(vertical: 8),
                                   child: TextFormField(
                                     controller: _controllers[key],
+                                    enabled: canEdit,
                                     decoration: InputDecoration(
                                       labelText: name,
                                       border: const OutlineInputBorder(),
@@ -138,13 +140,15 @@ class _LabelsScreenState extends State<LabelsScreen> {
                     }).toList(),
                   ],
                 ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: _isSaving ? null : () => _saveLabels(state),
-        backgroundColor: Colors.green,
-        foregroundColor: Colors.white,
-        icon: const Icon(Icons.save),
-        label: const Text('Save Labels'),
-      ),
+      floatingActionButton: (state.hasPermission('custom_labels', 'edit') || state.hasPermission('custom_labels', 'update'))
+          ? FloatingActionButton.extended(
+              onPressed: _isSaving ? null : () => _saveLabels(state),
+              backgroundColor: Colors.green,
+              foregroundColor: Colors.white,
+              icon: const Icon(Icons.save),
+              label: const Text('Save Labels'),
+            )
+          : null,
     );
   }
 }

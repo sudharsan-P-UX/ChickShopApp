@@ -68,67 +68,69 @@ class _CustomersScreenState extends State<CustomersScreen> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // Registration Form Widget
-          Card(
-            elevation: 2,
-            child: Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Form(
-                key: _formKey,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      state.getLabel('cust_register_title', 'Register Customer'),
-                      style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
-                    ),
-                    const SizedBox(height: 12),
-                    TextFormField(
-                      controller: _phoneController,
-                      keyboardType: TextInputType.phone,
-                      decoration: InputDecoration(
-                        labelText: state.getLabel('cust_phone_label', 'Phone Number'),
-                        prefixIcon: const Icon(Icons.phone),
-                        border: const OutlineInputBorder(),
+          if (state.hasPermission('customers', 'add'))
+            Card(
+              elevation: 2,
+              child: Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Form(
+                  key: _formKey,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        state.getLabel('cust_register_title', 'Register Customer'),
+                        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
                       ),
-                      validator: (value) {
-                        if (value == null || value.trim().isEmpty) {
-                          return 'Phone number is required';
-                        }
-                        return null;
-                      },
-                    ),
-                    const SizedBox(height: 12),
-                    TextFormField(
-                      controller: _nameController,
-                      decoration: InputDecoration(
-                        labelText: state.getLabel('cust_name_label', 'Customer Name'),
-                        prefixIcon: const Icon(Icons.person),
-                        border: const OutlineInputBorder(),
+                      const SizedBox(height: 12),
+                      TextFormField(
+                        controller: _phoneController,
+                        keyboardType: TextInputType.phone,
+                        decoration: InputDecoration(
+                          labelText: state.getLabel('cust_phone_label', 'Phone Number'),
+                          prefixIcon: const Icon(Icons.phone),
+                          border: const OutlineInputBorder(),
+                        ),
+                        validator: (value) {
+                          if (value == null || value.trim().isEmpty) {
+                            return 'Phone number is required';
+                          }
+                          return null;
+                        },
                       ),
-                      validator: (value) {
-                        if (value == null || value.trim().isEmpty) {
-                          return 'Full name is required';
-                        }
-                        return null;
-                      },
-                    ),
-                    const SizedBox(height: 14),
-                    ElevatedButton.icon(
-                      onPressed: () => _submitCustomer(state),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.deepOrange,
-                        foregroundColor: Colors.white,
-                        minimumSize: const Size.fromHeight(45),
+                      const SizedBox(height: 12),
+                      TextFormField(
+                        controller: _nameController,
+                        decoration: InputDecoration(
+                          labelText: state.getLabel('cust_name_label', 'Customer Name'),
+                          prefixIcon: const Icon(Icons.person),
+                          border: const OutlineInputBorder(),
+                        ),
+                        validator: (value) {
+                          if (value == null || value.trim().isEmpty) {
+                            return 'Full name is required';
+                          }
+                          return null;
+                        },
                       ),
-                      icon: const Icon(Icons.person_add),
-                      label: Text(state.getLabel('cust_register_button', 'Register Customer')),
-                    ),
-                  ],
+                      const SizedBox(height: 14),
+                      ElevatedButton.icon(
+                        onPressed: () => _submitCustomer(state),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.deepOrange,
+                          foregroundColor: Colors.white,
+                          minimumSize: const Size.fromHeight(45),
+                        ),
+                        icon: const Icon(Icons.person_add),
+                        label: Text(state.getLabel('cust_register_button', 'Register Customer')),
+                      ),
+                    ],
+                  ),
                 ),
               ),
             ),
-          ),
-          const SizedBox(height: 20),
+          if (state.hasPermission('customers', 'add'))
+            const SizedBox(height: 20),
           // Directory Title and Search Box
           Row(
             children: [

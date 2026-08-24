@@ -272,15 +272,16 @@ class _InventoryScreenState extends State<InventoryScreen> {
                                   ),
                                 ),
                               ),
-                              const SizedBox(width: 8),
-                              IconButton(
-                                icon: const Icon(Icons.edit, color: Colors.blue),
-                                onPressed: () => _showAddEditItemDialog(context, item),
-                              ),
-                              IconButton(
-                                icon: const Icon(Icons.delete, color: Colors.red),
-                                onPressed: () => _deleteItem(context, item['id'], state),
-                              ),
+                              if (state.hasPermission('inventory', 'edit') || state.hasPermission('inventory', 'update'))
+                                IconButton(
+                                  icon: const Icon(Icons.edit, color: Colors.blue),
+                                  onPressed: () => _showAddEditItemDialog(context, item),
+                                ),
+                              if (state.hasPermission('inventory', 'delete'))
+                                IconButton(
+                                  icon: const Icon(Icons.delete, color: Colors.red),
+                                  onPressed: () => _deleteItem(context, item['id'], state),
+                                ),
                             ],
                           ),
                         ),
@@ -290,12 +291,14 @@ class _InventoryScreenState extends State<InventoryScreen> {
           ),
         ],
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () => _showAddEditItemDialog(context),
-        backgroundColor: Colors.deepOrange,
-        foregroundColor: Colors.white,
-        child: const Icon(Icons.add),
-      ),
+      floatingActionButton: state.hasPermission('inventory', 'add')
+          ? FloatingActionButton(
+              onPressed: () => _showAddEditItemDialog(context),
+              backgroundColor: Colors.deepOrange,
+              foregroundColor: Colors.white,
+              child: const Icon(Icons.add),
+            )
+          : null,
     );
   }
 }

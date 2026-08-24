@@ -68,6 +68,22 @@ function showLoginScreen() {
   document.getElementById('login-screen').classList.add('active');
 }
 
+function hasPermission(menu, action) {
+  const permissions = currentUser ? currentUser.permissions : null;
+  if (permissions && permissions[menu]) {
+    if (action === 'update' && permissions[menu]['update'] === undefined) {
+      return permissions[menu]['edit'] === true;
+    }
+    if (permissions[menu][action] !== undefined) {
+      return permissions[menu][action] === true;
+    }
+  }
+  if (currentUser && (currentUser.role === 'super_admin' || currentUser.role === 'superadmin')) {
+    return true; // Super admin has absolute access
+  }
+  return false;
+}
+
 function getPermissionKeyForView(viewId) {
   const mapping = {
     'dashboard-view': 'dashboard',
@@ -89,24 +105,10 @@ function getPermissionKeyForView(viewId) {
 }
 
 function adjustActionPrivileges() {
-  const permissions = currentUser ? currentUser.permissions : null;
-
-  function hasPerm(menu, action) {
-    if (permissions && permissions[menu]) {
-      if (permissions[menu][action] !== undefined) {
-        return permissions[menu][action] === true;
-      }
-    }
-    if (currentUser && (currentUser.role === 'super_admin' || currentUser.role === 'superadmin')) {
-      return true;
-    }
-    return false;
-  }
-
   // 1. Inventory View Add Form
   const invForm = document.querySelector('#inventory-view .inventory-form');
   if (invForm) {
-    if (hasPerm('inventory', 'add')) {
+    if (hasPermission('inventory', 'add')) {
       invForm.style.display = 'block';
     } else {
       invForm.style.display = 'none';
@@ -116,7 +118,7 @@ function adjustActionPrivileges() {
   // 1b. Custom Bill Inventory View Add Form
   const customInvForm = document.querySelector('#custom-bill-inventory-view .inventory-form');
   if (customInvForm) {
-    if (hasPerm('custom_bill_inventory', 'add')) {
+    if (hasPermission('custom_bill_inventory', 'add')) {
       customInvForm.style.display = 'block';
     } else {
       customInvForm.style.display = 'none';
@@ -126,10 +128,20 @@ function adjustActionPrivileges() {
   // 2. Customer Add Form
   const custForm = document.querySelector('.customers-container .inventory-form');
   if (custForm) {
-    if (hasPerm('customers', 'add')) {
+    if (hasPermission('customers', 'add')) {
       custForm.style.display = 'block';
     } else {
       custForm.style.display = 'none';
+    }
+  }
+
+  // 3. User Register Forms Panel
+  const usersForm = document.getElementById('users-add-panel');
+  if (usersForm) {
+    if (hasPermission('users', 'add')) {
+      usersForm.style.display = 'flex';
+    } else {
+      usersForm.style.display = 'none';
     }
   }
 }
@@ -943,9 +955,8 @@ function renderInventoryTable(items) {
     return;
   }
 
-  const permissions = currentUser ? currentUser.permissions : null;
-  const showEdit = !permissions || (permissions.inventory && permissions.inventory.edit);
-  const showDelete = !permissions || (permissions.inventory && permissions.inventory.delete);
+  const showEdit = hasPermission('inventory', 'edit') || hasPermission('inventory', 'update');
+  const showDelete = hasPermission('inventory', 'delete');
 
   tableBody.innerHTML = items.map(item => {
     const isLow = item.qty < 5;
@@ -1590,12 +1601,12 @@ function renderUsersTable(users) {
         <td><span class="${badgeClass}">${u.role}</span></td>
         <td>
           ${isSelf ? '<span style="font-size:12px; color: var(--text-muted);">No actions</span>' : `
-            <button type="button" class="btn-primary" style="padding: 6px 12px; font-size: 12px;" onclick="openUserEditModal(${u.id}, '${u.username}', '${u.role}')">
-              Edit
-            </button>
-            <button type="button" class="btn-danger" style="padding: 6px 12px; font-size: 12px; margin-left: 6px;" onclick="deleteUserAccount(${u.id})">
-              Delete
-            </button>
+            ${hasPermission('users', 'edit') || hasPermission('users', 'update')
+              ? `<button type="button" class="btn-primary" style="padding: 6px 12px; font-size: 12px;" onclick="openUserEditModal(${u.id}, '${u.username}', '${u.role}')">Edit</button>`
+              : ''}
+            ${hasPermission('users', 'delete')
+              ? `<button type="button" class="btn-danger" style="padding: 6px 12px; font-size: 12px; margin-left: 6px;" onclick="deleteUserAccount(${u.id})">Delete</button>`
+              : ''}
           `}
         </td>
       </tr>
@@ -2507,8 +2518,12 @@ function renderCustomInventoryTable(items) {
         <td>${item.qty} kg</td>
         <td><span class="${statusClass}">${statusText}</span></td>
         <td>
-          <button class="btn-primary" style="padding: 6px 12px; font-size: 12px;" onclick="editCustomItem(${item.id})">Edit</button>
-          <button class="btn-danger" style="padding: 6px 12px; font-size: 12px; margin-left: 4px;" onclick="deleteCustomItem(${item.id})">Delete</button>
+          ${hasPermission('custom_bill_inventory', 'edit') || hasPermission('custom_bill_inventory', 'update')
+            ? `<button class="btn-primary" style="padding: 6px 12px; font-size: 12px;" onclick="editCustomItem(${item.id})">Edit</button>`
+            : ''}
+          ${hasPermission('custom_bill_inventory', 'delete')
+            ? `<button class="btn-danger" style="padding: 6px 12px; font-size: 12px; margin-left: 4px;" onclick="deleteCustomItem(${item.id})">Delete</button>`
+            : ''}
         </td>
       </tr>
     `;

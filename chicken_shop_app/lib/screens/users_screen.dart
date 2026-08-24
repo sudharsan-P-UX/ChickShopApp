@@ -379,117 +379,121 @@ class _UsersScreenState extends State<UsersScreen> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // Create Custom Role Card
-          Card(
-            elevation: 2,
-            child: Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(state.getLabel('user_roles_title', 'Custom System Roles'), style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
-                  const SizedBox(height: 12),
-                  Form(
-                    key: _roleFormKey,
-                    child: Row(
-                      children: [
-                        Expanded(
-                          child: TextFormField(
-                            controller: _roleNameController,
-                            decoration: const InputDecoration(labelText: 'Role Name', border: OutlineInputBorder(), contentPadding: EdgeInsets.all(12)),
-                            validator: (val) => val == null || val.trim().isEmpty ? 'Role name is required' : null,
-                          ),
-                        ),
-                        const SizedBox(width: 8),
-                        ElevatedButton(
-                          onPressed: () => _createRole(state),
-                          style: ElevatedButton.styleFrom(backgroundColor: Colors.deepOrange, foregroundColor: Colors.white, padding: const EdgeInsets.all(14)),
-                          child: const Icon(Icons.add),
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: 14),
-                  const Text('Current Roles:', style: TextStyle(fontSize: 12, color: Colors.grey)),
-                  const SizedBox(height: 6),
-                  Wrap(
-                    spacing: 8,
-                    runSpacing: 8,
-                    children: state.roles.map((r) {
-                      final name = r['role_name'].toString();
-                      final isDefault = name == 'admin' || name == 'cashier' || name == 'super_admin' || name == 'superadmin';
-                      
-                      return Chip(
-                        label: Text(name.toUpperCase(), style: const TextStyle(fontSize: 11)),
-                        backgroundColor: isDefault ? Colors.grey[300] : Colors.green[100],
-                        deleteIcon: isDefault ? null : const Icon(Icons.cancel, size: 16, color: Colors.red),
-                        onDeleted: isDefault ? null : () => _deleteRole(r['id'], name, state),
-                      );
-                    }).toList(),
-                  ),
-                ],
-              ),
-            ),
-          ),
-          const SizedBox(height: 16),
-          // Register User Card
-          Card(
-            elevation: 2,
-            child: Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Form(
-                key: _userFormKey,
+          if (state.hasPermission('users', 'add'))
+            Card(
+              elevation: 2,
+              child: Padding(
+                padding: const EdgeInsets.all(16.0),
                 child: Column(
-                   crossAxisAlignment: CrossAxisAlignment.start,
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(state.getLabel('user_register_title', 'Register New User'), style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
+                    Text(state.getLabel('user_roles_title', 'Custom System Roles'), style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
                     const SizedBox(height: 12),
-                    TextFormField(
-                      controller: _usernameController,
-                      decoration: InputDecoration(labelText: state.getLabel('user_username_label', 'Username'), prefixIcon: const Icon(Icons.person_outline), border: const OutlineInputBorder()),
-                      validator: (value) => value == null || value.trim().isEmpty ? 'Username is required' : null,
-                    ),
-                    const SizedBox(height: 12),
-                    TextFormField(
-                      controller: _passwordController,
-                      obscureText: true,
-                      decoration: InputDecoration(labelText: state.getLabel('user_password_label', 'Password'), prefixIcon: const Icon(Icons.lock_outline), border: const OutlineInputBorder()),
-                      validator: (value) {
-                        if (value == null || value.isEmpty) return 'Password is required';
-                        if (value.length < 6) return 'Password must be at least 6 characters';
-                        return null;
-                      },
-                    ),
-                    const SizedBox(height: 12),
-                    DropdownButtonFormField<String>(
-                      value: _selectedRole,
-                      decoration: InputDecoration(labelText: state.getLabel('user_role_label', 'User Role'), prefixIcon: const Icon(Icons.shield_outlined), border: const OutlineInputBorder()),
-                      items: availableRoles.map((role) {
-                        return DropdownMenuItem<String>(
-                          value: role,
-                          child: Text(role.toUpperCase()),
-                        );
-                      }).toList(),
-                      onChanged: (val) {
-                        if (val != null) {
-                          setState(() {
-                            _selectedRole = val;
-                          });
-                        }
-                      },
+                    Form(
+                      key: _roleFormKey,
+                      child: Row(
+                        children: [
+                          Expanded(
+                            child: TextFormField(
+                              controller: _roleNameController,
+                              decoration: const InputDecoration(labelText: 'Role Name', border: OutlineInputBorder(), contentPadding: EdgeInsets.all(12)),
+                              validator: (val) => val == null || val.trim().isEmpty ? 'Role name is required' : null,
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          ElevatedButton(
+                            onPressed: () => _createRole(state),
+                            style: ElevatedButton.styleFrom(backgroundColor: Colors.deepOrange, foregroundColor: Colors.white, padding: const EdgeInsets.all(14)),
+                            child: const Icon(Icons.add),
+                          ),
+                        ],
+                      ),
                     ),
                     const SizedBox(height: 14),
-                    ElevatedButton.icon(
-                      onPressed: () => _createUser(state),
-                      style: ElevatedButton.styleFrom(backgroundColor: Colors.deepOrange, foregroundColor: Colors.white, minimumSize: const Size.fromHeight(45)),
-                      icon: const Icon(Icons.add_moderator),
-                      label: Text(state.getLabel('user_register_title', 'Register New User')),
+                    const Text('Current Roles:', style: TextStyle(fontSize: 12, color: Colors.grey)),
+                    const SizedBox(height: 6),
+                    Wrap(
+                      spacing: 8,
+                      runSpacing: 8,
+                      children: state.roles.map((r) {
+                        final name = r['role_name'].toString();
+                        final isDefault = name == 'admin' || name == 'cashier' || name == 'super_admin' || name == 'superadmin';
+                        
+                        return Chip(
+                          label: Text(name.toUpperCase(), style: const TextStyle(fontSize: 11)),
+                          backgroundColor: isDefault ? Colors.grey[300] : Colors.green[100],
+                          deleteIcon: isDefault ? null : const Icon(Icons.cancel, size: 16, color: Colors.red),
+                          onDeleted: isDefault ? null : () => _deleteRole(r['id'], name, state),
+                        );
+                      }).toList(),
                     ),
                   ],
                 ),
               ),
             ),
-          ),
-          const SizedBox(height: 20),
+          if (state.hasPermission('users', 'add'))
+            const SizedBox(height: 16),
+          // Register User Card
+          if (state.hasPermission('users', 'add'))
+            Card(
+              elevation: 2,
+              child: Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Form(
+                  key: _userFormKey,
+                  child: Column(
+                     crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(state.getLabel('user_register_title', 'Register New User'), style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
+                      const SizedBox(height: 12),
+                      TextFormField(
+                        controller: _usernameController,
+                        decoration: InputDecoration(labelText: state.getLabel('user_username_label', 'Username'), prefixIcon: const Icon(Icons.person_outline), border: const OutlineInputBorder()),
+                        validator: (value) => value == null || value.trim().isEmpty ? 'Username is required' : null,
+                      ),
+                      const SizedBox(height: 12),
+                      TextFormField(
+                        controller: _passwordController,
+                        obscureText: true,
+                        decoration: InputDecoration(labelText: state.getLabel('user_password_label', 'Password'), prefixIcon: const Icon(Icons.lock_outline), border: const OutlineInputBorder()),
+                        validator: (value) {
+                          if (value == null || value.isEmpty) return 'Password is required';
+                          if (value.length < 6) return 'Password must be at least 6 characters';
+                          return null;
+                        },
+                      ),
+                      const SizedBox(height: 12),
+                      DropdownButtonFormField<String>(
+                        value: _selectedRole,
+                        decoration: InputDecoration(labelText: state.getLabel('user_role_label', 'User Role'), prefixIcon: const Icon(Icons.shield_outlined), border: const OutlineInputBorder()),
+                        items: availableRoles.map((role) {
+                          return DropdownMenuItem<String>(
+                            value: role,
+                            child: Text(role.toUpperCase()),
+                          );
+                        }).toList(),
+                        onChanged: (val) {
+                          if (val != null) {
+                            setState(() {
+                              _selectedRole = val;
+                            });
+                          }
+                        },
+                      ),
+                      const SizedBox(height: 14),
+                      ElevatedButton.icon(
+                        onPressed: () => _createUser(state),
+                        style: ElevatedButton.styleFrom(backgroundColor: Colors.deepOrange, foregroundColor: Colors.white, minimumSize: const Size.fromHeight(45)),
+                        icon: const Icon(Icons.add_moderator),
+                        label: Text(state.getLabel('user_register_title', 'Register New User')),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          if (state.hasPermission('users', 'add'))
+            const SizedBox(height: 20),
           // Active Users List
           Row(
             children: [
@@ -528,15 +532,18 @@ class _UsersScreenState extends State<UsersScreen> {
                                 : Row(
                                     mainAxisSize: MainAxisSize.min,
                                     children: [
-                                      IconButton(
-                                        icon: const Icon(Icons.edit, color: Colors.blue, size: 20),
-                                        onPressed: () => _showEditUserDialog(userId, username, role, state),
-                                      ),
-                                      const SizedBox(width: 4),
-                                      IconButton(
-                                        icon: const Icon(Icons.delete, color: Colors.red, size: 20),
-                                        onPressed: () => _deleteUser(userId, state),
-                                      )
+                                      if (state.hasPermission('users', 'edit') || state.hasPermission('users', 'update'))
+                                        IconButton(
+                                          icon: const Icon(Icons.edit, color: Colors.blue, size: 20),
+                                          onPressed: () => _showEditUserDialog(userId, username, role, state),
+                                        ),
+                                      if (state.hasPermission('users', 'edit') || state.hasPermission('users', 'update'))
+                                        const SizedBox(width: 4),
+                                      if (state.hasPermission('users', 'delete'))
+                                        IconButton(
+                                          icon: const Icon(Icons.delete, color: Colors.red, size: 20),
+                                          onPressed: () => _deleteUser(userId, state),
+                                        )
                                     ],
                                   ),
                           ),
