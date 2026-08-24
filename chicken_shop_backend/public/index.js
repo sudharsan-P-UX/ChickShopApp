@@ -549,10 +549,15 @@ function renderRecentBills() {
       timeStyle: 'short'
     });
 
+    const billTypeBadge = bill.is_custom_bill
+      ? '<span class="badge success">Custom Bill</span>'
+      : '<span class="badge info">Bill POS</span>';
+
     return `
       <tr style="cursor: pointer;" onclick="openReceipt(${bill.bill_no})" title="Click to view detailed receipt">
         <td><strong>#${bill.bill_no}</strong></td>
         <td>${bill.customer_phone || '<span class="badge warning">Walking Customer</span>'}</td>
+        <td>${billTypeBadge}</td>
         <td>${itemsCount} item(s)</td>
         <td>₹${parseFloat(bill.total_amount).toFixed(2)}</td>
         <td><strong class="text-success">₹${parseFloat(bill.final_price).toFixed(2)}</strong></td>
@@ -1350,7 +1355,7 @@ function renderSalesHistoryTable(bills) {
   const tableBody = document.getElementById('sales-history-table-body');
   
   if (bills.length === 0) {
-    tableBody.innerHTML = `<tr><td colspan="6" class="empty-state">No sales found.</td></tr>`;
+    tableBody.innerHTML = `<tr><td colspan="7" class="empty-state">No sales found.</td></tr>`;
     return;
   }
 
@@ -1361,10 +1366,15 @@ function renderSalesHistoryTable(bills) {
       timeStyle: 'short'
     });
 
+    const billTypeBadge = bill.is_custom_bill
+      ? '<span class="badge success">Custom Bill</span>'
+      : '<span class="badge info">Bill POS</span>';
+
     return `
       <tr style="cursor: pointer;" onclick="openReceipt(${bill.bill_no})" title="Click to view detailed receipt">
         <td><strong>#${bill.bill_no}</strong></td>
         <td>${bill.customer_phone || '<span class="badge warning">Walking Customer</span>'}</td>
+        <td>${billTypeBadge}</td>
         <td>${itemsCount} item(s)</td>
         <td>₹${parseFloat(bill.total_amount).toFixed(2)}</td>
         <td><strong class="text-success">₹${parseFloat(bill.final_price).toFixed(2)}</strong></td>
@@ -2293,15 +2303,18 @@ async function completeCustomPOSOrder() {
   }
 
   const phone = document.getElementById('custom-cart-customer-phone').value.trim();
-  if (!phone) {
-    showToast('Customer phone number is required to complete bill', 'warning');
-    return;
-  }
+  let customerPhone = null;
 
-  // Auto-lookup if not already loaded
-  if (!customSelectedCustomer || customSelectedCustomer.phone_no !== phone) {
-    await lookupCustomerInCustomPOS();
-    if (!customSelectedCustomer) return;
+  if (phone) {
+    // Auto-lookup if not already loaded
+    if (!customSelectedCustomer || customSelectedCustomer.phone_no !== phone) {
+      await lookupCustomerInCustomPOS();
+    }
+    if (customSelectedCustomer) {
+      customerPhone = customSelectedCustomer.phone_no;
+    } else {
+      customerPhone = phone;
+    }
   }
 
   const subtotal = cartEntries.reduce((sum, entry) => sum + (entry.item.price * entry.qty), 0);
@@ -2319,7 +2332,7 @@ async function completeCustomPOSOrder() {
     const bill = await apiRequest('/billing/complete', {
       method: 'POST',
       body: {
-        customer_phone: customSelectedCustomer.phone_no || phone,
+        customer_phone: customerPhone,
         items: checkoutItems,
         total_amount: subtotal,
         discount: discount,

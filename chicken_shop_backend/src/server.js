@@ -55,6 +55,7 @@ async function initSuperAdmin() {
     await db.query('ALTER TABLE inventory ADD COLUMN IF NOT EXISTS is_custom_bill BOOLEAN DEFAULT FALSE');
     await db.query('ALTER TABLE inventory ALTER COLUMN qty TYPE DECIMAL(10, 2)');
     await db.query('ALTER TABLE pending_bills ADD COLUMN IF NOT EXISTS is_custom_bill BOOLEAN DEFAULT FALSE');
+    await db.query('ALTER TABLE completed_bills ADD COLUMN IF NOT EXISTS is_custom_bill BOOLEAN DEFAULT FALSE');
 
     // Run schema migrations for Menu Order features
     await db.query(`

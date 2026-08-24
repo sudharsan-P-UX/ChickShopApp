@@ -373,15 +373,12 @@ class _CustomCartScreenState extends State<CustomCartScreen> {
                     onPressed: _isProcessing
                         ? null
                         : () async {
-                            if (_phoneController.text.trim().isEmpty) {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(content: Text('Customer phone is required to complete bill')),
-                              );
-                              return;
-                            }
-                            if (state.customSelectedCustomer == null) {
+                            final phone = _phoneController.text.trim();
+                            if (phone.isNotEmpty && state.customSelectedCustomer == null) {
                               _lookupCustomer(state);
                               if (state.customSelectedCustomer == null) return;
+                            } else if (phone.isEmpty) {
+                              state.selectCustomCustomer(null);
                             }
 
                             setState(() => _isProcessing = true);

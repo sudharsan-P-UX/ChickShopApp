@@ -46,14 +46,15 @@ exports.deletePendingBill = async (req, res) => {
 };
 
 exports.completeBill = async (req, res) => {
-  const { customer_phone, items, total_amount, discount, final_price, pending_bill_id } = req.body;
+  const { customer_phone, items, total_amount, discount, final_price, pending_bill_id, is_custom_bill } = req.body;
+  const isCustom = is_custom_bill === true || is_custom_bill === 'true';
   try {
     await db.query('BEGIN'); // Start transaction
 
     // 1. Insert completed bill
     const { rows } = await db.query(
-      'INSERT INTO completed_bills (customer_phone, items, total_amount, discount, final_price) VALUES ($1, $2, $3, $4, $5) RETURNING *',
-      [customer_phone, JSON.stringify(items), total_amount, discount || 0, final_price]
+      'INSERT INTO completed_bills (customer_phone, items, total_amount, discount, final_price, is_custom_bill) VALUES ($1, $2, $3, $4, $5, $6) RETURNING *',
+      [customer_phone, JSON.stringify(items), total_amount, discount || 0, final_price, isCustom]
     );
 
     // 2. Reduce inventory qty

@@ -368,7 +368,8 @@ class AppState with ChangeNotifier {
       'total_amount': cartSubtotal,
       'discount': discount,
       'final_price': cartFinalTotal,
-      'pending_bill_id': activePendingBillId
+      'pending_bill_id': activePendingBillId,
+      'is_custom_bill': false
     };
 
     await ApiService.completeBill(payload);
@@ -532,7 +533,8 @@ class AppState with ChangeNotifier {
       'total_amount': customCartSubtotal,
       'discount': customDiscount,
       'final_price': customCartFinalTotal,
-      'pending_bill_id': activeCustomPendingBillId
+      'pending_bill_id': activeCustomPendingBillId,
+      'is_custom_bill': true
     };
 
     await ApiService.completeBill(payload);

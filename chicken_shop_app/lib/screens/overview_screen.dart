@@ -68,10 +68,12 @@ class _OverviewScreenState extends State<OverviewScreen> {
                                 final itemsCount = (bill['items'] as List)
                                     .fold<int>(0, (sum, i) => sum + (int.tryParse(i['qty'].toString()) ?? 0));
                                 final date = DateTime.tryParse(bill['created_at'].toString()) ?? DateTime.now();
+                                final isCustom = bill['is_custom_bill'] == true;
+                                final billType = isCustom ? 'Custom Bill' : 'Bill POS';
                                 
                                 return ListTile(
                                   title: Text('Bill #${bill['bill_no']} (${bill['customer_phone'] ?? 'Walking Customer'})'),
-                                  subtitle: Text('Items: $itemsCount | Date: ${date.day}-${date.month}-${date.year}'),
+                                  subtitle: Text('Type: $billType | Items: $itemsCount | Date: ${date.day}-${date.month}-${date.year}'),
                                   trailing: Text(
                                     '₹${double.parse(bill['final_price'].toString()).toStringAsFixed(2)}',
                                     style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.green),
@@ -309,6 +311,8 @@ class _OverviewScreenState extends State<OverviewScreen> {
                       final itemsCount = (bill['items'] as List)
                           .fold<int>(0, (sum, i) => sum + (int.tryParse(i['qty'].toString()) ?? 0));
                       final date = DateTime.tryParse(bill['created_at'].toString()) ?? DateTime.now();
+                      final isCustom = bill['is_custom_bill'] == true;
+                      final billType = isCustom ? 'Custom Bill' : 'Bill POS';
                       
                       return Column(
                         children: [
@@ -319,7 +323,7 @@ class _OverviewScreenState extends State<OverviewScreen> {
                               child: Icon(Icons.shopping_bag_outlined),
                             ),
                             title: Text('Bill #${bill['bill_no']} | ${bill['customer_phone'] ?? 'Walking Customer'}'),
-                            subtitle: Text('$itemsCount items | Date: ${date.day}-${date.month}-${date.year} ${date.hour}:${date.minute.toString().padLeft(2, '0')}'),
+                            subtitle: Text('$billType | $itemsCount items | Date: ${date.day}-${date.month}-${date.year} ${date.hour}:${date.minute.toString().padLeft(2, '0')}'),
                             trailing: Text(
                               '₹${double.parse(bill['final_price'].toString()).toStringAsFixed(2)}',
                               style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: Colors.green),
