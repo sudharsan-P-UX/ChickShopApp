@@ -11,8 +11,8 @@ class MenuControlScreen extends StatefulWidget {
 }
 
 class _MenuControlScreenState extends State<MenuControlScreen> {
-  List<dynamic> _users = [];
-  dynamic _selectedUser;
+  List<dynamic> _roles = [];
+  dynamic _selectedRole;
   Map<String, Map<String, bool>> _perms = {};
   bool _isLoading = false;
 
@@ -36,23 +36,23 @@ class _MenuControlScreenState extends State<MenuControlScreen> {
   @override
   void initState() {
     super.initState();
-    _loadUsers();
+    _loadRoles();
   }
 
-  void _loadUsers() async {
+  void _loadRoles() async {
     setState(() => _isLoading = true);
     try {
-      final data = await ApiService.getUsers();
+      final data = await ApiService.getRoles();
       setState(() {
-        _users = data;
-        if (_users.isNotEmpty) {
-          _selectedUser = _users.first;
+        _roles = data;
+        if (_roles.isNotEmpty) {
+          _selectedRole = _roles.first;
           _syncPermissions();
         }
       });
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error loading users: ${e.toString().replaceAll('Exception: ', '')}')),
+        SnackBar(content: Text('Error loading roles: ${e.toString().replaceAll('Exception: ', '')}')),
       );
     } finally {
       setState(() => _isLoading = false);
@@ -61,11 +61,11 @@ class _MenuControlScreenState extends State<MenuControlScreen> {
 
   void _syncPermissions() {
     _perms.clear();
-    final userPerms = _selectedUser['permissions'] ?? {};
+    final rolePerms = _selectedRole['permissions'] ?? {};
 
     for (var m in _systemMenus) {
       final String key = m['key']!;
-      final menuPerms = userPerms[key] ?? {};
+      final menuPerms = rolePerms[key] ?? {};
 
       _perms[key] = {
         'view': menuPerms['view'] == true,
@@ -106,7 +106,7 @@ class _MenuControlScreenState extends State<MenuControlScreen> {
   }
 
   void _savePermissions() async {
-    if (_selectedUser == null) return;
+    if (_selectedRole == null) return;
     setState(() => _isLoading = true);
 
     try {
@@ -115,20 +115,20 @@ class _MenuControlScreenState extends State<MenuControlScreen> {
         body[k] = p;
       });
 
-      await ApiService.updateUserPermissions(_selectedUser['id'], body);
+      await ApiService.updateRolePermissions(_selectedRole['id'], body);
 
-      // Update state in app if editing self
+      // Update state in app if editing own role
       final appState = Provider.of<AppState>(context, listen: false);
-      if (_selectedUser['username'] == appState.username) {
+      if (_selectedRole['role_name'] == appState.userRole) {
         appState.updateLocalPermissions(body);
       }
 
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Permissions updated successfully!')),
+        const SnackBar(content: Text('Role permissions updated successfully!')),
       );
 
-      // Reload users to get latest permissions
-      _loadUsers();
+      // Reload roles to get latest permissions
+      _loadRoles();
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Error saving: ${e.toString().replaceAll('Exception: ', '')}')),
@@ -141,12 +141,12 @@ class _MenuControlScreenState extends State<MenuControlScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('User Access Menu Control', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+        title: const Text('Role Access Menu Control', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
         backgroundColor: Colors.white,
         surfaceTintColor: Colors.transparent,
         elevation: 0,
         actions: [
-          if (_selectedUser != null && !_isLoading)
+          if (_selectedRole != null && !_isLoading)
             Padding(
               padding: const EdgeInsets.only(right: 12),
               child: ElevatedButton.icon(
@@ -171,20 +171,20 @@ class _MenuControlScreenState extends State<MenuControlScreen> {
                   color: Colors.grey.shade50,
                   child: Row(
                     children: [
-                      const Text('Select User:  ', style: TextStyle(fontWeight: FontWeight.bold)),
+                      const Text('Select Role:  ', style: TextStyle(fontWeight: FontWeight.bold)),
                       Expanded(
                         child: DropdownButton<dynamic>(
-                          value: _selectedUser,
+                          value: _selectedRole,
                           isExpanded: true,
-                          items: _users.map<DropdownMenuItem<dynamic>>((user) {
+                          items: _roles.map<DropdownMenuItem<dynamic>>((role) {
                             return DropdownMenuItem<dynamic>(
-                              value: user,
-                              child: Text('${user['username']} (${user['role'].toString().toUpperCase()})'),
+                              value: role,
+                              child: Text(role['role_name'].toString().toUpperCase()),
                             );
                           }).toList(),
                           onChanged: (val) {
                             setState(() {
-                              _selectedUser = val;
+                              _selectedRole = val;
                               _syncPermissions();
                             });
                           },

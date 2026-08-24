@@ -2891,53 +2891,53 @@ async function handleMenuOrderFormSubmit(e) {
 }
 
 // ==========================================
-// User Access Menu Control Features
+// Role Access Menu Control Features
 // ==========================================
-let menuControlUsers = [];
-let menuControlSelectedUser = null;
+let menuControlRoles = [];
+let menuControlSelectedRole = null;
 
 async function loadMenuControlView() {
   try {
-    // 1. Fetch all users from the system
-    menuControlUsers = await apiRequest('/auth/users');
+    // 1. Fetch all roles from the system
+    menuControlRoles = await apiRequest('/auth/roles');
     
     // 2. Populate the select dropdown
-    const select = document.getElementById('menu-control-user-select');
+    const select = document.getElementById('menu-control-role-select');
     if (!select) return;
     
-    select.innerHTML = menuControlUsers.map(u => 
-      `<option value="${u.id}">${u.username} (${u.role})</option>`
+    select.innerHTML = menuControlRoles.map(r => 
+      `<option value="${r.id}">${r.role_name.toUpperCase()}</option>`
     ).join('');
     
-    // 3. Select first user or active editing user
-    if (menuControlUsers.length > 0) {
-      if (!menuControlSelectedUser || !menuControlUsers.find(u => u.id === menuControlSelectedUser.id)) {
-        menuControlSelectedUser = menuControlUsers[0];
+    // 3. Select first role or active editing role
+    if (menuControlRoles.length > 0) {
+      if (!menuControlSelectedRole || !menuControlRoles.find(r => r.id === menuControlSelectedRole.id)) {
+        menuControlSelectedRole = menuControlRoles[0];
       } else {
-        menuControlSelectedUser = menuControlUsers.find(u => u.id === menuControlSelectedUser.id);
+        menuControlSelectedRole = menuControlRoles.find(r => r.id === menuControlSelectedRole.id);
       }
-      select.value = menuControlSelectedUser.id;
-      renderUserMenuControlMatrix();
+      select.value = menuControlSelectedRole.id;
+      renderRoleMenuControlMatrix();
     }
   } catch (err) {
     showToast(err.message, 'danger');
   }
 }
 
-function handleMenuControlUserChange() {
-  const select = document.getElementById('menu-control-user-select');
+function handleMenuControlRoleChange() {
+  const select = document.getElementById('menu-control-role-select');
   if (!select) return;
   
-  const userId = parseInt(select.value);
-  menuControlSelectedUser = menuControlUsers.find(u => u.id === userId);
-  if (menuControlSelectedUser) {
-    renderUserMenuControlMatrix();
+  const roleId = parseInt(select.value);
+  menuControlSelectedRole = menuControlRoles.find(r => r.id === roleId);
+  if (menuControlSelectedRole) {
+    renderRoleMenuControlMatrix();
   }
 }
 
-function renderUserMenuControlMatrix() {
+function renderRoleMenuControlMatrix() {
   const tbody = document.getElementById('menu-control-matrix-body');
-  if (!tbody || !menuControlSelectedUser) return;
+  if (!tbody || !menuControlSelectedRole) return;
   
   // Make sure we have appMenus loaded
   if (appMenus.length === 0) {
@@ -2945,7 +2945,7 @@ function renderUserMenuControlMatrix() {
     return;
   }
   
-  const permissions = menuControlSelectedUser.permissions || {};
+  const permissions = menuControlSelectedRole.permissions || {};
   
   // Sort appMenus by main_menu and display_order
   const sortedMenus = [...appMenus].sort((a, b) => {
@@ -3015,8 +3015,8 @@ function handleHomeCheckboxChange(checkbox, menuKey) {
   }
 }
 
-async function saveUserMenuPermissions() {
-  if (!menuControlSelectedUser) return;
+async function saveRoleMenuPermissions() {
+  if (!menuControlSelectedRole) return;
   
   const tbody = document.getElementById('menu-control-matrix-body');
   if (!tbody) return;
@@ -3040,15 +3040,15 @@ async function saveUserMenuPermissions() {
   });
   
   try {
-    const res = await apiRequest(`/auth/users/${menuControlSelectedUser.id}/permissions`, {
+    const res = await apiRequest(`/auth/roles/${menuControlSelectedRole.id}/permissions`, {
       method: 'PUT',
       body: { permissions }
     });
     
-    showToast('User menu permissions saved successfully!', 'success');
+    showToast('Role menu permissions saved successfully!', 'success');
     
-    // Update local permissions if editing currently logged in user
-    if (menuControlSelectedUser.id === currentUser.id) {
+    // Update local permissions if editing currently logged in user's role
+    if (currentUser && currentUser.role === menuControlSelectedRole.role_name) {
       currentUser.permissions = res.permissions;
       localStorage.setItem('user', JSON.stringify(currentUser));
       // Re-render navigation bar & actions immediately
@@ -3064,7 +3064,7 @@ async function saveUserMenuPermissions() {
 
 // Bind to window context
 window.loadMenuControlView = loadMenuControlView;
-window.handleMenuControlUserChange = handleMenuControlUserChange;
-window.saveUserMenuPermissions = saveUserMenuPermissions;
+window.handleMenuControlRoleChange = handleMenuControlRoleChange;
+window.saveRoleMenuPermissions = saveRoleMenuPermissions;
 window.handleViewCheckboxChange = handleViewCheckboxChange;
 window.handleHomeCheckboxChange = handleHomeCheckboxChange;

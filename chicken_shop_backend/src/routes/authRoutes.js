@@ -17,7 +17,6 @@ router.get('/users', authMiddleware, adminOnly, authController.listUsers);
 router.put('/users/:id/role', authMiddleware, adminOnly, authController.updateRole);
 router.put('/users/:id', authMiddleware, adminOnly, authController.updateUser);
 router.delete('/users/:id', authMiddleware, adminOnly, authController.deleteUser);
-router.put('/users/:id/permissions', authMiddleware, adminOnly, authController.updateUserPermissions);
 
 // Roles routing
 router.get('/roles', authMiddleware, authController.listRoles);

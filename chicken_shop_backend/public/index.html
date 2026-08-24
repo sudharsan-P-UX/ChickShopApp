@@ -837,19 +837,19 @@
                 <div>
                   <h2 style="margin-bottom: 4px; display: flex; align-items: center; gap: 10px;">
                     <ion-icon name="options-outline" style="color: var(--accent-orange);"></ion-icon>
-                    User Access Menu Control
+                    Role Access Menu Control
                   </h2>
                   <p style="color: var(--text-muted); font-size: 13px; margin: 0;">
-                    Configure User-Based menu visibility and actions (Add, Edit, Update, Delete, View, Home Menu).
+                    Configure Role-Based menu visibility and actions (Add, Edit, Update, Delete, View, Home Menu).
                   </p>
                 </div>
                 
                 <div style="display: flex; align-items: center; gap: 12px;">
-                  <label for="menu-control-user-select" style="font-weight: bold; font-size: 13px;">Select User:</label>
-                  <select id="menu-control-user-select" style="padding: 8px 16px; border-radius: 6px; background: rgba(0,0,0,0.3); color: white; border: 1px solid var(--border-glass);" onchange="handleMenuControlUserChange()">
+                  <label for="menu-control-role-select" style="font-weight: bold; font-size: 13px;">Select Role:</label>
+                  <select id="menu-control-role-select" style="padding: 8px 16px; border-radius: 6px; background: rgba(0,0,0,0.3); color: white; border: 1px solid var(--border-glass);" onchange="handleMenuControlRoleChange()">
                     <!-- Populated dynamically -->
                   </select>
-                  <button type="button" class="btn-primary" onclick="saveUserMenuPermissions()" style="padding: 10px 20px; display: flex; align-items: center; gap: 6px;">
+                  <button type="button" class="btn-primary" onclick="saveRoleMenuPermissions()" style="padding: 10px 20px; display: flex; align-items: center; gap: 6px;">
                     <ion-icon name="save-outline"></ion-icon>
                     Save Permissions
                   </button>
