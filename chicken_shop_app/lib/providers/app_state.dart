@@ -313,4 +313,168 @@ class AppState with ChangeNotifier {
     await ApiService.deletePendingBill(id);
     await fetchPendingOrders();
   }
+
+  // ==========================================
+  // Custom Bill & Weight-Based POS Features
+  // ==========================================
+  final Map<int, double> customCart = {}; // itemId -> weight (double)
+  Map<String, dynamic>? customSelectedCustomer;
+  double customDiscount = 0.0;
+  int? activeCustomPendingBillId;
+  List<dynamic> customPendingOrders = [];
+
+  int get customCartCount => customCart.length;
+
+  double get customCartSubtotal {
+    double total = 0.0;
+    customCart.forEach((itemId, qty) {
+      final item = inventory.firstWhere((i) => i['id'] == itemId, orElse: () => null);
+      if (item != null) {
+        total += (double.tryParse(item['price'].toString()) ?? 0.0) * qty;
+      }
+    });
+    return total;
+  }
+
+  double get customCartFinalTotal => mathMax(0.0, customCartSubtotal - customDiscount);
+
+  void addToCustomCart(dynamic item, double qty) {
+    final int itemId = item['id'];
+    final double stock = double.tryParse(item['qty'].toString()) ?? 0.0;
+    
+    if (qty > stock) {
+      throw Exception('Only $stock kg available in stock');
+    }
+    
+    customCart[itemId] = qty;
+    notifyListeners();
+  }
+
+  void updateCustomCartQty(int itemId, double delta) {
+    if (!customCart.containsKey(itemId)) return;
+    
+    final item = inventory.firstWhere((i) => i['id'] == itemId, orElse: () => null);
+    if (item == null) return;
+    
+    final double stock = double.tryParse(item['qty'].toString()) ?? 0.0;
+    final double newQty = customCart[itemId]! + delta;
+
+    if (newQty <= 0) {
+      customCart.remove(itemId);
+    } else {
+      if (newQty > stock) {
+        throw Exception('Only $stock kg available in stock');
+      }
+      customCart[itemId] = double.parse(newQty.toStringAsFixed(2));
+    }
+    notifyListeners();
+  }
+
+  void clearCustomCart() {
+    customCart.clear();
+    customSelectedCustomer = null;
+    customDiscount = 0.0;
+    activeCustomPendingBillId = null;
+    notifyListeners();
+  }
+
+  void setCustomDiscount(double value) {
+    customDiscount = value;
+    notifyListeners();
+  }
+
+  void selectCustomCustomer(Map<String, dynamic>? cust) {
+    customSelectedCustomer = cust;
+    notifyListeners();
+  }
+
+  Future<void> fetchCustomPendingOrders() async {
+    try {
+      customPendingOrders = await ApiService.getCustomPendingBills();
+      notifyListeners();
+    } catch (e) {
+      debugPrint('Error fetching custom pending orders: $e');
+    }
+  }
+
+  // Complete custom weight order
+  Future<void> completeCustomOrder() async {
+    if (customCart.isEmpty) throw Exception('Cart is empty');
+
+    final List<Map<String, dynamic>> itemsList = [];
+    customCart.forEach((itemId, qty) {
+      final item = inventory.firstWhere((i) => i['id'] == itemId);
+      itemsList.add({
+        'id': itemId,
+        'item_name': item['item_name'],
+        'qty': qty,
+        'price': double.tryParse(item['price'].toString()) ?? 0.0
+      });
+    });
+
+    final payload = {
+      'customer_phone': customSelectedCustomer?['phone_no'],
+      'items': itemsList,
+      'total_amount': customCartSubtotal,
+      'discount': customDiscount,
+      'final_price': customCartFinalTotal,
+      'pending_bill_id': activeCustomPendingBillId
+    };
+
+    await ApiService.completeBill(payload);
+    clearCustomCart();
+    await fetchInventory();
+    await fetchCompletedBills();
+    await fetchCustomPendingOrders();
+  }
+
+  // Save custom pending order
+  Future<void> saveCustomPending() async {
+    if (customCart.isEmpty) throw Exception('Cart is empty');
+
+    final List<Map<String, dynamic>> itemsList = [];
+    customCart.forEach((itemId, qty) {
+      final item = inventory.firstWhere((i) => i['id'] == itemId);
+      itemsList.add({
+        'id': itemId,
+        'item_name': item['item_name'],
+        'qty': qty,
+        'price': double.tryParse(item['price'].toString()) ?? 0.0
+      });
+    });
+
+    await ApiService.saveCustomPendingBill(itemsList, customCartSubtotal, activeCustomPendingBillId);
+    clearCustomCart();
+    await fetchCustomPendingOrders();
+  }
+
+  // Restore Custom Pending Order
+  Future<void> restoreCustomPending(dynamic bill, bool goToCart) async {
+    await fetchInventory();
+    
+    customCart.clear();
+    activeCustomPendingBillId = bill['id'];
+    customSelectedCustomer = null;
+    customDiscount = 0.0;
+
+    for (var savedItem in bill['items']) {
+      final currentItem = inventory.firstWhere((i) => i['id'] == savedItem['id'], orElse: () => null);
+      if (currentItem != null) {
+        final double stock = double.tryParse(currentItem['qty'].toString()) ?? 0.0;
+        final double quantityToLoad = savedItem['qty'] > stock ? stock : double.parse(savedItem['qty'].toString());
+        if (quantityToLoad > 0) {
+          customCart[savedItem['id']] = quantityToLoad;
+        }
+      }
+    }
+
+    _screenIndex = goToCart ? 9 : 8; // 9 = View Custom Cart, 8 = Custom Bill POS
+    notifyListeners();
+  }
+
+  // Delete Custom Pending Order
+  Future<void> deleteCustomPending(int id) async {
+    await ApiService.deletePendingBill(id);
+    await fetchCustomPendingOrders();
+  }
 }

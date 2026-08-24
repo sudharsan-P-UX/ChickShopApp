@@ -9,6 +9,10 @@ import 'inventory_screen.dart';
 import 'customers_screen.dart';
 import 'users_screen.dart';
 import 'labels_screen.dart';
+import 'custom_bill_screen.dart';
+import 'custom_cart_screen.dart';
+import 'custom_pending_screen.dart';
+import 'custom_inventory_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -27,6 +31,10 @@ class _HomeScreenState extends State<HomeScreen> {
     const CustomersScreen(),
     const UsersScreen(),
     const LabelsScreen(),
+    const CustomBillScreen(),
+    const CustomCartScreen(),
+    const CustomPendingScreen(),
+    const CustomInventoryScreen(),
   ];
 
   String _getScreenTitle(int index, AppState appState) {
@@ -47,6 +55,14 @@ class _HomeScreenState extends State<HomeScreen> {
         return appState.getLabel('users_menu', 'User Management');
       case 7:
         return appState.getLabel('custom_labels_menu', 'Custom Label');
+      case 8:
+        return appState.getLabel('custom_bill_menu', 'Custom Bill');
+      case 9:
+        return appState.getLabel('custom_view_cart', 'View Custom Cart');
+      case 10:
+        return appState.getLabel('custom_pending_orders', 'Custom Pending Orders');
+      case 11:
+        return appState.getLabel('custom_inventory_menu', 'Custom Bill Inventory');
       default:
         return 'Chicken Shop POS';
     }
@@ -68,6 +84,10 @@ class _HomeScreenState extends State<HomeScreen> {
       case 5: menuKey = 'customers'; break;
       case 6: menuKey = 'users'; break;
       case 7: menuKey = 'custom_labels'; break;
+      case 8: menuKey = 'custom_bill'; break;
+      case 9: menuKey = 'custom_bill'; break;
+      case 10: menuKey = 'custom_bill'; break;
+      case 11: menuKey = 'custom_bill_inventory'; break;
     }
     if (menuKey != null && !appState.hasPermission(menuKey, 'view')) {
       index = 0; // Fallback to Billing POS
@@ -75,10 +95,16 @@ class _HomeScreenState extends State<HomeScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        leading: index != 0
+        leading: (index != 0 && index != 8)
             ? IconButton(
                 icon: const Icon(Icons.arrow_back),
-                onPressed: () => appState.setScreenIndex(0),
+                onPressed: () {
+                  if (index >= 8 && index <= 11) {
+                    appState.setScreenIndex(8);
+                  } else {
+                    appState.setScreenIndex(0);
+                  }
+                },
               )
             : null,
         title: Text(_getScreenTitle(index, appState)),
@@ -108,6 +134,41 @@ class _HomeScreenState extends State<HomeScreen> {
                       ),
                       child: Text(
                         '${appState.cartCount}',
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 10,
+                          fontWeight: FontWeight.bold,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+          if (index == 8 && appState.hasPermission('custom_bill', 'view')) // Custom Bill screen cart icon shortcut
+            Stack(
+              alignment: Alignment.center,
+              children: [
+                IconButton(
+                  icon: const Icon(Icons.shopping_cart),
+                  onPressed: () => appState.setScreenIndex(9), // go to Custom Cart
+                ),
+                if (appState.customCartCount > 0)
+                  Positioned(
+                    right: 8,
+                    top: 8,
+                    child: Container(
+                      padding: const EdgeInsets.all(2),
+                      decoration: BoxDecoration(
+                        color: Colors.red,
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      constraints: const BoxConstraints(
+                        minWidth: 16,
+                        minHeight: 16,
+                      ),
+                      child: Text(
+                        '${appState.customCartCount}',
                         style: const TextStyle(
                           color: Colors.white,
                           fontSize: 10,
@@ -201,6 +262,47 @@ class _HomeScreenState extends State<HomeScreen> {
                             Navigator.pop(context);
                           },
                         ),
+                      if (appState.hasPermission('custom_bill', 'view'))
+                        const Divider(height: 1, indent: 24, endIndent: 16),
+                      if (appState.hasPermission('custom_bill', 'view'))
+                        ListTile(
+                          contentPadding: const EdgeInsets.only(left: 24, right: 16),
+                          leading: const Icon(Icons.scale_outlined),
+                          title: Text(appState.getLabel('custom_bill_menu', 'Custom Bill')),
+                          selected: index == 8,
+                          onTap: () {
+                            appState.setScreenIndex(8);
+                            Navigator.pop(context);
+                          },
+                        ),
+                      if (appState.hasPermission('custom_bill', 'view'))
+                        ListTile(
+                          contentPadding: const EdgeInsets.only(left: 24, right: 16),
+                          leading: const Icon(Icons.shopping_basket_outlined),
+                          title: Text(appState.getLabel('custom_view_cart', 'View Custom Cart')),
+                          selected: index == 9,
+                          trailing: appState.customCartCount > 0
+                              ? Badge(
+                                  label: Text('${appState.customCartCount}'),
+                                  backgroundColor: Colors.red,
+                                )
+                              : null,
+                          onTap: () {
+                            appState.setScreenIndex(9);
+                            Navigator.pop(context);
+                          },
+                        ),
+                      if (appState.hasPermission('custom_bill', 'view'))
+                        ListTile(
+                          contentPadding: const EdgeInsets.only(left: 24, right: 16),
+                          leading: const Icon(Icons.bookmark_added_outlined),
+                          title: Text(appState.getLabel('custom_pending_orders', 'Custom Pending Orders')),
+                          selected: index == 10,
+                          onTap: () {
+                            appState.setScreenIndex(10);
+                            Navigator.pop(context);
+                          },
+                        ),
                     ],
                   ),
                   ExpansionTile(
@@ -260,6 +362,17 @@ class _HomeScreenState extends State<HomeScreen> {
                           selected: index == 7,
                           onTap: () {
                             appState.setScreenIndex(7);
+                            Navigator.pop(context);
+                          },
+                        ),
+                      if (appState.hasPermission('custom_bill_inventory', 'view'))
+                        ListTile(
+                          contentPadding: const EdgeInsets.only(left: 24, right: 16),
+                          leading: const Icon(Icons.layers_outlined),
+                          title: Text(appState.getLabel('custom_inventory_menu', 'Custom Bill Inventory')),
+                          selected: index == 11,
+                          onTap: () {
+                            appState.setScreenIndex(11);
                             Navigator.pop(context);
                           },
                         ),

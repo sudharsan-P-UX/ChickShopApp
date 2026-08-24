@@ -1,18 +1,19 @@
 const db = require('../config/db');
 
 exports.savePendingBill = async (req, res) => {
-  const { id, items, subtotal } = req.body;
+  const { id, items, subtotal, is_custom_bill } = req.body;
+  const isCustom = is_custom_bill === true || is_custom_bill === 'true';
   try {
     if (id) {
       const { rows } = await db.query(
-        'UPDATE pending_bills SET items = $1, subtotal = $2 WHERE id = $3 RETURNING *',
-        [JSON.stringify(items), subtotal, id]
+        'UPDATE pending_bills SET items = $1, subtotal = $2, is_custom_bill = $3 WHERE id = $4 RETURNING *',
+        [JSON.stringify(items), subtotal, isCustom, id]
       );
       res.status(200).json(rows[0]);
     } else {
       const { rows } = await db.query(
-        'INSERT INTO pending_bills (items, subtotal) VALUES ($1, $2) RETURNING *',
-        [JSON.stringify(items), subtotal]
+        'INSERT INTO pending_bills (items, subtotal, is_custom_bill) VALUES ($1, $2, $3) RETURNING *',
+        [JSON.stringify(items), subtotal, isCustom]
       );
       res.status(201).json(rows[0]);
     }
@@ -22,8 +23,12 @@ exports.savePendingBill = async (req, res) => {
 };
 
 exports.getPendingBills = async (req, res) => {
+  const isCustom = req.query.custom === 'true';
   try {
-    const { rows } = await db.query('SELECT * FROM pending_bills ORDER BY saved_at DESC');
+    const { rows } = await db.query(
+      'SELECT * FROM pending_bills WHERE is_custom_bill = $1 ORDER BY saved_at DESC',
+      [isCustom]
+    );
     res.json(rows);
   } catch (err) {
     res.status(500).json({ error: err.message });

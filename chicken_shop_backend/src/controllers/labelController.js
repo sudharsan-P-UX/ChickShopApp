@@ -126,10 +126,20 @@ const defaultLabels = [
   { menu_key: 'users', label_key: 'user_rbac_th_customers', label_name: 'Matrix Table: Customers', custom_label: 'Customers' },
   { menu_key: 'users', label_key: 'user_rbac_th_users', label_name: 'Matrix Table: User & Role Management', custom_label: 'User & Role Management' },
   { menu_key: 'users', label_key: 'user_rbac_th_labels', label_name: 'Matrix Table: Custom Labels', custom_label: 'Custom Labels' },
+  { menu_key: 'users', label_key: 'user_rbac_th_custom_bill', label_name: 'Matrix Table: Custom Bill', custom_label: 'Custom Bill' },
+  { menu_key: 'users', label_key: 'user_rbac_th_custom_bill_inventory', label_name: 'Matrix Table: Custom Bill Inventory', custom_label: 'Custom Bill Inventory' },
 
   // Custom Label Settings View
   { menu_key: 'custom_labels', label_key: 'custom_labels_menu', label_name: 'Custom Label Menu Title', custom_label: 'Custom Label' },
-  { menu_key: 'custom_labels', label_key: 'app_logo', label_name: 'App Logo Image Uploader', custom_label: '' }
+  { menu_key: 'custom_labels', label_key: 'app_logo', label_name: 'App Logo Image Uploader', custom_label: '' },
+
+  // Custom Bill POS View
+  { menu_key: 'custom_bill', label_key: 'custom_bill_menu', label_name: 'Custom Bill Menu Title', custom_label: 'Custom Bill' },
+  { menu_key: 'custom_bill', label_key: 'custom_view_cart', label_name: 'Custom View Cart Label', custom_label: 'View Custom Cart' },
+  { menu_key: 'custom_bill', label_key: 'custom_pending_orders', label_name: 'Custom Pending Orders Label', custom_label: 'Custom Pending Orders' },
+
+  // Custom Bill Inventory Control
+  { menu_key: 'custom_bill_inventory', label_key: 'custom_inventory_menu', label_name: 'Custom Inventory Menu Title', custom_label: 'Custom Bill Inventory' }
 ];
 
 exports.getAllLabels = async (req, res) => {

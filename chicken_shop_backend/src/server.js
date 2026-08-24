@@ -46,6 +46,11 @@ async function initSuperAdmin() {
     // 1. Ensure roles table has permissions column if not already
     await db.query('ALTER TABLE roles ADD COLUMN IF NOT EXISTS permissions JSONB');
 
+    // Run schema migrations for Custom Bill features
+    await db.query('ALTER TABLE inventory ADD COLUMN IF NOT EXISTS is_custom_bill BOOLEAN DEFAULT FALSE');
+    await db.query('ALTER TABLE inventory ALTER COLUMN qty TYPE DECIMAL(10, 2)');
+    await db.query('ALTER TABLE pending_bills ADD COLUMN IF NOT EXISTS is_custom_bill BOOLEAN DEFAULT FALSE');
+
     // 2. Ensure super_admin role exists in roles table
     const superAdminRoleCheck = await db.query("SELECT 1 FROM roles WHERE role_name = 'super_admin'");
     if (superAdminRoleCheck.rows.length === 0) {
@@ -58,7 +63,9 @@ async function initSuperAdmin() {
         inventory: { view: true, add: true, edit: true, delete: true },
         customers: { view: true, add: true, edit: true, delete: true },
         users: { view: true, add: true, edit: true, delete: true },
-        custom_labels: { view: true, add: true, edit: true, delete: true }
+        custom_labels: { view: true, add: true, edit: true, delete: true },
+        custom_bill: { view: true, add: true, edit: true, delete: true },
+        custom_bill_inventory: { view: true, add: true, edit: true, delete: true }
       };
       await db.query(
         "INSERT INTO roles (role_name, permissions) VALUES ('super_admin', $1)",
@@ -88,7 +95,9 @@ async function initSuperAdmin() {
         inventory: { view: true, add: true, edit: true, delete: true },
         customers: { view: true, add: true, edit: true, delete: true },
         users: { view: true, add: true, edit: true, delete: true },
-        custom_labels: { view: true, add: true, edit: true, delete: true }
+        custom_labels: { view: true, add: true, edit: true, delete: true },
+        custom_bill: { view: true, add: true, edit: true, delete: true },
+        custom_bill_inventory: { view: true, add: true, edit: true, delete: true }
       };
       await db.query(
         "UPDATE roles SET permissions = $1 WHERE role_name = 'admin'",

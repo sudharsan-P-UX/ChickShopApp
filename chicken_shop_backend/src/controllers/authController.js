@@ -141,7 +141,9 @@ exports.createRole = async (req, res) => {
     inventory: { view: false, add: false, edit: false, delete: false },
     customers: { view: true, add: true, edit: false, delete: false },
     users: { view: false, add: false, edit: false, delete: false },
-    custom_labels: { view: false, add: false, edit: false, delete: false }
+    custom_labels: { view: false, add: false, edit: false, delete: false },
+    custom_bill: { view: true, add: true, edit: false, delete: false },
+    custom_bill_inventory: { view: false, add: false, edit: false, delete: false }
   };
 
   try {

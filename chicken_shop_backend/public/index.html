@@ -76,6 +76,10 @@
           <ion-icon name="cart-outline"></ion-icon>
           <span class="label-billing_menu">Billing & POS</span>
         </a>
+        <a href="#" class="nav-item" data-target="custom-bill-view">
+          <ion-icon name="calculator-outline"></ion-icon>
+          <span class="label-custom_bill_menu">Custom Bill</span>
+        </a>
         <a href="#" class="nav-item" data-target="dashboard-view" data-role="admin">
           <ion-icon name="grid-outline"></ion-icon>
           <span class="label-overview_menu">Overview</span>
@@ -84,13 +88,25 @@
           <ion-icon name="basket-outline"></ion-icon>
           <span><span class="label-view_cart">View Cart</span> <span id="cart-badge-count" class="badge danger hidden" style="font-size: 9px; padding: 2px 6px; margin-left: auto;">0</span></span>
         </a>
+        <a href="#" class="nav-item" data-target="custom-cart-view">
+          <ion-icon name="basket-outline"></ion-icon>
+          <span><span class="label-custom_view_cart">View Custom Cart</span> <span id="custom-cart-badge-count" class="badge danger hidden" style="font-size: 9px; padding: 2px 6px; margin-left: auto;">0</span></span>
+        </a>
         <a href="#" class="nav-item" data-target="pending-view">
           <ion-icon name="bookmark-outline"></ion-icon>
           <span class="label-pending_orders">Pending Orders</span>
         </a>
+        <a href="#" class="nav-item" data-target="custom-pending-view">
+          <ion-icon name="bookmark-outline"></ion-icon>
+          <span class="label-custom_pending_orders">Custom Pending Orders</span>
+        </a>
         <a href="#" class="nav-item" data-target="inventory-view" data-role="admin">
           <ion-icon name="cube-outline"></ion-icon>
           <span class="label-inventory_menu">Inventory</span>
+        </a>
+        <a href="#" class="nav-item" data-target="custom-bill-inventory-view" data-role="admin">
+          <ion-icon name="cube-outline"></ion-icon>
+          <span class="label-custom_inventory_menu">Custom Bill Inventory</span>
         </a>
         <a href="#" class="nav-item" data-target="customers-view">
           <ion-icon name="people-outline"></ion-icon>
@@ -240,6 +256,28 @@
           </div>
         </section>
 
+        <!-- Custom Bill / POS Section -->
+        <section id="custom-bill-view" class="app-view">
+          <div class="pos-container">
+            <!-- Full-Width: Product Picker -->
+            <div class="pos-products glass" style="flex: 1; width: 100%;">
+              <div class="pos-header" style="display: flex; justify-content: space-between; align-items: center; gap: 16px; width: 100%;">
+                <div class="search-box" style="flex-grow: 1; max-width: 400px;">
+                  <ion-icon name="search-outline"></ion-icon>
+                  <input type="text" id="custom-bill-search-input" placeholder="Search custom bill items...">
+                </div>
+                <button type="button" id="btn-custom-bill-go-to-cart" class="btn-primary" onclick="switchView('custom-cart-view')" style="padding: 10px 20px; font-size: 14px;">
+                  <ion-icon name="basket-outline" style="font-size: 18px;"></ion-icon>
+                  <span>View Cart (<span id="custom-bill-cart-badge">0</span>)</span>
+                </button>
+              </div>
+              <div class="products-grid" id="custom-bill-products-grid" style="grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));">
+                <!-- Products dynamically loaded -->
+              </div>
+            </div>
+          </div>
+        </section>
+
         <!-- View Cart Section -->
         <section id="cart-view" class="app-view">
           <div class="cart-page-wrapper" style="padding: 10px 0;">
@@ -305,6 +343,77 @@
                 <button id="btn-complete-bill" class="btn-success btn-block">
                   <ion-icon name="print-outline"></ion-icon>
                   <span class="label-complete_bill_button">Print & Complete Bill</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- View Custom Cart Section -->
+        <section id="custom-cart-view" class="app-view">
+          <div class="cart-page-wrapper" style="padding: 10px 0;">
+            <div class="pos-cart glass" style="max-width: 600px; margin: 0 auto; width: 100%; padding: 28px; border: 1px solid var(--border-glass); display: flex; flex-direction: column;">
+              <div class="cart-header" style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 16px; margin-bottom: 20px;">
+                <h3 style="font-size: 18px; font-weight: 600;">Custom Shopping Cart Details</h3>
+                <button id="custom-btn-clear-cart" class="btn-text-danger">
+                  <ion-icon name="trash-outline"></ion-icon> <span>Clear Cart</span>
+                </button>
+              </div>
+              
+              <!-- Cart Items List -->
+              <div class="cart-items" id="custom-cart-items-list" style="max-height: 350px; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; margin-bottom: 20px;">
+                <div class="empty-cart-state">
+                  <ion-icon name="basket-outline"></ion-icon>
+                  <p>Your cart is empty</p>
+                  <small>Go back to Custom Bill to add items</small>
+                </div>
+              </div>
+ 
+              <!-- Customer Details Section -->
+              <div class="cart-customer" style="padding: 20px 0; border-top: 1px solid rgba(255,255,255,0.05); border-bottom: 1px solid rgba(255,255,255,0.05); margin-bottom: 20px;">
+                <div class="input-group">
+                  <label for="custom-cart-customer-phone">Customer Phone Number</label>
+                  <div class="customer-input-row" style="display: flex; gap: 10px;">
+                    <div class="input-wrapper" style="flex-grow: 1;">
+                      <ion-icon name="call-outline"></ion-icon>
+                      <input type="text" id="custom-cart-customer-phone" placeholder="e.g. 9876543210" maxlength="15">
+                    </div>
+                    <button type="button" id="custom-btn-lookup-customer" class="btn-secondary-icon" title="Check / Register Customer">
+                      <ion-icon name="checkmark-circle-outline"></ion-icon>
+                    </button>
+                  </div>
+                </div>
+                <div id="custom-customer-name-display" class="customer-info-display hidden" style="margin-top: 10px;">
+                  <ion-icon name="person-circle-outline"></ion-icon>
+                  <span id="custom-lbl-customer-name">Walking Customer</span>
+                </div>
+              </div>
+ 
+              <!-- Cart Financial Summary -->
+              <div class="cart-summary" style="display: flex; flex-direction: column; gap: 12px; margin-bottom: 24px;">
+                <div class="summary-row" style="display: flex; justify-content: space-between; font-size: 15px;">
+                  <span>Subtotal</span>
+                  <span id="custom-cart-subtotal">₹0.00</span>
+                </div>
+                <div class="summary-row" style="display: flex; justify-content: space-between; align-items: center; font-size: 15px;">
+                  <span>Discount (₹)</span>
+                  <input type="number" id="custom-cart-discount" min="0" value="0" class="discount-input" style="width: 100px; text-align: right;">
+                </div>
+                <hr style="border: 0; border-top: 1px solid rgba(255,255,255,0.05); margin: 8px 0;">
+                <div class="summary-row total" style="display: flex; justify-content: space-between; font-size: 18px; font-weight: 700; color: #fff;">
+                  <span>Final Total</span>
+                  <span id="custom-cart-final-total" style="color: var(--accent-orange);">₹0.00</span>
+                </div>
+              </div>
+ 
+              <div class="cart-actions" style="display: flex; flex-direction: column; gap: 12px;">
+                <button id="custom-btn-save-pending" class="btn-secondary btn-block">
+                  <ion-icon name="bookmark-outline"></ion-icon>
+                  <span>Save Pending Bill</span>
+                </button>
+                <button id="custom-btn-complete-bill" class="btn-success btn-block">
+                  <ion-icon name="print-outline"></ion-icon>
+                  <span>Print & Complete Bill</span>
                 </button>
               </div>
             </div>
@@ -395,6 +504,90 @@
           </div>
         </section>
 
+        <!-- Custom Bill Inventory Section -->
+        <section id="custom-bill-inventory-view" class="app-view">
+          <div class="inventory-container">
+            <!-- Left Panel: Add/Edit Item Form -->
+            <div class="inventory-form glass">
+              <h3 id="custom-inventory-form-title">Add New Custom Bill Item</h3>
+              <form id="custom-inventory-item-form">
+                <input type="hidden" id="custom-edit-item-id">
+                
+                <div class="input-group">
+                  <label for="custom-item_name">Item Name</label>
+                  <input type="text" id="custom-item_name" required placeholder="e.g. Chicken Leg (per kg)">
+                </div>
+
+                <div class="input-group">
+                  <label for="custom-item_description">Description</label>
+                  <textarea id="custom-item_description" placeholder="Item ingredients or sizing info..." rows="3"></textarea>
+                </div>
+
+                <div class="input-row">
+                  <div class="input-group">
+                    <label for="custom-item_qty">Quantity (Stock in kg)</label>
+                    <input type="number" id="custom-item_qty" min="0" step="0.01" required placeholder="e.g. 50.00">
+                  </div>
+                  <div class="input-group">
+                    <label for="custom-item_price">Price (₹ per kg)</label>
+                    <input type="number" id="custom-item_price" min="0.01" step="0.01" required placeholder="e.g. 199.00">
+                  </div>
+                </div>
+
+                <div class="input-group">
+                  <label for="custom-item_image">Item Image</label>
+                  <div class="file-upload-wrapper">
+                    <input type="file" id="custom-item_image" accept="image/*">
+                    <div class="upload-placeholder">
+                      <ion-icon name="image-outline"></ion-icon>
+                      <span>Choose Image (Optional)</span>
+                    </div>
+                  </div>
+                  <div id="custom-image-preview-container" class="image-preview-container hidden">
+                    <img id="custom-image-preview" src="" alt="Preview">
+                    <button type="button" id="custom-btn-remove-preview" class="btn-close-small">
+                      <ion-icon name="close-circle"></ion-icon>
+                    </button>
+                  </div>
+                </div>
+
+                <div class="form-actions">
+                  <button type="button" id="custom-btn-cancel-edit" class="btn-secondary hidden">Cancel Edit</button>
+                  <button type="submit" id="custom-btn-save-item" class="btn-primary">Add Item</button>
+                </div>
+              </form>
+            </div>
+
+            <!-- Right Panel: Inventory List -->
+            <div class="inventory-list-wrapper glass">
+              <div class="list-header">
+                <h3>Custom Bill Inventory Items</h3>
+                <div class="search-box">
+                  <ion-icon name="search-outline"></ion-icon>
+                  <input type="text" id="custom-inventory-search-input" placeholder="Search custom items...">
+                </div>
+              </div>
+              <div class="table-container">
+                <table class="data-table">
+                  <thead>
+                    <tr>
+                      <th>Image</th>
+                      <th>Item Name</th>
+                      <th>Price</th>
+                      <th>Stock Qty</th>
+                      <th>Status</th>
+                      <th>Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody id="custom-inventory-table-body">
+                    <!-- Dynamic custom inventory items -->
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </section>
+
         <!-- Customers Section -->
         <section id="customers-view" class="app-view">
           <div class="customers-container">
@@ -453,6 +646,22 @@
             </div>
             <div class="pending-grid" id="pending-orders-grid">
               <!-- Pending order cards will load dynamically -->
+            </div>
+          </div>
+        </section>
+
+        <!-- Custom Pending Bills Section -->
+        <section id="custom-pending-view" class="app-view">
+          <div class="pending-container glass">
+            <div class="list-header">
+              <h3>Custom Pending Orders</h3>
+              <div class="search-box">
+                <ion-icon name="search-outline"></ion-icon>
+                <input type="text" id="custom-pending-search-input" placeholder="Search custom pending orders...">
+              </div>
+            </div>
+            <div class="pending-grid" id="custom-pending-orders-grid">
+              <!-- Custom Pending order cards will load dynamically -->
             </div>
           </div>
         </section>
@@ -547,6 +756,8 @@
                     <th style="padding: 12px; text-align: center; color: var(--text-secondary);" class="label-user_rbac_th_customers">Customers</th>
                     <th style="padding: 12px; text-align: center; color: var(--text-secondary);" class="label-user_rbac_th_users">User & Role Management</th>
                     <th style="padding: 12px; text-align: center; color: var(--text-secondary);" class="label-user_rbac_th_labels">Custom Labels</th>
+                    <th style="padding: 12px; text-align: center; color: var(--text-secondary);" class="label-user_rbac_th_custom_bill">Custom Bill</th>
+                    <th style="padding: 12px; text-align: center; color: var(--text-secondary);" class="label-user_rbac_th_custom_bill_inventory">Custom Bill Inventory</th>
                   </tr>
                 </thead>
                 <tbody id="privilege-matrix-body">

@@ -62,7 +62,11 @@ function getPermissionKeyForView(viewId) {
     'billing-view': 'billing',
     'cart-view': 'billing',
     'pending-view': 'billing',
+    'custom-bill-view': 'custom_bill',
+    'custom-cart-view': 'custom_bill',
+    'custom-pending-view': 'custom_bill',
     'inventory-view': 'inventory',
+    'custom-bill-inventory-view': 'custom_bill_inventory',
     'customers-view': 'customers',
     'users-view': 'users',
     'labels-view': 'custom_labels'
@@ -76,18 +80,30 @@ function adjustActionPrivileges() {
     if (invForm) invForm.style.display = 'block';
     const custForm = document.querySelector('.customers-container .inventory-form');
     if (custForm) custForm.style.display = 'block';
+    const customInvForm = document.querySelector('#custom-bill-inventory-view .inventory-form');
+    if (customInvForm) customInvForm.style.display = 'block';
     return;
   }
   const permissions = currentUser ? currentUser.permissions : null;
   if (!permissions) return;
 
   // 1. Inventory View Add Form
-  const invForm = document.querySelector('.inventory-form');
+  const invForm = document.querySelector('#inventory-view .inventory-form');
   if (invForm) {
     if (permissions.inventory && permissions.inventory.add) {
       invForm.style.display = 'block';
     } else {
       invForm.style.display = 'none';
+    }
+  }
+
+  // 1b. Custom Bill Inventory View Add Form
+  const customInvForm = document.querySelector('#custom-bill-inventory-view .inventory-form');
+  if (customInvForm) {
+    if (permissions.custom_bill_inventory && permissions.custom_bill_inventory.add) {
+      customInvForm.style.display = 'block';
+    } else {
+      customInvForm.style.display = 'none';
     }
   }
 
@@ -177,14 +193,18 @@ function switchView(viewId) {
     'inventory-view': 'Inventory & Stock Control',
     'customers-view': 'Customer Directory',
     'pending-view': 'Pending Orders',
-    'users-view': 'User Account & Role Management'
+    'users-view': 'User Account & Role Management',
+    'custom-bill-view': 'Custom Bill POS System',
+    'custom-cart-view': 'Custom Shopping Cart & Checkout',
+    'custom-pending-view': 'Custom Pending Orders',
+    'custom-bill-inventory-view': 'Custom Bill Inventory & Stock Control'
   };
   document.getElementById('page-title').textContent = titles[viewId] || 'Chicken Shop POS';
 
   // Toggle Global Back to POS Button visibility
   const globalBackBtn = document.getElementById('btn-global-back');
   if (globalBackBtn) {
-    if (viewId === 'billing-view') {
+    if (viewId === 'billing-view' || viewId === 'custom-bill-view') {
       globalBackBtn.style.display = 'none';
     } else {
       globalBackBtn.style.display = 'flex';
@@ -206,6 +226,14 @@ function switchView(viewId) {
     loadPendingOrdersData();
   } else if (viewId === 'users-view') {
     loadUsersData();
+  } else if (viewId === 'custom-bill-view') {
+    loadCustomPOSData();
+  } else if (viewId === 'custom-cart-view') {
+    renderCustomPOSCart();
+  } else if (viewId === 'custom-bill-inventory-view') {
+    loadCustomInventoryData();
+  } else if (viewId === 'custom-pending-view') {
+    loadCustomPendingOrdersData();
   } else if (viewId === 'labels-view') {
     loadLabelsView();
   }
@@ -339,6 +367,44 @@ function setupEventListeners() {
   document.getElementById('card-bills').addEventListener('click', openSalesHistoryModal);
   document.getElementById('card-low-stock').addEventListener('click', showLowStockInventory);
   document.getElementById('card-customers').addEventListener('click', () => switchView('customers-view'));
+
+  // Custom Bill POS search filter
+  document.getElementById('custom-bill-search-input').addEventListener('input', filterCustomPOSProducts);
+
+  // Custom POS Add Customer Check Button
+  document.getElementById('custom-btn-lookup-customer').addEventListener('click', lookupCustomerInCustomPOS);
+
+  // Clear Custom POS Cart
+  document.getElementById('custom-btn-clear-cart').addEventListener('click', clearCustomPOSCart);
+
+  // Complete Custom POS Order
+  document.getElementById('custom-btn-complete-bill').addEventListener('click', completeCustomPOSOrder);
+
+  // Save Custom POS Pending Order
+  document.getElementById('custom-btn-save-pending').addEventListener('click', saveCustomPOSPendingOrder);
+
+  // Custom Image Upload Preview handler
+  const customImageInput = document.getElementById('custom-item_image');
+  if (customImageInput) {
+    customImageInput.addEventListener('change', handleCustomImageUploadPreview);
+  }
+
+  const customRemovePreview = document.getElementById('custom-btn-remove-preview');
+  if (customRemovePreview) {
+    customRemovePreview.addEventListener('click', removeCustomImagePreview);
+  }
+
+  // Add/Edit Custom Inventory Form Submit
+  document.getElementById('custom-inventory-item-form').addEventListener('submit', handleCustomInventoryFormSubmit);
+
+  // Cancel custom edit button
+  document.getElementById('custom-btn-cancel-edit').addEventListener('click', cancelCustomInventoryEdit);
+
+  // Custom Inventory Search Filter
+  document.getElementById('custom-inventory-search-input').addEventListener('input', filterCustomInventoryTable);
+
+  // Custom Pending Search Filter
+  document.getElementById('custom-pending-search-input').addEventListener('input', filterCustomPendingOrdersTable);
 
   // Sales History search
   document.getElementById('sales-history-search').addEventListener('input', filterSalesHistoryTable);
@@ -1587,7 +1653,7 @@ function renderPrivilegeMatrix(roles) {
     return;
   }
 
-  const menus = ['dashboard', 'billing', 'cart', 'pending', 'inventory', 'customers', 'users', 'custom_labels'];
+  const menus = ['dashboard', 'billing', 'cart', 'pending', 'inventory', 'customers', 'users', 'custom_labels', 'custom_bill', 'custom_bill_inventory'];
 
   container.innerHTML = roles.map(r => {
     const isSuperAdmin = r.role_name === 'super_admin' || r.role_name === 'superadmin';
@@ -1596,9 +1662,9 @@ function renderPrivilegeMatrix(roles) {
     const columnsHtml = menus.map(menu => {
       const menuPerms = permissions[menu] || { view: false, add: false, edit: false, delete: false };
       
-      const showAdd = menu === 'billing' || menu === 'inventory' || menu === 'customers' || menu === 'users';
-      const showEdit = menu === 'inventory' || menu === 'users';
-      const showDelete = menu === 'billing' || menu === 'inventory' || menu === 'users' || menu === 'pending';
+      const showAdd = menu === 'billing' || menu === 'inventory' || menu === 'customers' || menu === 'users' || menu === 'custom_bill' || menu === 'custom_bill_inventory';
+      const showEdit = menu === 'inventory' || menu === 'users' || menu === 'custom_bill_inventory';
+      const showDelete = menu === 'billing' || menu === 'inventory' || menu === 'users' || menu === 'pending' || menu === 'custom_bill' || menu === 'custom_bill_inventory';
       
       const viewChecked = menuPerms.view ? 'checked' : '';
       const addChecked = menuPerms.add ? 'checked' : '';
@@ -1948,3 +2014,624 @@ async function handleEditUserFormSubmit(e) {
 window.openUserEditModal = openUserEditModal;
 window.closeUserEditModal = closeUserEditModal;
 window.deleteUserAccount = deleteUserAccount;
+
+// ==========================================
+// Custom Bill & Weight-Based POS Features
+// ==========================================
+let customBillCart = {};
+let customBillInventoryData = [];
+let customPendingBillsData = [];
+let customSelectedCustomer = null;
+let activeCustomPendingBillId = null;
+let editingCustomItemId = null;
+
+// Custom POS Load & Render Products
+async function loadCustomPOSData() {
+  try {
+    const data = await apiRequest('/inventory');
+    customBillInventoryData = data.filter(item => item.is_custom_bill === true);
+    renderCustomPOSProducts(customBillInventoryData);
+  } catch (err) {
+    showToast(err.message, 'danger');
+  }
+}
+
+function renderCustomPOSProducts(products) {
+  const grid = document.getElementById('custom-bill-products-grid');
+  if (!grid) return;
+
+  if (products.length === 0) {
+    grid.innerHTML = `<div class="empty-state" style="grid-column: 1/-1">No custom bill items found. Go to Custom Bill Inventory to add items first!</div>`;
+    return;
+  }
+
+  grid.innerHTML = products.map(item => {
+    const isLow = parseFloat(item.qty) < 5.0;
+    const imgUrl = item.image_url ? item.image_url : '';
+    const imgTag = imgUrl 
+      ? `<img src="${imgUrl}" alt="${item.item_name}" class="product-image">`
+      : `<div class="product-image"><ion-icon name="calculator-outline"></ion-icon></div>`;
+
+    const cartItem = customBillCart[item.id];
+    const qtyInCart = cartItem ? cartItem.qty : 0;
+    const qtyBadge = qtyInCart > 0 
+      ? `<div class="cart-qty-badge">${qtyInCart} kg in cart</div>`
+      : '';
+
+    const isOutOfStock = parseFloat(item.qty) <= 0;
+    let addBtn;
+    if (isOutOfStock) {
+      addBtn = `<button class="btn-add-to-cart" style="background: #333; color: #777; cursor: not-allowed;" disabled><ion-icon name="ban-outline"></ion-icon> Out of Stock</button>`;
+    } else {
+      const btnText = qtyInCart > 0 ? `Update (${qtyInCart} kg)` : 'Add Weight';
+      addBtn = `<button class="btn-add-to-cart" onclick="event.stopPropagation(); addCustomPOSProduct(${item.id})"><ion-icon name="basket-outline"></ion-icon> ${btnText}</button>`;
+    }
+
+    return `
+      <div class="product-card" onclick="addCustomPOSProduct(${item.id})">
+        ${qtyBadge}
+        ${imgTag}
+        <h4>${item.item_name}</h4>
+        <div class="price">₹${item.price} / kg</div>
+        <div class="stock-tag ${isLow ? 'low' : ''}" style="margin-bottom: 4px;">Stock: ${item.qty} kg</div>
+        ${addBtn}
+      </div>
+    `;
+  }).join('');
+}
+
+function filterCustomPOSProducts() {
+  const query = document.getElementById('custom-bill-search-input').value.toLowerCase().trim();
+  const filtered = customBillInventoryData.filter(item => 
+    item.item_name.toLowerCase().includes(query) || 
+    (item.description && item.description.toLowerCase().includes(query))
+  );
+  renderCustomPOSProducts(filtered);
+}
+
+// Add weight-based product to cart
+async function addCustomPOSProduct(itemId) {
+  const item = customBillInventoryData.find(i => i.id === itemId);
+  if (!item) return;
+
+  if (parseFloat(item.qty) <= 0) {
+    showToast(`${item.item_name} is out of stock!`, 'danger');
+    return;
+  }
+
+  const currentQty = customBillCart[itemId] ? customBillCart[itemId].qty : 0;
+  const val = prompt(`Enter weight for ${item.item_name} in kg (Price: ₹${item.price}/kg):`, currentQty > 0 ? currentQty : '3');
+  if (val === null) return; // Cancelled
+
+  const cleanVal = val.replace(/[^\d.]/g, '');
+  const parsedQty = parseFloat(cleanVal);
+  if (isNaN(parsedQty) || parsedQty <= 0) {
+    showToast('Invalid weight quantity entered', 'warning');
+    return;
+  }
+
+  if (parsedQty > parseFloat(item.qty)) {
+    showToast(`Cannot add weight. Only ${item.qty} kg in stock.`, 'warning');
+    return;
+  }
+
+  customBillCart[itemId] = { item, qty: parsedQty };
+  renderCustomPOSCart();
+  showToast(`Added ${parsedQty} kg of ${item.item_name} to cart.`);
+}
+
+function updateCustomCartQty(itemId, change) {
+  const cartItem = customBillCart[itemId];
+  if (!cartItem) return;
+
+  const newQty = cartItem.qty + change;
+  if (newQty <= 0) {
+    delete customBillCart[itemId];
+  } else {
+    if (newQty > parseFloat(cartItem.item.qty)) {
+      showToast(`Cannot add weight. Only ${cartItem.item.qty} kg in stock.`, 'warning');
+      return;
+    }
+    cartItem.qty = parseFloat(newQty.toFixed(2));
+  }
+  renderCustomPOSCart();
+}
+
+function updateCustomCartBadges() {
+  const totalQty = Object.values(customBillCart).reduce((sum, entry) => sum + entry.qty, 0);
+  const badgeVal = parseFloat(totalQty.toFixed(2));
+  
+  const customBadge = document.getElementById('custom-bill-cart-badge');
+  if (customBadge) customBadge.textContent = badgeVal;
+
+  const sidebarBadge = document.getElementById('custom-cart-badge-count');
+  if (sidebarBadge) {
+    sidebarBadge.textContent = badgeVal;
+    if (badgeVal > 0) {
+      sidebarBadge.classList.remove('hidden');
+    } else {
+      sidebarBadge.classList.add('hidden');
+    }
+  }
+}
+
+function renderCustomPOSCart() {
+  updateCustomCartBadges();
+
+  if (typeof customBillInventoryData !== 'undefined' && customBillInventoryData && customBillInventoryData.length > 0) {
+    filterCustomPOSProducts();
+  }
+
+  const cartContainer = document.getElementById('custom-cart-items-list');
+  const cartEntries = Object.values(customBillCart);
+
+  if (cartEntries.length === 0) {
+    cartContainer.innerHTML = `
+      <div class="empty-cart-state">
+        <ion-icon name="basket-outline"></ion-icon>
+        <p>Your cart is empty</p>
+        <small>Go back to Custom Bill to add items</small>
+      </div>
+    `;
+    document.getElementById('custom-cart-subtotal').textContent = '₹0.00';
+    document.getElementById('custom-cart-final-total').textContent = '₹0.00';
+    return;
+  }
+
+  cartContainer.innerHTML = cartEntries.map(entry => {
+    const item = entry.item;
+    const subtotal = item.price * entry.qty;
+    const imgUrl = item.image_url ? item.image_url : '';
+    const imgTag = imgUrl 
+      ? `<img src="${imgUrl}" alt="${item.item_name}" style="width: 50px; height: 50px; border-radius: 6px; object-fit: cover;">`
+      : `<div style="width: 50px; height: 50px; border-radius: 6px; background: rgba(255,255,255,0.05); display: flex; align-items: center; justify-content: center;"><ion-icon name="calculator-outline"></ion-icon></div>`;
+
+    return `
+      <div class="cart-item" style="display: flex; align-items: center; gap: 12px; padding: 12px; background: rgba(255, 255, 255, 0.03); border-radius: 8px;">
+        ${imgTag}
+        <div style="flex: 1;">
+          <h4 style="font-size: 14px; font-weight: 500; color: #fff; margin-bottom: 2px;">${item.item_name}</h4>
+          <span style="font-size: 12px; color: var(--text-muted);">₹${item.price} / kg</span>
+        </div>
+        <div style="display: flex; align-items: center; gap: 10px; background: rgba(0,0,0,0.2); border-radius: 6px; padding: 4px 8px;">
+          <button onclick="updateCustomCartQty(${item.id}, -0.5)" style="background:none; border:none; color:#fff; cursor:pointer; font-weight:bold;">-</button>
+          <span style="font-size:13px; font-weight:bold; min-width: 50px; text-align: center;">${entry.qty} kg</span>
+          <button onclick="updateCustomCartQty(${item.id}, 0.5)" style="background:none; border:none; color:#fff; cursor:pointer; font-weight:bold;">+</button>
+        </div>
+        <div style="font-size: 14px; font-weight: 600; color: #fff; min-width: 80px; text-align: right;">₹${subtotal.toFixed(2)}</div>
+        <button onclick="updateCustomCartQty(${item.id}, -${entry.qty})" style="background:none; border:none; color:var(--danger-red); cursor:pointer; padding: 4px;">
+          <ion-icon name="trash-outline" style="font-size: 18px;"></ion-icon>
+        </button>
+      </div>
+    `;
+  }).join('');
+
+  // Calculate Subtotal & Total
+  const subtotal = cartEntries.reduce((sum, entry) => sum + (entry.item.price * entry.qty), 0);
+  const discountInput = document.getElementById('custom-cart-discount');
+  const discount = parseFloat(discountInput.value) || 0;
+  const finalTotal = Math.max(0, subtotal - discount);
+
+  document.getElementById('custom-cart-subtotal').textContent = `₹${subtotal.toFixed(2)}`;
+  document.getElementById('custom-cart-final-total').textContent = `₹${finalTotal.toFixed(2)}`;
+
+  // Bind discount updates dynamically
+  discountInput.oninput = () => {
+    const val = parseFloat(discountInput.value) || 0;
+    const cleanFinal = Math.max(0, subtotal - val);
+    document.getElementById('custom-cart-final-total').textContent = `₹${cleanFinal.toFixed(2)}`;
+  };
+}
+
+function clearCustomPOSCart() {
+  if (Object.keys(customBillCart).length === 0) return;
+  if (!confirm('Are you sure you want to clear the custom cart?')) return;
+  customBillCart = {};
+  customSelectedCustomer = null;
+  activeCustomPendingBillId = null;
+  document.getElementById('custom-cart-customer-phone').value = '';
+  const nameEl = document.getElementById('custom-customer-name-display');
+  if (nameEl) nameEl.classList.add('hidden');
+  document.getElementById('custom-cart-discount').value = 0;
+  renderCustomPOSCart();
+  showToast('Custom cart cleared');
+}
+
+// Custom Customer Verification & Registration
+async function lookupCustomerInCustomPOS() {
+  const phone = document.getElementById('custom-cart-customer-phone').value.trim();
+  if (!phone) {
+    showToast('Please enter a phone number', 'warning');
+    return;
+  }
+  try {
+    const data = await apiRequest(`/customers/${phone}`);
+    if (data && data.name) {
+      customSelectedCustomer = data;
+      document.getElementById('custom-lbl-customer-name').textContent = data.name;
+      document.getElementById('custom-customer-name-display').classList.remove('hidden');
+      showToast(`Welcome back, ${data.name}!`);
+    } else {
+      // Trigger new customer registration modal
+      document.getElementById('modal-phone-num').textContent = phone;
+      document.getElementById('customer-modal').classList.remove('hidden');
+      document.getElementById('customer-modal').classList.add('active');
+    }
+  } catch (err) {
+    // If not found, open modal
+    document.getElementById('modal-phone-num').textContent = phone;
+    document.getElementById('customer-modal').classList.remove('hidden');
+    document.getElementById('customer-modal').classList.add('active');
+  }
+}
+
+// Complete Custom Order
+async function completeCustomPOSOrder() {
+  const cartEntries = Object.values(customBillCart);
+  if (cartEntries.length === 0) {
+    showToast('Custom cart is empty', 'warning');
+    return;
+  }
+
+  const phone = document.getElementById('custom-cart-customer-phone').value.trim();
+  if (!phone) {
+    showToast('Customer phone number is required to complete bill', 'warning');
+    return;
+  }
+
+  // Auto-lookup if not already loaded
+  if (!customSelectedCustomer || customSelectedCustomer.phone_no !== phone) {
+    await lookupCustomerInCustomPOS();
+    if (!customSelectedCustomer) return;
+  }
+
+  const subtotal = cartEntries.reduce((sum, entry) => sum + (entry.item.price * entry.qty), 0);
+  const discount = parseFloat(document.getElementById('custom-cart-discount').value) || 0;
+  const finalTotal = Math.max(0, subtotal - discount);
+
+  const checkoutItems = cartEntries.map(entry => ({
+    id: entry.item.id,
+    item_name: entry.item.item_name,
+    qty: entry.qty,
+    price: entry.item.price
+  }));
+
+  try {
+    const bill = await apiRequest('/billing/complete', {
+      method: 'POST',
+      body: {
+        customer_phone: customSelectedCustomer.phone_no || phone,
+        items: checkoutItems,
+        total_amount: subtotal,
+        discount: discount,
+        final_price: finalTotal,
+        pending_bill_id: activeCustomPendingBillId
+      }
+    });
+
+    showToast('Bill completed and printed successfully!', 'success');
+    
+    // Clear state
+    customBillCart = {};
+    customSelectedCustomer = null;
+    activeCustomPendingBillId = null;
+    document.getElementById('custom-cart-customer-phone').value = '';
+    document.getElementById('custom-customer-name-display').classList.add('hidden');
+    document.getElementById('custom-cart-discount').value = 0;
+    
+    // Render receipt view using standard invoice modal
+    showReceiptModal(bill);
+    
+    renderCustomPOSCart();
+  } catch (err) {
+    showToast(err.message, 'danger');
+  }
+}
+
+// Save Custom POS Pending Order
+async function saveCustomPOSPendingOrder() {
+  const cartEntries = Object.values(customBillCart);
+  if (cartEntries.length === 0) {
+    showToast('Cart is empty, cannot save pending', 'warning');
+    return;
+  }
+
+  const subtotal = cartEntries.reduce((sum, entry) => sum + (entry.item.price * entry.qty), 0);
+  const checkoutItems = cartEntries.map(entry => ({
+    id: entry.item.id,
+    item_name: entry.item.item_name,
+    qty: entry.qty,
+    price: entry.item.price
+  }));
+
+  try {
+    await apiRequest('/billing/pending', {
+      method: 'POST',
+      body: {
+        id: activeCustomPendingBillId,
+        items: checkoutItems,
+        subtotal: subtotal,
+        is_custom_bill: true
+      }
+    });
+
+    showToast('Custom pending bill saved successfully!');
+    customBillCart = {};
+    activeCustomPendingBillId = null;
+    document.getElementById('custom-cart-customer-phone').value = '';
+    document.getElementById('custom-customer-name-display').classList.add('hidden');
+    document.getElementById('custom-cart-discount').value = 0;
+    renderCustomPOSCart();
+    switchView('custom-bill-view');
+  } catch (err) {
+    showToast(err.message, 'danger');
+  }
+}
+
+// Custom Pending Orders Management
+async function loadCustomPendingOrdersData() {
+  try {
+    customPendingBillsData = await apiRequest('/billing/pending?custom=true');
+    renderCustomPendingOrders(customPendingBillsData);
+  } catch (err) {
+    showToast(err.message, 'danger');
+  }
+}
+
+function renderCustomPendingOrders(bills) {
+  const grid = document.getElementById('custom-pending-orders-grid');
+  if (!grid) return;
+
+  if (bills.length === 0) {
+    grid.innerHTML = `<div class="empty-state" style="grid-column: 1/-1">No custom pending orders found.</div>`;
+    return;
+  }
+
+  grid.innerHTML = bills.map(bill => {
+    const itemsList = bill.items.map(item => `${item.qty} kg x ${item.item_name}`).join(', ');
+    const savedTime = new Date(bill.saved_at).toLocaleString('en-IN');
+    
+    return `
+      <div class="pending-card glass" style="padding: 20px; display: flex; flex-direction: column; gap: 12px; border-radius: 8px;">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+          <strong style="color: #fff;">Order #${bill.id}</strong>
+          <span style="font-size: 12px; color: var(--accent-orange); font-weight: 600;">₹${parseFloat(bill.subtotal).toFixed(2)}</span>
+        </div>
+        <p style="font-size: 13px; color: var(--text-muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${itemsList}</p>
+        <span style="font-size: 11px; color: var(--text-muted);">${savedTime}</span>
+        <div style="display: flex; gap: 8px; justify-content: flex-end; margin-top: 8px;">
+          <button onclick="deleteCustomPendingOrder(${bill.id})" class="btn-text-danger" style="font-size: 12px; padding: 6px 12px;">Delete</button>
+          <button onclick="recallCustomPendingOrder(${bill.id})" class="btn-primary" style="font-size: 12px; padding: 6px 12px; border-radius: 4px;">Recall</button>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+function filterCustomPendingOrdersTable() {
+  const query = document.getElementById('custom-pending-search-input').value.trim();
+  if (!query) {
+    renderCustomPendingOrders(customPendingBillsData);
+    return;
+  }
+  const filtered = customPendingBillsData.filter(bill => 
+    bill.id.toString() === query ||
+    bill.items.some(i => i.item_name.toLowerCase().includes(query.toLowerCase()))
+  );
+  renderCustomPendingOrders(filtered);
+}
+
+async function recallCustomPendingOrder(billId) {
+  const bill = customPendingBillsData.find(b => b.id === billId);
+  if (!bill) return;
+
+  // Populate cart
+  customBillCart = {};
+  bill.items.forEach(i => {
+    customBillCart[i.id] = {
+      item: { id: i.id, item_name: i.item_name, price: i.price, qty: 9999 }, // placeholder stock
+      qty: parseFloat(i.qty)
+    };
+  });
+
+  activeCustomPendingBillId = bill.id;
+  renderCustomPOSCart();
+  switchView('custom-cart-view');
+  showToast(`Recalled Custom Pending Order #${bill.id}`);
+}
+
+async function deleteCustomPendingOrder(billId) {
+  if (!confirm('Are you sure you want to delete this custom pending order?')) return;
+  try {
+    await apiRequest(`/billing/pending/${billId}`, { method: 'DELETE' });
+    showToast('Pending order deleted');
+    loadCustomPendingOrdersData();
+  } catch (err) {
+    showToast(err.message, 'danger');
+  }
+}
+
+// Custom Bill Inventory CRUD Handlers
+async function loadCustomInventoryData() {
+  try {
+    const data = await apiRequest('/inventory');
+    customBillInventoryData = data.filter(item => item.is_custom_bill === true);
+    renderCustomInventoryTable(customBillInventoryData);
+  } catch (err) {
+    showToast(err.message, 'danger');
+  }
+}
+
+function renderCustomInventoryTable(items) {
+  const tbody = document.getElementById('custom-inventory-table-body');
+  if (!tbody) return;
+
+  if (items.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="6" class="empty-state">No custom bill items in stock. Create one now!</td></tr>`;
+    return;
+  }
+
+  tbody.innerHTML = items.map(item => {
+    const isLow = parseFloat(item.qty) < 5.0;
+    const statusClass = parseFloat(item.qty) <= 0 
+      ? 'badge danger' 
+      : isLow 
+        ? 'badge warning' 
+        : 'badge success';
+    const statusText = parseFloat(item.qty) <= 0 
+      ? 'Out of Stock' 
+      : isLow 
+        ? 'Low Stock' 
+        : 'In Stock';
+
+    const imgTag = item.image_url 
+      ? `<img src="${item.image_url}" alt="${item.item_name}" style="width: 40px; height: 40px; border-radius: 4px; object-fit: cover;">`
+      : `<div style="width: 40px; height: 40px; border-radius: 4px; background: rgba(255,255,255,0.05); display: flex; align-items: center; justify-content: center;"><ion-icon name="calculator-outline"></ion-icon></div>`;
+
+    return `
+      <tr>
+        <td>${imgTag}</td>
+        <td><strong>${item.item_name}</strong></td>
+        <td>₹${item.price} per kg</td>
+        <td>${item.qty} kg</td>
+        <td><span class="${statusClass}">${statusText}</span></td>
+        <td>
+          <button class="btn-primary" style="padding: 6px 12px; font-size: 12px;" onclick="editCustomItem(${item.id})">Edit</button>
+          <button class="btn-danger" style="padding: 6px 12px; font-size: 12px; margin-left: 4px;" onclick="deleteCustomItem(${item.id})">Delete</button>
+        </td>
+      </tr>
+    `;
+  }).join('');
+}
+
+function filterCustomInventoryTable() {
+  const query = document.getElementById('custom-inventory-search-input').value.toLowerCase().trim();
+  const filtered = customBillInventoryData.filter(item => 
+    item.item_name.toLowerCase().includes(query) ||
+    (item.description && item.description.toLowerCase().includes(query))
+  );
+  renderCustomInventoryTable(filtered);
+}
+
+// Add or Edit Custom Inventory submit
+async function handleCustomInventoryFormSubmit(e) {
+  e.preventDefault();
+  const name = document.getElementById('custom-item_name').value.trim();
+  const description = document.getElementById('custom-item_description').value.trim();
+  const qty = parseFloat(document.getElementById('custom-item_qty').value);
+  const price = parseFloat(document.getElementById('custom-item_price').value);
+  const imageFileInput = document.getElementById('custom-item_image');
+
+  try {
+    let base64Image = null;
+    if (imageFileInput.files.length > 0) {
+      const file = imageFileInput.files[0];
+      base64Image = await new Promise((resolve) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result);
+        reader.readAsDataURL(file);
+      });
+    }
+
+    const payload = {
+      item_name: name,
+      description,
+      qty,
+      price,
+      is_custom_bill: true
+    };
+    if (base64Image) payload.image_url = base64Image;
+
+    if (editingCustomItemId) {
+      await apiRequest(`/inventory/${editingCustomItemId}`, {
+        method: 'PUT',
+        body: payload
+      });
+      showToast('Custom item updated successfully');
+    } else {
+      await apiRequest('/inventory', {
+        method: 'POST',
+        body: payload
+      });
+      showToast('Custom item added to inventory');
+    }
+
+    cancelCustomInventoryEdit();
+    loadCustomInventoryData();
+  } catch (err) {
+    showToast(err.message, 'danger');
+  }
+}
+
+function editCustomItem(itemId) {
+  const item = customBillInventoryData.find(i => i.id === itemId);
+  if (!item) return;
+
+  editingCustomItemId = item.id;
+  document.getElementById('custom-edit-item-id').value = item.id;
+  document.getElementById('custom-item_name').value = item.item_name;
+  document.getElementById('custom-item_description').value = item.description || '';
+  document.getElementById('custom-item_qty').value = item.qty;
+  document.getElementById('custom-item_price').value = item.price;
+  
+  if (item.image_url) {
+    document.getElementById('custom-image-preview').src = item.image_url;
+    document.getElementById('custom-image-preview-container').classList.remove('hidden');
+    document.querySelector('#custom-bill-inventory-view .upload-placeholder').classList.add('hidden');
+  } else {
+    removeCustomImagePreview();
+  }
+
+  document.getElementById('custom-inventory-form-title').textContent = 'Update Custom Item';
+  document.getElementById('custom-btn-save-item').textContent = 'Save Changes';
+  document.getElementById('custom-btn-cancel-edit').classList.remove('hidden');
+}
+
+function cancelCustomInventoryEdit() {
+  editingCustomItemId = null;
+  document.getElementById('custom-inventory-item-form').reset();
+  removeCustomImagePreview();
+  document.getElementById('custom-inventory-form-title').textContent = 'Add New Custom Bill Item';
+  document.getElementById('custom-btn-save-item').textContent = 'Add Item';
+  document.getElementById('custom-btn-cancel-edit').classList.add('hidden');
+}
+
+async function deleteCustomItem(itemId) {
+  if (!confirm('Are you sure you want to delete this custom item?')) return;
+  try {
+    await apiRequest(`/inventory/${itemId}`, { method: 'DELETE' });
+    showToast('Custom item deleted successfully');
+    loadCustomInventoryData();
+  } catch (err) {
+    showToast(err.message, 'danger');
+  }
+}
+
+// Custom Image Upload Previews
+function handleCustomImageUploadPreview(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+
+  const reader = new FileReader();
+  reader.onload = (event) => {
+    document.getElementById('custom-image-preview').src = event.target.result;
+    document.getElementById('custom-image-preview-container').classList.remove('hidden');
+    document.querySelector('#custom-bill-inventory-view .upload-placeholder').classList.add('hidden');
+  };
+  reader.readAsDataURL(file);
+}
+
+function removeCustomImagePreview() {
+  document.getElementById('custom-item_image').value = '';
+  document.getElementById('custom-image-preview').src = '';
+  document.getElementById('custom-image-preview-container').classList.add('hidden');
+  document.querySelector('#custom-bill-inventory-view .upload-placeholder').classList.remove('hidden');
+}
+
+// Bind custom functions to global window context
+window.addCustomPOSProduct = addCustomPOSProduct;
+window.updateCustomCartQty = updateCustomCartQty;
+window.recallCustomPendingOrder = recallCustomPendingOrder;
+window.deleteCustomPendingOrder = deleteCustomPendingOrder;
+window.editCustomItem = editCustomItem;
+window.deleteCustomItem = deleteCustomItem;

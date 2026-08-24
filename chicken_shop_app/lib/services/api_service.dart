@@ -186,7 +186,7 @@ class ApiService {
     return null;
   }
 
-  static Future<dynamic> addInventoryItem(String name, String desc, int qty, double price, [String? imagePath]) async {
+  static Future<dynamic> addInventoryItem(String name, String desc, num qty, double price, [String? imagePath, bool isCustomBill = false]) async {
     final token = await _getToken();
     final uri = Uri.parse('$baseUrl/inventory');
     
@@ -204,6 +204,7 @@ class ApiService {
       'qty': qty,
       'price': price,
       'image_url': base64Image,
+      'is_custom_bill': isCustomBill,
     });
     
     final response = await http.post(uri, headers: headers, body: body);
@@ -215,7 +216,7 @@ class ApiService {
     throw Exception(responseBody['message'] ?? 'Failed to add inventory item');
   }
 
-  static Future<dynamic> updateInventoryItem(int id, String name, String desc, int qty, double price, [String? imagePath]) async {
+  static Future<dynamic> updateInventoryItem(int id, String name, String desc, num qty, double price, [String? imagePath, bool? isCustomBill]) async {
     final token = await _getToken();
     final uri = Uri.parse('$baseUrl/inventory/$id');
     
@@ -227,14 +228,18 @@ class ApiService {
     };
     if (token != null) headers['Authorization'] = 'Bearer $token';
     
-    final body = jsonEncode({
+    final Map<String, dynamic> payload = {
       'item_name': name,
       'description': desc,
       'qty': qty,
       'price': price,
       'image_url': base64Image,
-    });
+    };
+    if (isCustomBill != null) {
+      payload['is_custom_bill'] = isCustomBill;
+    }
     
+    final body = jsonEncode(payload);
     final response = await http.put(uri, headers: headers, body: body);
     
     if (response.statusCode == 200) {
@@ -310,6 +315,15 @@ class ApiService {
     throw Exception('Failed to load pending bills');
   }
 
+  static Future<List<dynamic>> getCustomPendingBills() async {
+    final headers = await _getHeaders();
+    final response = await http.get(Uri.parse('$baseUrl/billing/pending?custom=true'), headers: headers);
+    if (response.statusCode == 200) {
+      return jsonDecode(response.body);
+    }
+    throw Exception('Failed to load custom pending bills');
+  }
+
   static Future<dynamic> savePendingBill(List<Map<String, dynamic>> items, double subtotal, [int? id]) async {
     final headers = await _getHeaders();
     final response = await http.post(
@@ -322,6 +336,20 @@ class ApiService {
     }
     final body = jsonDecode(response.body);
     throw Exception(body['message'] ?? 'Failed to save pending bill');
+  }
+
+  static Future<dynamic> saveCustomPendingBill(List<Map<String, dynamic>> items, double subtotal, [int? id]) async {
+    final headers = await _getHeaders();
+    final response = await http.post(
+      Uri.parse('$baseUrl/billing/pending'),
+      headers: headers,
+      body: jsonEncode({'id': id, 'items': items, 'subtotal': subtotal, 'is_custom_bill': true}),
+    );
+    if (response.statusCode == 201 || response.statusCode == 200) {
+      return jsonDecode(response.body);
+    }
+    final body = jsonDecode(response.body);
+    throw Exception(body['message'] ?? 'Failed to save custom pending bill');
   }
 
   static Future<void> deletePendingBill(int id) async {
