@@ -678,7 +678,7 @@ function addToPOSCart(itemId) {
 }
 
 function updateCartBadges() {
-  const totalQty = Object.values(cart).reduce((sum, entry) => sum + entry.qty, 0);
+  const totalQty = Object.keys(cart).length;
   const billingBadge = document.getElementById('billing-cart-badge');
   if (billingBadge) billingBadge.textContent = totalQty;
   
@@ -2158,8 +2158,7 @@ function updateCustomCartQty(itemId, change) {
 }
 
 function updateCustomCartBadges() {
-  const totalQty = Object.values(customBillCart).reduce((sum, entry) => sum + entry.qty, 0);
-  const badgeVal = parseFloat(totalQty.toFixed(2));
+  const badgeVal = Object.keys(customBillCart).length;
   
   const customBadge = document.getElementById('custom-bill-cart-badge');
   if (customBadge) customBadge.textContent = badgeVal;

@@ -51,7 +51,7 @@ class AppState with ChangeNotifier {
     return false;
   }
 
-  int get cartCount => cart.values.fold(0, (sum, qty) => sum + qty);
+  int get cartCount => cart.length;
 
   double get cartSubtotal {
     double total = 0.0;
