@@ -174,7 +174,7 @@ class _MenuOrderScreenState extends State<MenuOrderScreen> {
                             2: FlexColumnWidth(2),
                             3: FlexColumnWidth(2.5),
                           },
-                          verticalAlignment: TableCellVerticalAlignment.middle,
+                          defaultVerticalAlignment: TableCellVerticalAlignment.middle,
                           children: [
                             const TableRow(
                               decoration: BoxDecoration(border: Border(bottom: BorderSide(color: Colors.grey, width: 0.5))),

@@ -98,7 +98,7 @@ class _CustomCartScreenState extends State<CustomCartScreen> {
                 }
 
                 try {
-                  final newCustomer = await ApiService.createCustomer(name, phone);
+                  final newCustomer = await ApiService.registerCustomer(phone, name);
                   state.selectCustomCustomer(newCustomer);
                   await state.fetchCustomers();
                   if (mounted) {

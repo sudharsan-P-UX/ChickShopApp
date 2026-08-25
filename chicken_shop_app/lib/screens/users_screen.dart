@@ -154,42 +154,6 @@ class _UsersScreenState extends State<UsersScreen> {
     }
   }
 
-  void _toggleUserRole(int userId, String currentRole, AppState state) async {
-    // Show role selection dialog based on available roles
-    final List<String> rolesList = state.roles.map<String>((r) => r['role_name'].toString()).toList();
-    if (rolesList.isEmpty) {
-      rolesList.addAll(['super_admin', 'admin', 'cashier']);
-    }
-
-    final selected = await showDialog<String>(
-      context: context,
-      builder: (context) {
-        return SimpleDialog(
-          title: const Text('Select New Role'),
-          children: rolesList.map((role) {
-            return SimpleDialogOption(
-              onPressed: () => Navigator.pop(context, role),
-              child: Text(role.toUpperCase(), style: TextStyle(fontWeight: role == currentRole ? FontWeight.bold : FontWeight.normal)),
-            );
-          }).toList(),
-        );
-      },
-    );
-
-    if (selected == null || selected == currentRole) return;
-
-    try {
-      await ApiService.updateUserRole(userId, selected);
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('User role updated successfully')),
-      );
-      state.fetchUsers();
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error updating role: ${e.toString()}')),
-      );
-    }
-  }
 
   void _deleteUser(int userId, AppState state) async {
     final confirm = await showDialog<bool>(

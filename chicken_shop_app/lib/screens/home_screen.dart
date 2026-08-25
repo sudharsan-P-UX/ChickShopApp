@@ -398,7 +398,7 @@ class _HomeScreenState extends State<HomeScreen> {
             routeIndex = 7;
             break;
           case 'menu_control':
-            itemIcon = Icons.options_outlined;
+            itemIcon = Icons.tune_outlined;
             labelKey = 'menu_control_menu';
             defaultLabel = 'Menu Control';
             routeIndex = 12;
@@ -472,7 +472,7 @@ class MenuControlPlaceholderScreen extends StatelessWidget {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(Icons.options_outlined, size: 64, color: Colors.grey),
+          Icon(Icons.tune_outlined, size: 64, color: Colors.grey),
           SizedBox(height: 12),
           Text(
             'Menu Control Panel',
