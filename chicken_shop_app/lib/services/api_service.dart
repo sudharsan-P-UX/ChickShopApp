@@ -186,7 +186,7 @@ class ApiService {
     return null;
   }
 
-  static Future<dynamic> addInventoryItem(String name, String desc, num qty, double price, [String? imagePath, bool isCustomBill = false]) async {
+  static Future<dynamic> addInventoryItem(String name, String desc, num qty, double price, [String? imagePath, bool isCustomBill = false, String unit = 'kg']) async {
     final token = await _getToken();
     final uri = Uri.parse('$baseUrl/inventory');
     
@@ -205,6 +205,7 @@ class ApiService {
       'price': price,
       'image_url': base64Image,
       'is_custom_bill': isCustomBill,
+      'unit': unit,
     });
     
     final response = await http.post(uri, headers: headers, body: body);
@@ -216,7 +217,7 @@ class ApiService {
     throw Exception(responseBody['message'] ?? 'Failed to add inventory item');
   }
 
-  static Future<dynamic> updateInventoryItem(int id, String name, String desc, num qty, double price, [String? imagePath, bool? isCustomBill]) async {
+  static Future<dynamic> updateInventoryItem(int id, String name, String desc, num qty, double price, [String? imagePath, bool? isCustomBill, String? unit]) async {
     final token = await _getToken();
     final uri = Uri.parse('$baseUrl/inventory/$id');
     
@@ -237,6 +238,9 @@ class ApiService {
     };
     if (isCustomBill != null) {
       payload['is_custom_bill'] = isCustomBill;
+    }
+    if (unit != null) {
+      payload['unit'] = unit;
     }
     
     final body = jsonEncode(payload);

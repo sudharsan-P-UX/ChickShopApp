@@ -241,6 +241,7 @@ class _InventoryScreenState extends State<InventoryScreen> {
                     itemCount: filteredInventory.length,
                     itemBuilder: (context, index) {
                       final item = filteredInventory[index];
+                      final int itemId = item['id'] is int ? item['id'] : (int.tryParse(item['id'].toString()) ?? 0);
                       final double qty = double.tryParse(item['qty'].toString()) ?? 0.0;
                       final bool isLowStock = qty < 5.0;
 
@@ -292,7 +293,7 @@ class _InventoryScreenState extends State<InventoryScreen> {
                               if (state.hasPermission('inventory', 'delete'))
                                 IconButton(
                                   icon: const Icon(Icons.delete, color: Colors.red),
-                                  onPressed: () => _deleteItem(context, item['id'], state),
+                                   onPressed: () => _deleteItem(context, itemId, state),
                                 ),
                             ],
                           ),

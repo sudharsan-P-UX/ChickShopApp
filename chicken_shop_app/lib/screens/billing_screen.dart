@@ -84,7 +84,7 @@ class _BillingScreenState extends State<BillingScreen> {
                   itemCount: filteredInventory.length,
                   itemBuilder: (context, index) {
                     final item = filteredInventory[index];
-                    final int itemId = item['id'];
+                    final int itemId = item['id'] is int ? item['id'] : (int.tryParse(item['id'].toString()) ?? 0);
                     final double stock = double.tryParse(item['qty'].toString()) ?? 0.0;
                     final double price = double.tryParse(item['price'].toString()) ?? 0.0;
                     final int cartQty = state.cart[itemId] ?? 0;

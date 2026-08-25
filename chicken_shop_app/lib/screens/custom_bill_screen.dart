@@ -22,7 +22,7 @@ class _CustomBillScreenState extends State<CustomBillScreen> {
   }
 
   void _promptForWeight(BuildContext context, dynamic item, AppState state) {
-    final itemId = item['id'];
+    final int itemId = item['id'] is int ? item['id'] : (int.tryParse(item['id'].toString()) ?? 0);
     final double stock = double.tryParse(item['qty'].toString()) ?? 0.0;
     final double price = double.tryParse(item['price'].toString()) ?? 0.0;
     final double currentQty = state.customCart[itemId] ?? 0.0;
@@ -31,26 +31,27 @@ class _CustomBillScreenState extends State<CustomBillScreen> {
       text: currentQty > 0.0 ? (currentQty % 1 == 0 ? currentQty.toInt().toString() : currentQty.toString()) : '',
     );
 
+    final String unit = item['unit'] ?? 'kg';
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: Text('Enter weight for ${item['item_name']}'),
+        title: Text(unit == 'pcs' ? 'Enter quantity for ${item['item_name']}' : 'Enter weight for ${item['item_name']}'),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('Price: ₹${price.toStringAsFixed(2)} / kg'),
-            Text('Stock: ${stock.toStringAsFixed(2)} kg', style: const TextStyle(color: Colors.grey, fontSize: 13)),
+            Text('Price: ₹${price.toStringAsFixed(2)} / $unit'),
+            Text('Stock: ${stock % 1 == 0 ? stock.toInt() : stock.toStringAsFixed(2)} $unit', style: const TextStyle(color: Colors.grey, fontSize: 13)),
             const SizedBox(height: 12),
             TextField(
               controller: controller,
-              keyboardType: const TextInputType.numberWithOptions(decimal: true),
+              keyboardType: unit == 'pcs' ? TextInputType.number : const TextInputType.numberWithOptions(decimal: true),
               autofocus: true,
-              decoration: const InputDecoration(
-                labelText: 'Weight (e.g. 3kg or 2.5)',
-                hintText: '3',
-                suffixText: 'kg',
-                border: OutlineInputBorder(),
+              decoration: InputDecoration(
+                labelText: unit == 'pcs' ? 'Quantity' : 'Weight (e.g. 3kg or 2.5)',
+                hintText: unit == 'pcs' ? '1' : '3',
+                suffixText: unit,
+                border: const OutlineInputBorder(),
               ),
             ),
           ],
@@ -68,14 +69,14 @@ class _CustomBillScreenState extends State<CustomBillScreen> {
               
               if (parsedVal == null || parsedVal <= 0) {
                 ScaffoldMessenger.of(ctx).showSnackBar(
-                  const SnackBar(content: Text('Invalid weight quantity entered')),
+                  SnackBar(content: Text('Invalid $unit quantity entered')),
                 );
                 return;
               }
 
               if (parsedVal > stock) {
                 ScaffoldMessenger.of(ctx).showSnackBar(
-                  SnackBar(content: Text('Cannot add weight. Only $stock kg in stock.')),
+                  SnackBar(content: Text('Cannot add. Only ${stock % 1 == 0 ? stock.toInt() : stock.toStringAsFixed(2)} $unit in stock.')),
                 );
                 return;
               }
@@ -157,7 +158,7 @@ class _CustomBillScreenState extends State<CustomBillScreen> {
                   itemCount: filteredInventory.length,
                   itemBuilder: (context, index) {
                     final item = filteredInventory[index];
-                    final int itemId = item['id'];
+                    final int itemId = item['id'] is int ? item['id'] : (int.tryParse(item['id'].toString()) ?? 0);
                     final double stock = double.tryParse(item['qty'].toString()) ?? 0.0;
                     final double price = double.tryParse(item['price'].toString()) ?? 0.0;
                     final double cartQty = state.customCart[itemId] ?? 0.0;
@@ -208,16 +209,19 @@ class _CustomBillScreenState extends State<CustomBillScreen> {
                                       ),
                                       const SizedBox(height: 2),
                                       Text(
-                                        '₹${price.toStringAsFixed(2)} / kg',
+                                        '₹${price.toStringAsFixed(2)} / ${item['unit'] ?? 'kg'}',
                                         style: const TextStyle(color: Colors.green, fontWeight: FontWeight.bold, fontSize: 13),
                                       ),
                                       const SizedBox(height: 2),
                                       Text(
-                                        isOutOfStock ? 'OUT OF STOCK' : 'Stock: ${stock.toStringAsFixed(2)} kg',
+                                        isOutOfStock
+                                            ? 'OUT OF STOCK'
+                                            : 'Stock: ${stock % 1 == 0 ? stock.toInt() : stock.toStringAsFixed(2)} ${item['unit'] ?? 'kg'}',
                                         style: TextStyle(
                                           fontSize: 10,
                                           color: isOutOfStock ? Colors.red : Colors.grey,
                                           fontWeight: isOutOfStock ? FontWeight.bold : FontWeight.normal,
+                                          fontFamily: 'monospace',
                                         ),
                                       ),
                                     ],
@@ -251,7 +255,9 @@ class _CustomBillScreenState extends State<CustomBillScreen> {
                                             elevation: 0,
                                           ),
                                           child: Text(
-                                            cartQty > 0 ? 'Update ($cartQty kg)' : 'Add Weight',
+                                            cartQty > 0
+                                                ? 'Update (${cartQty % 1 == 0 ? cartQty.toInt() : cartQty.toStringAsFixed(2)} ${item['unit'] ?? 'kg'})'
+                                                : (item['unit'] == 'pcs' ? 'Add Quantity' : 'Add Weight'),
                                             style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
                                           ),
                                         ),

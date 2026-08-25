@@ -60,7 +60,7 @@ exports.getAllItems = async (req, res) => {
 };
 
 exports.addItem = async (req, res) => {
-  const { item_name, description, qty, price, image_url, is_custom_bill } = req.body;
+  const { item_name, description, qty, price, image_url, is_custom_bill, unit } = req.body;
   try {
     let uploadedUrl = null;
     if (image_url) {
@@ -76,8 +76,8 @@ exports.addItem = async (req, res) => {
     
     const isCustom = is_custom_bill === true || is_custom_bill === 'true';
     const { rows } = await db.query(
-      'INSERT INTO inventory (item_name, description, qty, price, image_url, is_custom_bill) VALUES ($1, $2, $3, $4, $5, $6) RETURNING *',
-      [item_name, description, qty, price, uploadedUrl, isCustom]
+      'INSERT INTO inventory (item_name, description, qty, price, image_url, is_custom_bill, unit) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING *',
+      [item_name, description, qty, price, uploadedUrl, isCustom, unit || 'kg']
     );
     res.status(201).json(rows[0]);
   } catch (err) {
@@ -87,13 +87,14 @@ exports.addItem = async (req, res) => {
 
 exports.updateItem = async (req, res) => {
   const { id } = req.params;
-  const { item_name, description, qty, price, image_url, is_custom_bill } = req.body;
+  const { item_name, description, qty, price, image_url, is_custom_bill, unit } = req.body;
   try {
-    // Fetch existing item to preserve image if no new one is provided
-    const existing = await db.query('SELECT image_url, is_custom_bill FROM inventory WHERE id = $1', [id]);
+    // Fetch existing item to preserve image and unit if no new one is provided
+    const existing = await db.query('SELECT image_url, is_custom_bill, unit FROM inventory WHERE id = $1', [id]);
     if (existing.rows.length === 0) return res.status(404).json({ message: 'Item not found' });
     const currentImageUrl = existing.rows[0].image_url;
     const currentIsCustom = existing.rows[0].is_custom_bill;
+    const currentUnit = existing.rows[0].unit;
 
     let uploadedUrl = req.body.image_url;
     if (image_url && image_url.startsWith('data:')) {
@@ -110,9 +111,11 @@ exports.updateItem = async (req, res) => {
     }
     
     const isCustom = is_custom_bill !== undefined ? (is_custom_bill === true || is_custom_bill === 'true') : currentIsCustom;
+    const targetUnit = unit !== undefined ? unit : currentUnit;
+    
     const { rows } = await db.query(
-      'UPDATE inventory SET item_name = $1, description = $2, qty = $3, price = $4, image_url = $5, is_custom_bill = $6 WHERE id = $7 RETURNING *',
-      [item_name, description, qty, price, uploadedUrl, isCustom, id]
+      'UPDATE inventory SET item_name = $1, description = $2, qty = $3, price = $4, image_url = $5, is_custom_bill = $6, unit = $7 WHERE id = $8 RETURNING *',
+      [item_name, description, qty, price, uploadedUrl, isCustom, targetUnit || 'kg', id]
     );
     if (rows.length === 0) return res.status(404).json({ message: 'Item not found' });
     res.json(rows[0]);

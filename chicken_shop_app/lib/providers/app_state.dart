@@ -297,12 +297,12 @@ class AppState with ChangeNotifier {
 
   // Cart Management
   void addToCart(dynamic item) {
-    final int itemId = item['id'];
-    final int stock = item['qty'];
+    final int itemId = item['id'] is int ? item['id'] : (int.tryParse(item['id'].toString()) ?? 0);
+    final double stock = double.tryParse(item['qty'].toString()) ?? 0.0;
     final int currentQty = cart[itemId] ?? 0;
     
     if (currentQty >= stock) {
-      throw Exception('Only $stock items available in stock');
+      throw Exception('Only ${stock % 1 == 0 ? stock.toInt() : stock} items available in stock');
     }
     
     cart[itemId] = currentQty + 1;
@@ -315,14 +315,14 @@ class AppState with ChangeNotifier {
     final item = inventory.firstWhere((i) => i['id'] == itemId, orElse: () => null);
     if (item == null) return;
     
-    final int stock = item['qty'];
+    final double stock = double.tryParse(item['qty'].toString()) ?? 0.0;
     final int newQty = cart[itemId]! + delta;
 
     if (newQty <= 0) {
       cart.remove(itemId);
     } else {
       if (newQty > stock) {
-        throw Exception('Only $stock items available in stock');
+        throw Exception('Only ${stock % 1 == 0 ? stock.toInt() : stock} items available in stock');
       }
       cart[itemId] = newQty;
     }
@@ -454,7 +454,7 @@ class AppState with ChangeNotifier {
   double get customCartFinalTotal => mathMax(0.0, customCartSubtotal - customDiscount);
 
   void addToCustomCart(dynamic item, double qty) {
-    final int itemId = item['id'];
+    final int itemId = item['id'] is int ? item['id'] : (int.tryParse(item['id'].toString()) ?? 0);
     final double stock = double.tryParse(item['qty'].toString()) ?? 0.0;
     
     if (qty > stock) {
@@ -538,7 +538,6 @@ class AppState with ChangeNotifier {
     };
 
     await ApiService.completeBill(payload);
-    clearCustomCart();
     await fetchInventory();
     await fetchCompletedBills();
     await fetchCustomPendingOrders();
@@ -560,7 +559,6 @@ class AppState with ChangeNotifier {
     });
 
     await ApiService.saveCustomPendingBill(itemsList, customCartSubtotal, activeCustomPendingBillId);
-    clearCustomCart();
     await fetchCustomPendingOrders();
   }
 

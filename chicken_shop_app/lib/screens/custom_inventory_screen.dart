@@ -34,7 +34,8 @@ class _CustomInventoryScreenState extends State<CustomInventoryScreen> {
     final qtyController = TextEditingController(text: isEdit ? item['qty'].toString() : '');
     final priceController = TextEditingController(text: isEdit ? item['price'].toString() : '');
     XFile? pickedImage;
-
+    String selectedUnit = isEdit ? (item['unit'] ?? 'kg') : 'kg';
+ 
     showDialog(
       context: context,
       builder: (context) {
@@ -63,13 +64,32 @@ class _CustomInventoryScreenState extends State<CustomInventoryScreen> {
                           maxLines: 2,
                         ),
                         const SizedBox(height: 12),
+                        DropdownButtonFormField<String>(
+                          value: selectedUnit,
+                          decoration: const InputDecoration(labelText: 'Item Unit', border: OutlineInputBorder()),
+                          items: const [
+                            DropdownMenuItem(value: 'kg', child: Text('kg (Kilograms)')),
+                            DropdownMenuItem(value: 'pcs', child: Text('pcs (Pieces)')),
+                            DropdownMenuItem(value: 'plate', child: Text('plate (Plates)')),
+                            DropdownMenuItem(value: 'packet', child: Text('packet (Packets)')),
+                            DropdownMenuItem(value: 'box', child: Text('box (Boxes)')),
+                          ],
+                          onChanged: (val) {
+                            if (val != null) {
+                              setStateDialog(() {
+                                selectedUnit = val;
+                              });
+                            }
+                          },
+                        ),
+                        const SizedBox(height: 12),
                         Row(
                           children: [
                             Expanded(
                               child: TextFormField(
                                 controller: qtyController,
                                 keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                                decoration: const InputDecoration(labelText: 'Quantity (Stock in kg)', border: OutlineInputBorder()),
+                                decoration: InputDecoration(labelText: 'Quantity (Stock in $selectedUnit)', border: const OutlineInputBorder()),
                                 validator: (val) => val == null || double.tryParse(val) == null ? 'Invalid quantity' : null,
                               ),
                             ),
@@ -78,7 +98,7 @@ class _CustomInventoryScreenState extends State<CustomInventoryScreen> {
                               child: TextFormField(
                                 controller: priceController,
                                 keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                                decoration: const InputDecoration(labelText: 'Price (₹ per kg)', border: OutlineInputBorder()),
+                                decoration: InputDecoration(labelText: 'Price (₹ per $selectedUnit)', border: const OutlineInputBorder()),
                                 validator: (val) => val == null || double.tryParse(val) == null ? 'Invalid price' : null,
                               ),
                             ),
@@ -153,6 +173,7 @@ class _CustomInventoryScreenState extends State<CustomInventoryScreen> {
                           price,
                           pickedImage?.path,
                           true, // isCustomBill
+                          selectedUnit,
                         );
                         if (mounted) {
                           ScaffoldMessenger.of(context).showSnackBar(
@@ -167,6 +188,7 @@ class _CustomInventoryScreenState extends State<CustomInventoryScreen> {
                           price,
                           pickedImage?.path,
                           true, // isCustomBill
+                          selectedUnit,
                         );
                         if (mounted) {
                           ScaffoldMessenger.of(context).showSnackBar(
@@ -293,6 +315,7 @@ class _CustomInventoryScreenState extends State<CustomInventoryScreen> {
                   itemCount: filteredItems.length,
                   itemBuilder: (context, index) {
                     final item = filteredItems[index];
+                    final int itemId = item['id'] is int ? item['id'] : (int.tryParse(item['id'].toString()) ?? 0);
                     final double stock = double.tryParse(item['qty'].toString()) ?? 0.0;
                     final double price = double.tryParse(item['price'].toString()) ?? 0.0;
                     
@@ -330,7 +353,7 @@ class _CustomInventoryScreenState extends State<CustomInventoryScreen> {
                               : const Icon(Icons.restaurant, color: Colors.grey),
                         ),
                         title: Text(item['item_name'], style: const TextStyle(fontWeight: FontWeight.bold)),
-                        subtitle: Text('Price: ₹${price.toStringAsFixed(2)}/kg  |  Stock: ${stock.toStringAsFixed(2)} kg'),
+                        subtitle: Text('Price: ₹${price.toStringAsFixed(2)}/${item['unit'] ?? 'kg'}  |  Stock: ${stock.toStringAsFixed(2)} ${item['unit'] ?? 'kg'}'),
                         trailing: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
@@ -354,7 +377,7 @@ class _CustomInventoryScreenState extends State<CustomInventoryScreen> {
                             if (isAllowedToDelete)
                               IconButton(
                                 icon: const Icon(Icons.delete, color: Colors.red),
-                                onPressed: () => _deleteItem(item['id'], context, state),
+                                onPressed: () => _deleteItem(itemId, context, state),
                               ),
                           ],
                         ),

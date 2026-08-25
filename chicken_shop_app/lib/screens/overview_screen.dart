@@ -170,8 +170,8 @@ class _OverviewScreenState extends State<OverviewScreen> {
                   const SizedBox(height: 4),
                   ...List.generate(items.length, (index) {
                     final item = items[index];
-                    final price = double.tryParse(item['price'].toString()) ?? 0.0;
-                    final qty = int.tryParse(item['qty'].toString()) ?? 0;
+                    final double price = double.tryParse(item['price'].toString()) ?? 0.0;
+                    final double qty = double.tryParse(item['qty'].toString()) ?? 0.0;
                     final total = price * qty;
                     return Padding(
                       padding: const EdgeInsets.symmetric(vertical: 4.0),
@@ -179,7 +179,13 @@ class _OverviewScreenState extends State<OverviewScreen> {
                         children: [
                           Expanded(flex: 1, child: Text('${index + 1}')),
                           Expanded(flex: 4, child: Text(item['item_name'])),
-                          Expanded(flex: 1, child: Text('$qty', textAlign: TextAlign.center)),
+                          Expanded(
+                            flex: 1, 
+                            child: Text(
+                              qty % 1 == 0 ? '${qty.toInt()}' : qty.toStringAsFixed(2), 
+                              textAlign: TextAlign.center,
+                            ),
+                          ),
                           Expanded(flex: 2, child: Text('₹${price.toStringAsFixed(2)}', textAlign: TextAlign.right)),
                           Expanded(flex: 2, child: Text('₹${total.toStringAsFixed(2)}', textAlign: TextAlign.right)),
                         ],
@@ -308,8 +314,8 @@ class _OverviewScreenState extends State<OverviewScreen> {
                     itemCount: state.completedBills.length > 5 ? 5 : state.completedBills.length,
                     itemBuilder: (context, index) {
                       final bill = state.completedBills[index];
-                      final itemsCount = (bill['items'] as List)
-                          .fold<int>(0, (sum, i) => sum + (int.tryParse(i['qty'].toString()) ?? 0));
+                      final double itemsCount = (bill['items'] as List)
+                          .fold<double>(0.0, (sum, i) => sum + (double.tryParse(i['qty'].toString()) ?? 0.0));
                       final date = DateTime.tryParse(bill['created_at'].toString()) ?? DateTime.now();
                       final isCustom = bill['is_custom_bill'] == true;
                       final billType = isCustom ? 'Custom Bill' : 'Bill POS';
@@ -323,7 +329,7 @@ class _OverviewScreenState extends State<OverviewScreen> {
                               child: Icon(Icons.shopping_bag_outlined),
                             ),
                             title: Text('Bill #${bill['bill_no']} | ${bill['customer_phone'] ?? 'Walking Customer'}'),
-                            subtitle: Text('$billType | $itemsCount items | Date: ${date.day}-${date.month}-${date.year} ${date.hour}:${date.minute.toString().padLeft(2, '0')}'),
+                            subtitle: Text('$billType | ${itemsCount % 1 == 0 ? itemsCount.toInt() : itemsCount.toStringAsFixed(2)} items | Date: ${date.day}-${date.month}-${date.year} ${date.hour}:${date.minute.toString().padLeft(2, '0')}'),
                             trailing: Text(
                               '₹${double.parse(bill['final_price'].toString()).toStringAsFixed(2)}',
                               style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: Colors.green),

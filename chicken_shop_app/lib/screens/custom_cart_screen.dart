@@ -203,7 +203,7 @@ class _CustomCartScreenState extends State<CustomCartScreen> {
                         margin: const EdgeInsets.only(bottom: 8),
                         child: ListTile(
                           title: Text(item['item_name'], style: const TextStyle(fontWeight: FontWeight.bold)),
-                          subtitle: Text('₹${price.toStringAsFixed(2)} x ${qty.toStringAsFixed(2)} kg'),
+                          subtitle: Text('₹${price.toStringAsFixed(2)} x ${qty % 1 == 0 ? qty.toInt() : qty.toStringAsFixed(2)} ${item['unit'] ?? 'kg'}'),
                           trailing: Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [
@@ -216,7 +216,9 @@ class _CustomCartScreenState extends State<CustomCartScreen> {
                                 icon: const Icon(Icons.remove_circle_outline, color: Colors.red),
                                 onPressed: () {
                                   try {
-                                    state.updateCustomCartQty(itemId, -0.5);
+                                    final String unit = item['unit'] ?? 'kg';
+                                    final double delta = (unit == 'pcs' || unit == 'packet' || unit == 'box' || unit == 'plate') ? 1.0 : 0.5;
+                                    state.updateCustomCartQty(itemId, -delta);
                                   } catch (e) {
                                     ScaffoldMessenger.of(context).showSnackBar(
                                       SnackBar(content: Text(e.toString().replaceAll('Exception: ', ''))),
@@ -228,7 +230,9 @@ class _CustomCartScreenState extends State<CustomCartScreen> {
                                 icon: const Icon(Icons.add_circle_outline, color: Colors.green),
                                 onPressed: () {
                                   try {
-                                    state.updateCustomCartQty(itemId, 0.5);
+                                    final String unit = item['unit'] ?? 'kg';
+                                    final double delta = (unit == 'pcs' || unit == 'packet' || unit == 'box' || unit == 'plate') ? 1.0 : 0.5;
+                                    state.updateCustomCartQty(itemId, delta);
                                   } catch (e) {
                                     ScaffoldMessenger.of(context).showSnackBar(
                                       SnackBar(content: Text(e.toString().replaceAll('Exception: ', ''))),
@@ -353,6 +357,8 @@ class _CustomCartScreenState extends State<CustomCartScreen> {
                                 );
                                 _phoneController.clear();
                                 _discountController.clear();
+                                state.setScreenIndex(8);
+                                state.clearCustomCart();
                               }
                             } catch (e) {
                               if (mounted) {
@@ -394,6 +400,8 @@ class _CustomCartScreenState extends State<CustomCartScreen> {
                                 );
                                 _phoneController.clear();
                                 _discountController.clear();
+                                state.setScreenIndex(8);
+                                state.clearCustomCart();
                               }
                             } catch (e) {
                               if (mounted) {

@@ -67,7 +67,7 @@ class _CustomPendingScreenState extends State<CustomPendingScreen> {
                     final String dateStr = '${date.day.toString().padLeft(2, '0')}-${date.month.toString().padLeft(2, '0')}-${date.year} ${date.hour}:${date.minute.toString().padLeft(2, '0')}';
 
                     final items = bill['items'] as List;
-                    final String itemsSummary = items.map((i) => "${i['item_name']} (${i['qty']} kg)").join(', ');
+                    final String itemsSummary = items.map((i) => "${i['item_name']} (${i['qty'] % 1 == 0 ? (i['qty'] as num).toInt() : i['qty']} ${i['unit'] ?? 'kg'})").join(', ');
 
                     return Card(
                       margin: const EdgeInsets.only(bottom: 12),

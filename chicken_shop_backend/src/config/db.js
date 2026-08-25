@@ -10,6 +10,19 @@ const pool = new Pool({
   ssl: process.env.DATABASE_URL ? { rejectUnauthorized: false } : false
 });
 
+// Database auto-migration helper
+const ensureUnitColumn = async () => {
+  try {
+    await pool.query(`
+      ALTER TABLE inventory ADD COLUMN IF NOT EXISTS unit VARCHAR(20) DEFAULT 'kg';
+    `);
+    console.log("Database migration: 'unit' column ensured in inventory table.");
+  } catch (err) {
+    console.error("Database migration error:", err);
+  }
+};
+ensureUnitColumn();
+
 module.exports = {
   query: (text, params) => pool.query(text, params),
 };
