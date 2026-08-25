@@ -120,8 +120,8 @@ class _OverviewScreenState extends State<OverviewScreen> {
       context: context,
       builder: (context) {
         return AlertDialog(
-          title: Row(
-            children: const [
+          title: const Row(
+            children: [
               Icon(Icons.restaurant, color: Colors.deepOrange),
               SizedBox(width: 8),
               Expanded(child: Text('Chicken Shop Invoice')),
@@ -158,8 +158,8 @@ class _OverviewScreenState extends State<OverviewScreen> {
                   Text('Phone: $custPhone'),
                   const Divider(),
                   // Items Table Header
-                  Row(
-                    children: const [
+                  const Row(
+                    children: [
                       Expanded(flex: 1, child: Text('No.', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12))),
                       Expanded(flex: 4, child: Text('Item Name', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12))),
                       Expanded(flex: 1, child: Text('Qty', textAlign: TextAlign.center, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12))),

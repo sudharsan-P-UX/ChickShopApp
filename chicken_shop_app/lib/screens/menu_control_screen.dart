@@ -13,7 +13,7 @@ class MenuControlScreen extends StatefulWidget {
 class _MenuControlScreenState extends State<MenuControlScreen> {
   List<dynamic> _roles = [];
   dynamic _selectedRole;
-  Map<String, Map<String, bool>> _perms = {};
+  final Map<String, Map<String, bool>> _perms = {};
   bool _isLoading = false;
 
   final List<Map<String, String>> _systemMenus = [
@@ -116,21 +116,25 @@ class _MenuControlScreenState extends State<MenuControlScreen> {
       await ApiService.updateRolePermissions(_selectedRole['id'], body);
 
       // Update state in app if editing own role
-      final appState = Provider.of<AppState>(context, listen: false);
-      if (_selectedRole['role_name'] == appState.userRole) {
-        appState.updateLocalPermissions(body);
+      if (mounted) {
+        final appState = Provider.of<AppState>(context, listen: false);
+        if (_selectedRole['role_name'] == appState.userRole) {
+          appState.updateLocalPermissions(body);
+        }
+        
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Role permissions updated successfully!')),
+        );
       }
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Role permissions updated successfully!')),
-      );
 
       // Reload roles to get latest permissions
       _loadRoles();
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error saving: ${e.toString().replaceAll('Exception: ', '')}')),
-      );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error saving: ${e.toString().replaceAll('Exception: ', '')}')),
+        );
+      }
       setState(() => _isLoading = false);
     }
   }

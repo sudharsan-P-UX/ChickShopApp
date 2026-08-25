@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'providers/app_state.dart';
-import 'screens/login_screen.dart';
-import 'screens/home_screen.dart';
+import 'package:chicken_shop_app/providers/app_state.dart';
+import 'package:chicken_shop_app/screens/login_screen.dart';
+import 'package:chicken_shop_app/screens/home_screen.dart';
 
 void main() {
   runApp(

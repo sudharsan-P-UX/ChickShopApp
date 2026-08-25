@@ -32,14 +32,18 @@ class _LabelsScreenState extends State<LabelsScreen> {
 
     try {
       await ApiService.updateCustomLabels(payload);
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Custom labels saved successfully!')),
-      );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Custom labels saved successfully!')),
+        );
+      }
       await state.fetchCustomLabels(); // refresh local state
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error saving labels: $e')),
-      );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error saving labels: $e')),
+        );
+      }
     } finally {
       setState(() => _isSaving = false);
     }
@@ -132,12 +136,12 @@ class _LabelsScreenState extends State<LabelsScreen> {
                                     ),
                                   ),
                                 );
-                              }).toList(),
+                              }),
                             ],
                           ),
                         ),
                       );
-                    }).toList(),
+                    }),
                   ],
                 ),
       floatingActionButton: (state.hasPermission('custom_labels', 'edit') || state.hasPermission('custom_labels', 'update'))

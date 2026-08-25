@@ -215,6 +215,26 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _buildDynamicDrawer(BuildContext context, AppState appState) {
+    int getRouteIndex(String key) {
+      switch (key) {
+        case 'billing': return 0;
+        case 'dashboard': return 1;
+        case 'cart': return 2;
+        case 'pending': return 3;
+        case 'inventory': return 4;
+        case 'customers': return 5;
+        case 'users': return 6;
+        case 'custom_labels': return 7;
+        case 'custom_bill': return 8;
+        case 'custom_cart': return 9;
+        case 'custom_pending': return 10;
+        case 'custom_bill_inventory': return 11;
+        case 'menu_control': return 12;
+        case 'menu_order': return 13;
+        default: return 0;
+      }
+    }
+
     // Group menuOrders by main_menu
     final Map<String, List<dynamic>> groups = {};
     for (var m in appState.menuOrders) {
@@ -430,7 +450,7 @@ class _HomeScreenState extends State<HomeScreen> {
         ExpansionTile(
           leading: Icon(groupIcon, color: Colors.deepOrange),
           title: Text(groupName, style: const TextStyle(fontWeight: FontWeight.bold)),
-          initiallyExpanded: true,
+          initiallyExpanded: visibleSubmenus.any((item) => getRouteIndex(item['submenu_key']) == index),
           children: childrenTiles,
         ),
       );

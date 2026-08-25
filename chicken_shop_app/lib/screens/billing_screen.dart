@@ -85,7 +85,7 @@ class _BillingScreenState extends State<BillingScreen> {
                   itemBuilder: (context, index) {
                     final item = filteredInventory[index];
                     final int itemId = item['id'];
-                    final int stock = item['qty'] ?? 0;
+                    final double stock = double.tryParse(item['qty'].toString()) ?? 0.0;
                     final double price = double.tryParse(item['price'].toString()) ?? 0.0;
                     final int cartQty = state.cart[itemId] ?? 0;
                     final bool isOutOfStock = stock <= 0;
@@ -138,7 +138,7 @@ class _BillingScreenState extends State<BillingScreen> {
                                     ),
                                     const SizedBox(height: 2),
                                     Text(
-                                      isOutOfStock ? 'OUT OF STOCK' : 'Stock: $stock',
+                                      isOutOfStock ? 'OUT OF STOCK' : 'Stock: ${stock % 1 == 0 ? stock.toInt() : stock}',
                                       style: TextStyle(
                                         fontSize: 10,
                                         color: isOutOfStock ? Colors.red : Colors.grey,

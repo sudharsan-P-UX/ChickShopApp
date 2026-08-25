@@ -28,7 +28,7 @@ class _CustomBillScreenState extends State<CustomBillScreen> {
     final double currentQty = state.customCart[itemId] ?? 0.0;
 
     final controller = TextEditingController(
-      text: currentQty > 0.0 ? currentQty.toString() : '3',
+      text: currentQty > 0.0 ? (currentQty % 1 == 0 ? currentQty.toInt().toString() : currentQty.toString()) : '',
     );
 
     showDialog(
@@ -48,6 +48,7 @@ class _CustomBillScreenState extends State<CustomBillScreen> {
               autofocus: true,
               decoration: const InputDecoration(
                 labelText: 'Weight (e.g. 3kg or 2.5)',
+                hintText: '3',
                 suffixText: 'kg',
                 border: OutlineInputBorder(),
               ),
@@ -82,7 +83,7 @@ class _CustomBillScreenState extends State<CustomBillScreen> {
               state.addToCustomCart(item, parsedVal);
               Navigator.pop(ctx);
               ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text('Added ${parsedVal} kg of ${item['item_name']} to cart')),
+                SnackBar(content: Text('Added $parsedVal kg of ${item['item_name']} to cart')),
               );
             },
             child: const Text('Add to Cart'),
@@ -250,7 +251,7 @@ class _CustomBillScreenState extends State<CustomBillScreen> {
                                             elevation: 0,
                                           ),
                                           child: Text(
-                                            cartQty > 0 ? 'Update (${cartQty} kg)' : 'Add Weight',
+                                            cartQty > 0 ? 'Update ($cartQty kg)' : 'Add Weight',
                                             style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
                                           ),
                                         ),

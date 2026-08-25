@@ -304,7 +304,7 @@ class _CartScreenState extends State<CartScreen> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Text(state.getLabel('cart_subtotal_label', 'Subtotal') + ':'),
+                      Text('${state.getLabel('cart_subtotal_label', 'Subtotal')}:'),
                       Text('₹${state.cartSubtotal.toStringAsFixed(2)}'),
                     ],
                   ),
@@ -312,7 +312,7 @@ class _CartScreenState extends State<CartScreen> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Text(state.getLabel('cart_discount_label', 'Discount (₹)') + ':'),
+                      Text('${state.getLabel('cart_discount_label', 'Discount (₹)')}:'),
                       SizedBox(
                         width: 100,
                         height: 40,
@@ -336,7 +336,7 @@ class _CartScreenState extends State<CartScreen> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Text(state.getLabel('cart_total_label', 'Final Total') + ':', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                      Text('${state.getLabel('cart_total_label', 'Final Total')}:', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
                       Text(
                         '₹${state.cartFinalTotal.toStringAsFixed(2)}',
                         style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: Colors.deepOrange),

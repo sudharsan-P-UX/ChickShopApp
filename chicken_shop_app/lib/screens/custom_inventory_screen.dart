@@ -27,7 +27,7 @@ class _CustomInventoryScreenState extends State<CustomInventoryScreen> {
 
   void _showAddEditItemDialog(BuildContext context, [dynamic item]) {
     final bool isEdit = item != null;
-    final _formKey = GlobalKey<FormState>();
+    final formKey = GlobalKey<FormState>();
     
     final nameController = TextEditingController(text: isEdit ? item['item_name'] : '');
     final descController = TextEditingController(text: isEdit ? (item['description'] ?? '') : '');
@@ -47,7 +47,7 @@ class _CustomInventoryScreenState extends State<CustomInventoryScreen> {
                 child: SizedBox(
                   width: 400,
                   child: Form(
-                    key: _formKey,
+                    key: formKey,
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [
@@ -136,7 +136,7 @@ class _CustomInventoryScreenState extends State<CustomInventoryScreen> {
                 ),
                 ElevatedButton(
                   onPressed: () async {
-                    if (!_formKey.currentState!.validate()) return;
+                    if (!formKey.currentState!.validate()) return;
                     
                     try {
                       final name = nameController.text.trim();
@@ -154,9 +154,11 @@ class _CustomInventoryScreenState extends State<CustomInventoryScreen> {
                           pickedImage?.path,
                           true, // isCustomBill
                         );
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('Custom item updated successfully')),
-                        );
+                        if (mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text('Custom item updated successfully')),
+                          );
+                        }
                       } else {
                         await ApiService.addInventoryItem(
                           name,
@@ -166,17 +168,21 @@ class _CustomInventoryScreenState extends State<CustomInventoryScreen> {
                           pickedImage?.path,
                           true, // isCustomBill
                         );
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('Custom item added successfully')),
-                        );
+                        if (mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text('Custom item added successfully')),
+                          );
+                        }
                       }
                       
                       await state.fetchInventory();
                       if (mounted) Navigator.pop(context);
                     } catch (e) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text(e.toString().replaceAll('Exception: ', ''))),
-                      );
+                      if (mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(content: Text(e.toString().replaceAll('Exception: ', ''))),
+                        );
+                      }
                     }
                   },
                   child: const Text('Save'),
@@ -205,10 +211,12 @@ class _CustomInventoryScreenState extends State<CustomInventoryScreen> {
               try {
                 await ApiService.deleteInventoryItem(id);
                 await state.fetchInventory();
-                if (mounted) Navigator.pop(ctx);
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Custom item deleted successfully')),
-                );
+                if (mounted) {
+                  Navigator.pop(ctx);
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Custom item deleted successfully')),
+                  );
+                }
               } catch (e) {
                 if (mounted) {
                   ScaffoldMessenger.of(context).showSnackBar(

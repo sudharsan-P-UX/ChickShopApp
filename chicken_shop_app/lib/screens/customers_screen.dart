@@ -39,16 +39,20 @@ class _CustomersScreenState extends State<CustomersScreen> {
 
     try {
       await ApiService.registerCustomer(phone, name);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Registered customer: $name')),
-      );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Registered customer: $name')),
+        );
+      }
       _phoneController.clear();
       _nameController.clear();
       state.fetchCustomers();
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error: ${e.toString().replaceAll('Exception: ', '')}')),
-      );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error: ${e.toString().replaceAll('Exception: ', '')}')),
+        );
+      }
     }
   }
 

@@ -53,11 +53,15 @@ class _CustomCartScreenState extends State<CustomCartScreen> {
 
     if (customer != null) {
       state.selectCustomCustomer(customer);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Customer found: ${customer['name']}')),
-      );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Customer found: ${customer['name']}')),
+        );
+      }
     } else {
-      _showRegisterCustomerDialog(phone, state);
+      if (mounted) {
+        _showRegisterCustomerDialog(phone, state);
+      }
     }
   }
 

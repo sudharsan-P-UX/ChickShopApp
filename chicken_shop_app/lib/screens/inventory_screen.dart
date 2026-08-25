@@ -27,7 +27,7 @@ class _InventoryScreenState extends State<InventoryScreen> {
 
   void _showAddEditItemDialog(BuildContext context, [dynamic item]) {
     final bool isEdit = item != null;
-    final _formKey = GlobalKey<FormState>();
+    final formKey = GlobalKey<FormState>();
     
     final nameController = TextEditingController(text: isEdit ? item['item_name'] : '');
     final descController = TextEditingController(text: isEdit ? (item['description'] ?? '') : '');
@@ -47,7 +47,7 @@ class _InventoryScreenState extends State<InventoryScreen> {
                 child: SizedBox(
                   width: 400,
                   child: Form(
-                    key: _formKey,
+                    key: formKey,
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [
@@ -133,26 +133,34 @@ class _InventoryScreenState extends State<InventoryScreen> {
                 TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')),
                 ElevatedButton(
                   onPressed: () async {
-                    if (!_formKey.currentState!.validate()) return;
+                    if (!formKey.currentState!.validate()) return;
                     
                     final name = nameController.text.trim();
                     final desc = descController.text.trim();
-                    final qty = int.parse(qtyController.text);
+                    final qty = double.parse(qtyController.text);
                     final price = double.parse(priceController.text);
 
                     try {
                       if (isEdit) {
                         await ApiService.updateInventoryItem(item['id'], name, desc, qty, price, pickedImage?.path);
-                        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Item updated successfully')));
+                        if (mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Item updated successfully')));
+                        }
                       } else {
                         await ApiService.addInventoryItem(name, desc, qty, price, pickedImage?.path);
-                        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Item created successfully')));
+                        if (mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Item created successfully')));
+                        }
                       }
                       
-                      Provider.of<AppState>(context, listen: false).fetchInventory();
-                      Navigator.pop(context);
+                      if (mounted) {
+                        Provider.of<AppState>(context, listen: false).fetchInventory();
+                        Navigator.pop(context);
+                      }
                     } catch (e) {
-                      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: ${e.toString()}')));
+                      if (mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: ${e.toString()}')));
+                      }
                     }
                   },
                   style: ElevatedButton.styleFrom(backgroundColor: Colors.deepOrange, foregroundColor: Colors.white),
@@ -176,13 +184,17 @@ class _InventoryScreenState extends State<InventoryScreen> {
           TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')),
           TextButton(
             onPressed: () async {
-              Navigator.pop(context);
               try {
                 await ApiService.deleteInventoryItem(itemId);
-                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Item deleted successfully')));
+                if (mounted) {
+                  Navigator.pop(context);
+                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Item deleted successfully')));
+                }
                 state.fetchInventory();
               } catch (e) {
-                ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: ${e.toString()}')));
+                if (mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: ${e.toString()}')));
+                }
               }
             },
             child: const Text('Delete', style: TextStyle(color: Colors.red)),
@@ -229,8 +241,8 @@ class _InventoryScreenState extends State<InventoryScreen> {
                     itemCount: filteredInventory.length,
                     itemBuilder: (context, index) {
                       final item = filteredInventory[index];
-                      final int qty = item['qty'] ?? 0;
-                      final bool isLowStock = qty < 5;
+                      final double qty = double.tryParse(item['qty'].toString()) ?? 0.0;
+                      final bool isLowStock = qty < 5.0;
 
                       return Card(
                         child: ListTile(
@@ -264,7 +276,7 @@ class _InventoryScreenState extends State<InventoryScreen> {
                                   borderRadius: BorderRadius.circular(4),
                                 ),
                                 child: Text(
-                                  'Qty: $qty',
+                                  'Qty: ${qty % 1 == 0 ? qty.toInt() : qty}',
                                   style: TextStyle(
                                     fontSize: 12,
                                     fontWeight: FontWeight.bold,
